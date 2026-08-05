@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Biblioteca">
+<meta name="theme-color" content="#1C2541">
+<title>Mi Biblioteca</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
+    --brass:#B8874F; --sage:#5B7B62; --sage-dark:#3F5A45;
+    --burgundy:#8B3A3A; --burgundy-dark:#6E2C2C;
+    --text:#2A2A28; --text-muted:#6B6558;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;}
+  h1,.serif{font-family:'Georgia','Times New Roman',serif;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
+  .hidden{display:none !important;}
+
+  /* ---- auth screen ---- */
+  #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+  #recovery-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+  .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:16px;padding:28px 24px;border:1px solid var(--border);}
+  .auth-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
+  .auth-brand h1{font-size:20px;color:var(--ink);margin:0;}
+  .auth-sub{text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 20px;}
+  .auth-field{margin-bottom:12px;}
+  .auth-field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;}
+  .auth-field input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);outline:none;}
+  .auth-submit{width:100%;padding:11px;border-radius:10px;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;margin-top:6px;}
+  .auth-toggle{text-align:center;font-size:13px;color:var(--text-muted);margin-top:14px;}
+  .auth-toggle button{color:var(--brass);font-weight:700;text-decoration:underline;}
+  .auth-msg{font-size:12.5px;text-align:center;margin:10px 0 0;min-height:16px;}
+  .guest-divider{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--text-muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;}
+  .guest-divider::before,.guest-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  .guest-btn{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-weight:600;font-size:13.5px;}
+  .auth-msg.error{color:var(--burgundy);}
+  .auth-msg.ok{color:var(--sage-dark);}
+
+  header{background:var(--ink);padding:20px 16px 0;padding-top:calc(20px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .header-inner{max-width:1100px;margin:0 auto;}
+  .brand-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;}
+  .brand h1{color:var(--paper);font-size:22px;margin:0;letter-spacing:.3px;}
+  .title-display{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 4px;margin:-2px -4px;border-radius:6px;min-width:0;overflow:hidden;}
+  .title-display h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .title-display:hover{background:rgba(250,246,236,.08);}
+  .title-edit-icon{color:rgba(250,246,236,.4);flex-shrink:0;}
+  .title-input{font-family:'Georgia','Times New Roman',serif;font-size:22px;font-weight:700;letter-spacing:.3px;color:var(--ink);background:var(--paper);border:none;border-radius:6px;padding:3px 8px;max-width:200px;outline:2px solid var(--brass);}
+  .logout-btn{font-size:11.5px;color:rgba(250,246,236,.65);border:1px solid rgba(250,246,236,.25);padding:6px 9px;border-radius:8px;flex-shrink:0;text-align:center;line-height:1.25;max-width:120px;}
+  .header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .icon-btn-header{position:relative;padding:6px;border-radius:8px;color:rgba(250,246,236,.7);flex-shrink:0;}
+  .icon-btn-header.has-unread{color:var(--brass);}
+  .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--burgundy);border:1.5px solid var(--ink);}
+  .notif-actions-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .notif-action-btn{font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
+  .notif-action-danger{color:var(--burgundy-dark);}
+  .notif-list{max-height:55vh;overflow-y:auto;}
+  .notif-row{display:flex;align-items:flex-start;gap:10px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;}
+  .notif-row:last-child{border-bottom:none;}
+  .notif-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--brass);flex-shrink:0;margin-top:5px;}
+  .notif-row.read .notif-unread-dot{background:transparent;}
+  .notif-content{flex:1;min-width:0;}
+  .notif-message{font-size:13.5px;color:var(--text);font-weight:700;line-height:1.35;}
+  .notif-row.read .notif-message{color:var(--text-muted);font-weight:400;}
+  .notif-date{font-size:11px;color:var(--text-muted);margin-top:3px;}
+  .notif-delete-x{padding:5px;color:var(--text-muted);border-radius:6px;flex-shrink:0;}
+  .notif-empty{text-align:center;padding:40px 16px;color:var(--text-muted);font-size:13px;}
+  .notif-detail-date{font-size:12px;color:var(--text-muted);margin:0 0 12px;}
+  .notif-detail-message{font-size:15px;line-height:1.55;color:var(--text);margin:0 0 22px;white-space:pre-wrap;}
+  .notif-detail-actions{display:flex;gap:10px;}
+  nav.tabs{display:flex;gap:24px;margin-top:18px;}
+  nav.tabs button{padding-bottom:12px;font-size:14px;font-weight:600;letter-spacing:.4px;color:rgba(250,246,236,.5);position:relative;display:flex;align-items:center;gap:6px;}
+  nav.tabs button.active{color:var(--paper);}
+  nav.tabs button.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brass);}
+  .badge{font-size:10px;border-radius:999px;padding:1px 6px;background:var(--burgundy);color:var(--paper);}
+
+  main{max-width:1100px;margin:0 auto;padding:20px 16px 60px;padding-bottom:calc(60px + env(safe-area-inset-bottom));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));}
+  .stats{display:flex;flex-wrap:wrap;gap:24px;margin-bottom:18px;}
+  .stat b{font-size:24px;font-family:'Georgia',serif;}
+  .stat span{font-size:13px;color:var(--text-muted);}
+  .stat.clickable{cursor:pointer;padding:4px 8px;margin:-4px -8px;border-radius:8px;transition:background .15s;border:1px solid transparent;}
+  .stat.clickable:hover{background:rgba(28,37,65,.05);}
+  .stat.clickable.stat-active{background:var(--paper);border-color:var(--border);}
+
+  .controls{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  @media(min-width:640px){.controls{flex-direction:row;}}
+  .search-wrap{position:relative;flex:1;}
+  .search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+  .search-wrap input{width:100%;padding:10px 12px 10px 34px;border-radius:10px;border:1px solid var(--border);background:var(--paper);outline:none;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
+  .btn-ghost{background:var(--paper);border-color:var(--border);color:var(--text);}
+  .btn-ghost.active{background:var(--brass);color:var(--paper);border-color:var(--brass);}
+  .btn-dark{background:var(--ink);color:var(--paper);}
+  .btn-burgundy{background:var(--burgundy);color:var(--paper);}
+
+  .filters-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;padding:14px;border-radius:10px;background:var(--paper);border:1px solid var(--border);}
+  @media(min-width:640px){.filters-panel{grid-template-columns:repeat(4,1fr);}}
+
+  .group-panel{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;padding:14px;border-radius:10px;background:var(--paper);border:1px solid var(--border);}
+  .group-panel-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);}
+  .group-opt-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .group-opt{padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;color:var(--text);}
+  .group-opt.selected{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .filters-reset-btn{grid-column:1/-1;justify-self:start;margin-top:2px;font-size:12px;font-weight:600;color:var(--burgundy-dark);text-decoration:underline;padding:2px;}
+
+  .group-card{cursor:pointer;}
+  .group-card-inner{aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1C2541 0%,#3a4a6b 100%);padding:14px;text-align:center;}
+  .group-card-count{font-family:'Georgia',serif;font-size:34px;font-weight:800;color:var(--brass);}
+  .group-card-label{color:var(--paper);font-size:13px;font-weight:700;margin-top:6px;line-height:1.25;}
+  .group-card-sub{color:rgba(250,246,236,.6);font-size:11px;margin-top:2px;}
+  .filter-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:4px;}
+  .filter-field select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  @media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:800px){.grid{grid-template-columns:repeat(4,1fr);}}
+  @media(min-width:1050px){.grid{grid-template-columns:repeat(5,1fr);}}
+
+  .cover-click{cursor:pointer;}
+  .card{background:var(--paper);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .cover-wrap{position:relative;aspect-ratio:2/3;background:linear-gradient(135deg,#B8874F 0%,#1C2541 100%);}
+  .cover-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cover-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;}
+  .cover-placeholder span{color:var(--paper);font-size:13px;font-weight:600;opacity:.92;font-family:'Georgia',serif;line-height:1.25;}
+  .stamp{position:absolute;top:8px;right:8px;transform:rotate(6deg);background:rgba(250,246,236,.9);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:800;letter-spacing:1px;border:2px solid;}
+  .stamp-leido{border-color:var(--sage);color:var(--sage-dark);}
+  .stamp-leyendo{border-color:var(--brass);color:#8A5F2C;}
+  .card-body{padding:10px;}
+  .card-title{font-size:12px;font-weight:700;font-family:'Georgia',serif;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card-author{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-tags{font-size:10px;color:var(--brass);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-notes{font-size:10px;color:var(--text-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card-actions{margin-top:8px;display:flex;align-items:center;gap:4px;}
+  .toggle-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:700;padding:7px 4px;border-radius:6px;}
+  .toggle-btn.pendiente{background:rgba(139,58,58,.1);color:var(--burgundy-dark);}
+  .toggle-btn.leyendo{background:rgba(184,135,79,.18);color:#8A5F2C;}
+  .toggle-btn.leido{background:rgba(91,123,98,.14);color:var(--sage-dark);}
+  .buy-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:700;padding:7px 4px;border-radius:6px;background:rgba(184,135,79,.16);color:#8A5F2C;}
+  .icon-btn{padding:6px;color:var(--text-muted);border-radius:6px;}
+
+  .empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:70px 20px;gap:6px;}
+  .empty p.title{font-size:18px;font-weight:700;color:var(--ink);font-family:'Georgia',serif;margin:8px 0 0;}
+  .empty p.subtitle{font-size:13px;color:var(--text-muted);margin:0;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+  @media(min-width:640px){.modal-overlay{align-items:center;}}
+  .modal{width:100%;max-width:440px;background:var(--paper);border-radius:16px 16px 0 0;padding:20px;max-height:92vh;overflow-y:auto;}
+  @media(min-width:640px){.modal{border-radius:16px;}}
+  .modal-wide{max-width:820px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .modal-head h2{font-size:18px;margin:0;color:var(--ink);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;}
+  .field input,.field textarea{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .status-row{display:flex;gap:8px;}
+  .status-opt{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;text-align:center;}
+  .status-opt.selected-pendiente{background:var(--burgundy);color:var(--paper);border-color:var(--burgundy);}
+  .status-opt.selected-leyendo{background:var(--brass);color:var(--paper);border-color:var(--brass);}
+  .status-opt.selected-leido{background:var(--sage);color:var(--paper);border-color:var(--sage);}
+  .submit-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;margin-top:6px;}
+  .loading-note{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:13px;}
+
+  .detail-body{display:flex;gap:16px;}
+  .detail-cover{width:110px;flex-shrink:0;}
+  .detail-cover .cover-wrap{border-radius:8px;overflow:hidden;}
+  .detail-info{flex:1;min-width:0;}
+  .detail-title{font-family:'Georgia','Times New Roman',serif;font-size:17px;font-weight:700;color:var(--ink);margin:0 0 4px;line-height:1.3;}
+  .detail-author{font-size:13.5px;color:var(--text-muted);margin:0 0 12px;}
+  .detail-row{margin-bottom:10px;}
+  .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:2px;}
+  .detail-value{font-size:13px;color:var(--text);line-height:1.35;}
+  .detail-status-badge{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;}
+  .status-badge-pendiente{background:rgba(139,58,58,.12);color:var(--burgundy-dark);}
+  .status-badge-leyendo{background:rgba(184,135,79,.18);color:#8A5F2C;}
+  .status-badge-leido{background:rgba(91,123,98,.14);color:var(--sage-dark);}
+  .status-badge-pendiente{background:rgba(139,58,58,.12);color:var(--burgundy-dark);}
+  .status-badge-leyendo{background:rgba(184,135,79,.18);color:#8A5F2C;}
+  .status-badge-leido{background:rgba(91,123,98,.14);color:var(--sage-dark);}
+</style>
+</head>
+<body>
+
+<!-- ---------- pantalla de acceso ---------- -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <h1>Mi Biblioteca</h1>
+    </div>
+    <p class="auth-sub" id="auth-subtitle">Iniciá sesión para ver tus libros</p>
+    <form id="auth-form">
+      <div class="auth-field"><label>Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
+      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="6"></div>
+      <button type="submit" class="auth-submit" id="auth-submit-btn">Iniciar sesión</button>
+    </form>
+    <p class="auth-msg" id="auth-msg"></p>
+    <p class="auth-toggle hidden" id="forgot-password-wrap">
+      <button type="button" id="forgot-password-link">¿Olvidaste tu contraseña?</button>
+    </p>
+    <p class="auth-toggle" id="auth-toggle-wrap">
+      <span id="auth-toggle-text">¿No tenés cuenta?</span>
+      <button type="button" id="auth-toggle-btn">Crear una</button>
+    </p>
+    <div class="guest-divider" id="guest-divider"><span>o</span></div>
+    <button type="button" class="guest-btn" id="guest-link">Ingresar como invitado</button>
+  </div>
+</div>
+
+<!-- ---------- pantalla de nueva contraseña (tras el enlace del correo) ---------- -->
+<div id="recovery-screen" class="hidden">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <h1>Mi Biblioteca</h1>
+    </div>
+    <p class="auth-sub">Elegí tu nueva contraseña</p>
+    <form id="recovery-form">
+      <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="recovery-password" required minlength="6" autocomplete="new-password"></div>
+      <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="6" autocomplete="new-password"></div>
+      <button type="submit" class="auth-submit">Guardar nueva contraseña</button>
+    </form>
+    <p class="auth-msg" id="recovery-msg"></p>
+  </div>
+</div>
+
+<!-- ---------- app ---------- -->
+<div id="app-root" class="hidden">
+  <header>
+    <div class="header-inner">
+      <div class="brand-row">
+        <div class="brand">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+          <div class="title-display" id="title-display" data-action="edit-title">
+            <h1 id="app-title-text">Mi Biblioteca</h1>
+            <svg class="title-edit-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          </div>
+          <input id="title-input" class="title-input hidden" maxlength="40" autocomplete="off">
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn-header hidden" id="btn-notifications" data-action="open-notifications" aria-label="Notificaciones">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="notif-dot hidden" id="notif-dot"></span>
+          </button>
+          <button class="logout-btn" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </div>
+      <nav class="tabs">
+        <button id="tab-biblioteca" class="active" data-action="tab" data-tab="biblioteca">LIBROS</button>
+        <button id="tab-wishlist" data-action="tab" data-tab="wishlist">WISHLIST <span id="wish-badge" class="badge hidden">0</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-biblioteca">
+      <div class="stats" id="stats"></div>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="search-input" type="text" placeholder="Buscar por título, autor, saga o género…">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-toggle-filters" data-action="toggle-filters">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+            <span id="filters-label">Filtros</span>
+          </button>
+          <button class="btn btn-ghost" id="btn-toggle-group" data-action="toggle-group">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Agrupar
+          </button>
+          <button class="btn btn-ghost hidden" id="btn-clear-book-all" data-action="clear-book-all">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            Limpiar todo
+          </button>
+          <button class="btn btn-dark" data-action="add-book">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Añadir
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-panel hidden" id="filters-panel">
+        <div class="filter-field"><label>Autor</label><select id="filter-author"></select></div>
+        <div class="filter-field"><label>Saga</label><select id="filter-saga"></select></div>
+        <div class="filter-field"><label>Género / tema</label><select id="filter-genre"></select></div>
+        <div class="filter-field"><label>Estado</label>
+          <select id="filter-status">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="leyendo">Leyendo</option>
+            <option value="leido">Leído</option>
+          </select>
+        </div>
+        <button type="button" class="filters-reset-btn" data-action="reset-book-filters">Restablecer filtros</button>
+      </div>
+
+      <div class="group-panel hidden" id="group-panel">
+        <span class="group-panel-label">Agrupar por:</span>
+        <div class="group-opt-row">
+          <button type="button" class="group-opt" data-action="set-group" data-group="author">Autor</button>
+          <button type="button" class="group-opt" data-action="set-group" data-group="saga">Saga</button>
+          <button type="button" class="group-opt" data-action="set-group" data-group="genre">Género</button>
+          <button type="button" class="group-opt" data-action="set-group" data-group="status">Estado</button>
+        </div>
+      </div>
+
+      <div id="grid-books" class="grid"></div>
+    </section>
+
+    <section id="view-wishlist" class="hidden">
+      <div class="controls">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="wish-search-input" type="text" placeholder="Buscar por título o autor…">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-toggle-wish-filters" data-action="toggle-wish-filters">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+            Filtros
+          </button>
+          <button class="btn btn-ghost" id="btn-toggle-wish-group" data-action="toggle-wish-group">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Agrupar
+          </button>
+          <button class="btn btn-ghost hidden" id="btn-clear-wish-all" data-action="clear-wish-all">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            Limpiar todo
+          </button>
+          <button class="btn btn-burgundy" data-action="add-wish">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Añadir
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-panel hidden" id="wish-filters-panel">
+        <div class="filter-field"><label>Autor</label><select id="wish-filter-author"></select></div>
+        <button type="button" class="filters-reset-btn" data-action="reset-wish-filters">Restablecer filtros</button>
+      </div>
+
+      <div class="group-panel hidden" id="wish-group-panel">
+        <span class="group-panel-label">Agrupar por:</span>
+        <div class="group-opt-row">
+          <button type="button" class="group-opt" data-action="set-wish-group" data-group="author">Autor</button>
+        </div>
+      </div>
+
+      <div id="grid-wishlist" class="grid"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal libro -->
+<div class="modal-overlay hidden" id="modal-book">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="book-modal-title" class="serif">Añadir libro</h2>
+      <button data-action="close-book-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <form id="form-book">
+      <div class="field"><label>Título *</label><input required id="f-title" name="title"></div>
+      <div class="field"><label>Autor *</label><input required id="f-author" name="author"></div>
+      <div class="field field-row">
+        <div><label>Saga (opcional)</label><input id="f-saga" name="saga"></div>
+        <div><label>Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
+      </div>
+      <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
+      <div class="field">
+        <label>Estado</label>
+        <div class="status-row">
+          <button type="button" class="status-opt" id="status-pendiente" data-action="set-status" data-status="pendiente">Pendiente</button>
+          <button type="button" class="status-opt" id="status-leyendo" data-action="set-status" data-status="leyendo">Leyendo</button>
+          <button type="button" class="status-opt" id="status-leido" data-action="set-status" data-status="leido">Leído</button>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn btn-dark" id="book-submit-btn">Añadir a mi biblioteca</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal wishlist -->
+<div class="modal-overlay hidden" id="modal-wish">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="wish-modal-title" class="serif">Añadir a wishlist</h2>
+      <button data-action="close-wish-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <form id="form-wish">
+      <div class="field"><label>Título *</label><input required id="w-title" name="title"></div>
+      <div class="field"><label>Autor *</label><input required id="w-author" name="author"></div>
+      <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
+      <div class="field"><label>Notas (opcional)</label><textarea id="w-notas" name="notas" rows="2"></textarea></div>
+      <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal información (solo lectura) -->
+<div class="modal-overlay hidden" id="modal-detail">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="serif">Información</h2>
+      <button data-action="close-detail-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-cover" id="detail-cover"></div>
+      <div class="detail-info">
+        <p class="detail-title" id="detail-title"></p>
+        <p class="detail-author" id="detail-author"></p>
+        <div class="detail-row hidden" id="detail-saga-row">
+          <div class="detail-label">Saga</div>
+          <div class="detail-value" id="detail-saga-value"></div>
+        </div>
+        <div class="detail-row hidden" id="detail-genre-row">
+          <div class="detail-label">Género / tema</div>
+          <div class="detail-value" id="detail-genre-value"></div>
+        </div>
+        <div class="detail-row hidden" id="detail-status-row">
+          <div class="detail-label">Estado</div>
+          <span class="detail-status-badge" id="detail-status-value"></span>
+        </div>
+        <div class="detail-row hidden" id="detail-notes-row">
+          <div class="detail-label">Notas</div>
+          <div class="detail-value" id="detail-notes-value"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal lista de notificaciones -->
+<div class="modal-overlay hidden" id="modal-notifications">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2 class="serif">Notificaciones</h2>
+      <button data-action="close-notifications-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="notif-actions-row">
+      <button type="button" class="notif-action-btn" data-action="mark-all-read">Marcar todas como leídas</button>
+      <button type="button" class="notif-action-btn notif-action-danger" data-action="delete-all-notifications">Eliminar todas</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+</div>
+
+<!-- Modal detalle de notificación -->
+<div class="modal-overlay hidden" id="modal-notification-detail">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="serif">Notificación</h2>
+      <button data-action="close-notification-detail-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p class="notif-detail-date" id="notif-detail-date"></p>
+    <p class="notif-detail-message" id="notif-detail-message"></p>
+    <div class="notif-detail-actions">
+      <button type="button" class="btn btn-ghost" data-action="mark-read-detail">Marcar como leída</button>
+      <button type="button" class="btn btn-burgundy" data-action="delete-notification-detail">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal grupo -->
+<div class="modal-overlay hidden" id="modal-group">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2 id="group-modal-title" class="serif">Grupo</h2>
+      <button data-action="close-group-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="grid-group-books" class="grid" style="zoom:.7"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ======= CONFIGURÁ ACÁ TUS CREDENCIALES DE SUPABASE =======
+  var SUPABASE_URL = 'https://fvlfyezsegbbpwkkwcvm.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bGZ5ZXpzZWdiYnB3a2t3Y3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MjgyNTMsImV4cCI6MjEwMDMwNDI1M30.Nc7zcYF5bgxPhOYPNhjGa9HHYSywVOYxXJi-96zVfT0';
+  // ===========================================================
+
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var books = [];
+  var wishlist = [];
+  var currentUserId = null;
+  var isGuest = false;
+  var cameFromGuest = false;
+  var migrationInProgress = false;
+  var notifications = [];
+  var currentNotifDetailId = null;
+
+  // ================= MODO INVITADO (almacenamiento local) =================
+  function guestGet(key, fallback){
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; }
+  }
+  function guestSet(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e){}
+  }
+  function guestUid(){ return 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  function dbSelectBooks(){
+    if(isGuest){
+      var arr = guestGet('guest_books', []);
+      arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
+      return Promise.resolve({ data: arr, error: null });
+    }
+    return sb.from('books').select('*').order('created_at', { ascending:false });
+  }
+  function dbSelectWishlist(){
+    if(isGuest){
+      var arr = guestGet('guest_wishlist', []);
+      arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
+      return Promise.resolve({ data: arr, error: null });
+    }
+    return sb.from('wishlist').select('*').order('created_at', { ascending:false });
+  }
+  function dbSelectProfile(){
+    if(isGuest){
+      var name = localStorage.getItem('guest_library_name');
+      return Promise.resolve({ data: name ? { library_name:name } : null, error:null });
+    }
+    return sb.from('profile').select('library_name').maybeSingle();
+  }
+  function dbInsertBook(data){
+    if(isGuest){
+      var arr = guestGet('guest_books', []);
+      var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
+      arr.unshift(row);
+      guestSet('guest_books', arr);
+      return Promise.resolve({ data:[row], error:null });
+    }
+    return sb.from('books').insert([data]).select();
+  }
+  function dbUpdateBook(id, data){
+    if(isGuest){
+      var arr = guestGet('guest_books', []);
+      var updated = null;
+      arr = arr.map(function(b){ if(b.id===id){ updated = Object.assign({}, b, data); return updated; } return b; });
+      guestSet('guest_books', arr);
+      return Promise.resolve({ data:[updated], error:null });
+    }
+    return sb.from('books').update(data).eq('id', id).select();
+  }
+  function dbDeleteBook(id){
+    if(isGuest){
+      var arr = guestGet('guest_books', []).filter(function(b){ return b.id!==id; });
+      guestSet('guest_books', arr);
+      return Promise.resolve({ error:null });
+    }
+    return sb.from('books').delete().eq('id', id);
+  }
+  function dbInsertWish(data){
+    if(isGuest){
+      var arr = guestGet('guest_wishlist', []);
+      var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
+      arr.unshift(row);
+      guestSet('guest_wishlist', arr);
+      return Promise.resolve({ data:[row], error:null });
+    }
+    return sb.from('wishlist').insert([data]).select();
+  }
+  function dbUpdateWish(id, data){
+    if(isGuest){
+      var arr = guestGet('guest_wishlist', []);
+      var updated = null;
+      arr = arr.map(function(w){ if(w.id===id){ updated = Object.assign({}, w, data); return updated; } return w; });
+      guestSet('guest_wishlist', arr);
+      return Promise.resolve({ data:[updated], error:null });
+    }
+    return sb.from('wishlist').update(data).eq('id', id).select();
+  }
+  function dbDeleteWish(id){
+    if(isGuest){
+      var arr = guestGet('guest_wishlist', []).filter(function(w){ return w.id!==id; });
+      guestSet('guest_wishlist', arr);
+      return Promise.resolve({ error:null });
+    }
+    return sb.from('wishlist').delete().eq('id', id);
+  }
+  function dbSaveProfile(name){
+    if(isGuest){
+      localStorage.setItem('guest_library_name', name);
+      return Promise.resolve({ error:null });
+    }
+    return sb.from('profile').upsert({ user_id: currentUserId, library_name: name });
+  }
+
+  function migrateGuestDataToAccount(){
+    var gBooks = guestGet('guest_books', []);
+    var gWish = guestGet('guest_wishlist', []);
+    var gName = localStorage.getItem('guest_library_name');
+    var tasks = [];
+    gBooks.forEach(function(b){
+      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, status:b.status }]));
+    });
+    gWish.forEach(function(w){
+      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, notas:w.notas }]));
+    });
+    if(gName){
+      tasks.push(sb.from('profile').upsert({ user_id: currentUserId, library_name: gName }));
+    }
+    return Promise.all(tasks).then(function(){
+      localStorage.removeItem('guest_books');
+      localStorage.removeItem('guest_wishlist');
+      localStorage.removeItem('guest_library_name');
+      localStorage.removeItem('guest_pending_migration');
+    });
+  }
+  var currentStatus = 'pendiente';
+  var editingBookId = null;
+  var editingWishId = null;
+  var authMode = 'login'; // 'login' | 'signup' | 'recover'
+  var groupBy = ''; // '' | 'author' | 'saga' | 'genre' | 'status'
+  var currentGroups = [];
+  var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
+  var filters = { search:'', author:'', saga:'', genre:'', status:'' };
+  var wishFilters = { search:'', author:'' };
+  var wishGroupBy = ''; // '' | 'author'
+  var currentWishGroups = [];
+  var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
+
+  // ================= PERSISTENCIA DE FILTROS/AGRUPAMIENTO (por navegador) =================
+  var PREF_BOOK_FILTERS = 'pref_book_filters';
+  var PREF_BOOK_GROUP = 'pref_book_group';
+  var PREF_WISH_FILTERS = 'pref_wish_filters';
+  var PREF_WISH_GROUP = 'pref_wish_group';
+
+  function savePrefs(){
+    try {
+      localStorage.setItem(PREF_BOOK_FILTERS, JSON.stringify(filters));
+      localStorage.setItem(PREF_BOOK_GROUP, groupBy);
+      localStorage.setItem(PREF_WISH_FILTERS, JSON.stringify(wishFilters));
+      localStorage.setItem(PREF_WISH_GROUP, wishGroupBy);
+    } catch(e){}
+  }
+  function loadPrefs(){
+    try {
+      var bf = localStorage.getItem(PREF_BOOK_FILTERS);
+      if(bf){ var parsedBf = JSON.parse(bf); filters.search = parsedBf.search||''; filters.author = parsedBf.author||''; filters.saga = parsedBf.saga||''; filters.genre = parsedBf.genre||''; filters.status = parsedBf.status||''; }
+      var bg = localStorage.getItem(PREF_BOOK_GROUP);
+      if(bg !== null) groupBy = bg;
+      var wf = localStorage.getItem(PREF_WISH_FILTERS);
+      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; }
+      var wg = localStorage.getItem(PREF_WISH_GROUP);
+      if(wg !== null) wishGroupBy = wg;
+    } catch(e){}
+  }
+  loadPrefs();
+
+  function syncControlsUI(){
+    document.getElementById('search-input').value = filters.search;
+    document.getElementById('wish-search-input').value = wishFilters.search;
+
+    document.querySelectorAll('#group-panel .group-opt').forEach(function(btn){
+      btn.classList.toggle('selected', btn.getAttribute('data-group') === groupBy);
+    });
+    document.getElementById('btn-toggle-group').classList.toggle('active', !!groupBy);
+
+    document.querySelectorAll('#wish-group-panel .group-opt').forEach(function(btn){
+      btn.classList.toggle('selected', btn.getAttribute('data-group') === wishGroupBy);
+    });
+    document.getElementById('btn-toggle-wish-group').classList.toggle('active', !!wishGroupBy);
+
+    var bookFilterCount = ['author','saga','genre','status'].filter(function(k){ return !!filters[k]; }).length;
+    document.getElementById('btn-toggle-filters').classList.toggle('active', bookFilterCount > 0);
+    document.getElementById('filters-label').textContent = bookFilterCount > 0 ? 'Filtros ('+bookFilterCount+')' : 'Filtros';
+
+    var wishFilterActive = !!wishFilters.author;
+    document.getElementById('btn-toggle-wish-filters').classList.toggle('active', wishFilterActive);
+
+    document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !groupBy);
+    document.getElementById('btn-clear-wish-all').classList.toggle('hidden', !wishFilterActive && !wishGroupBy);
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
+  var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'pendiente' };
+
+  var ICONS = {
+    check:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
+    edit:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
+    trash:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+    cart:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.4a2 2 0 002 1.6h9a2 2 0 002-1.8L21 7H6"/></svg>',
+    heart:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B3A3A" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>',
+    book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+  };
+
+  // ================= AUTENTICACIÓN =================
+  function showAuthScreen(){
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('recovery-screen').classList.add('hidden');
+    document.getElementById('app-root').classList.add('hidden');
+  }
+  function updateAccountButton(){
+    document.getElementById('btn-logout').textContent = isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
+  }
+  function showApp(){
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('recovery-screen').classList.add('hidden');
+    document.getElementById('app-root').classList.remove('hidden');
+    updateAccountButton();
+  }
+  function showRecoveryScreen(){
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-root').classList.add('hidden');
+    document.getElementById('recovery-screen').classList.remove('hidden');
+  }
+
+  function setAuthMsg(text, kind){
+    var el = document.getElementById('auth-msg');
+    el.textContent = text || '';
+    el.className = 'auth-msg' + (kind ? ' ' + kind : '');
+  }
+  function setRecoveryMsg(text, kind){
+    var el = document.getElementById('recovery-msg');
+    el.textContent = text || '';
+    el.className = 'auth-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function updateAuthUI(){
+    var pwField = document.getElementById('auth-password-field');
+    var pwInput = document.getElementById('auth-password');
+    var submitBtn = document.getElementById('auth-submit-btn');
+    var subtitle = document.getElementById('auth-subtitle');
+    var toggleText = document.getElementById('auth-toggle-text');
+    var toggleBtn = document.getElementById('auth-toggle-btn');
+    var toggleWrap = document.getElementById('auth-toggle-wrap');
+    var forgotWrap = document.getElementById('forgot-password-wrap');
+    var forgotLink = document.getElementById('forgot-password-link');
+    var guestDivider = document.getElementById('guest-divider');
+    var guestLink = document.getElementById('guest-link');
+
+    setAuthMsg('');
+
+    if(authMode === 'recover'){
+      pwField.classList.add('hidden');
+      pwInput.value = '';
+      submitBtn.textContent = 'Enviar enlace de recuperación';
+      subtitle.textContent = 'Ingresá tu correo para recuperar tu contraseña';
+      toggleWrap.classList.add('hidden');
+      forgotWrap.classList.remove('hidden');
+      forgotLink.textContent = 'Volver a iniciar sesión';
+      guestDivider.classList.add('hidden');
+      guestLink.classList.add('hidden');
+    } else {
+      pwField.classList.remove('hidden');
+      submitBtn.textContent = authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
+      subtitle.textContent = authMode === 'login' ? 'Iniciá sesión para ver tus libros' : 'Creá tu cuenta para empezar tu biblioteca';
+      toggleText.textContent = authMode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?';
+      toggleBtn.textContent = authMode === 'login' ? 'Crear una' : 'Iniciar sesión';
+      toggleWrap.classList.remove('hidden');
+      forgotWrap.classList.add('hidden');
+      guestDivider.classList.remove('hidden');
+      guestLink.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('auth-toggle-btn').addEventListener('click', function(){
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    updateAuthUI();
+  });
+
+  document.getElementById('forgot-password-link').addEventListener('click', function(){
+    authMode = (authMode === 'recover') ? 'login' : 'recover';
+    updateAuthUI();
+  });
+
+  document.getElementById('auth-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('auth-email').value.trim();
+    var password = document.getElementById('auth-password').value;
+
+    if(authMode === 'recover'){
+      if(!email){ setAuthMsg('Ingresá tu correo.', 'error'); return; }
+      setAuthMsg('Enviando…');
+      sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
+        if(res.error){ setAuthMsg(res.error.message, 'error'); return; }
+        setAuthMsg('Si ese correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisá tu bandeja de entrada (y spam).', 'ok');
+      });
+      return;
+    }
+
+    setAuthMsg('Un momento…');
+    if(authMode === 'login'){
+      if(!password){ setAuthMsg('Ingresá tu contraseña.', 'error'); return; }
+      sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
+        if(res.error){
+          setAuthMsg(res.error.message, 'error');
+          document.getElementById('forgot-password-wrap').classList.remove('hidden');
+          document.getElementById('forgot-password-link').textContent = '¿Olvidaste tu contraseña?';
+          return;
+        }
+        setAuthMsg('');
+      });
+    } else {
+      if(!password){ setAuthMsg('Ingresá una contraseña.', 'error'); return; }
+      sb.auth.signUp({ email: email, password: password }).then(function(res){
+        if(res.error){ setAuthMsg(res.error.message, 'error'); return; }
+        if(cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); cameFromGuest = false; }
+        if(res.data && res.data.session){
+          setAuthMsg('');
+        } else {
+          setAuthMsg('Cuenta creada. Revisá tu correo para confirmar antes de iniciar sesión.', 'ok');
+        }
+      });
+    }
+  });
+
+  document.getElementById('recovery-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var p1 = document.getElementById('recovery-password').value;
+    var p2 = document.getElementById('recovery-password-confirm').value;
+    if(p1 !== p2){ setRecoveryMsg('Las contraseñas no coinciden.', 'error'); return; }
+    if(p1.length < 6){ setRecoveryMsg('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+    setRecoveryMsg('Guardando…');
+    sb.auth.updateUser({ password: p1 }).then(function(res){
+      if(res.error){ setRecoveryMsg(res.error.message, 'error'); return; }
+      setRecoveryMsg('Contraseña actualizada. Entrando…', 'ok');
+      setTimeout(function(){
+        authMode = 'login';
+        sb.auth.getSession().then(function(r){
+          if(r.data && r.data.session && r.data.session.user){
+            currentUserId = r.data.session.user.id;
+            showApp();
+            loadData();
+          } else {
+            showAuthScreen();
+          }
+        });
+      }, 1200);
+    });
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', function(){
+    if(isGuest){
+      isGuest = false;
+      cameFromGuest = true;
+      authMode = 'login';
+      updateAuthUI();
+      showAuthScreen();
+    } else {
+      sb.auth.signOut();
+    }
+  });
+
+  document.getElementById('guest-link').addEventListener('click', function(){
+    isGuest = true;
+    currentUserId = null;
+    showApp();
+    loadData();
+  });
+
+  sb.auth.onAuthStateChange(function(event, session){
+    if(event === 'PASSWORD_RECOVERY'){
+      showRecoveryScreen();
+      return;
+    }
+    if(session && session.user){
+      currentUserId = session.user.id;
+      isGuest = false;
+      if(localStorage.getItem('guest_pending_migration') === '1'){
+        migrationInProgress = true;
+        migrateGuestDataToAccount().then(function(){
+          migrationInProgress = false;
+          showApp();
+          loadData();
+        });
+        return;
+      }
+      if(migrationInProgress) return;
+      showApp();
+      loadData();
+    } else {
+      currentUserId = null;
+      showAuthScreen();
+    }
+  });
+
+  // ================= DATOS =================
+  var DEFAULT_TITLE = 'Mi Biblioteca';
+  var MAX_TITLE_CHARS = 20;
+
+  function loadData(){
+    Promise.all([
+      dbSelectBooks(),
+      dbSelectWishlist(),
+      dbSelectProfile()
+    ]).then(function(results){
+      var bRes = results[0], wRes = results[1], pRes = results[2];
+      if(bRes.error){ alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; }
+      if(wRes.error){ alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
+      var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
+      document.getElementById('app-title-text').textContent = savedTitle;
+      renderAll();
+    });
+    document.getElementById('btn-notifications').classList.toggle('hidden', isGuest);
+    if(isGuest){
+      notifications = [];
+      updateNotifDot();
+    } else {
+      loadNotifications();
+    }
+  }
+
+  // ================= NOTIFICACIONES =================
+  function loadNotifications(){
+    var expired = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+    return sb.from('notifications').delete().lt('created_at', expired).then(function(){
+      return sb.from('notification_receipts')
+        .select('id, read, created_at, notifications(message, created_at)')
+        .order('created_at', { ascending:true });
+    }).then(function(res){
+      if(res.error){
+        console.error(res.error);
+        notifications = [];
+      } else {
+        notifications = (res.data || [])
+          .filter(function(r){ return r.notifications; })
+          .map(function(r){
+            return {
+              receiptId: r.id,
+              read: r.read,
+              message: r.notifications.message,
+              created_at: r.notifications.created_at || r.created_at
+            };
+          });
+      }
+      updateNotifDot();
+    });
+  }
+  function updateNotifDot(){
+    var hasUnread = notifications.some(function(n){ return !n.read; });
+    document.getElementById('notif-dot').classList.toggle('hidden', !hasUnread);
+    document.getElementById('btn-notifications').classList.toggle('has-unread', hasUnread);
+  }
+  function formatNotifDate(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) + ' · ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+  }
+  function renderNotifList(){
+    var container = document.getElementById('notif-list');
+    if(notifications.length === 0){
+      container.innerHTML = '<div class="notif-empty">No tenés notificaciones todavía.</div>';
+      return;
+    }
+    container.innerHTML = notifications.map(function(n){
+      return '<div class="notif-row'+(n.read?' read':'')+'" data-action="open-notification-detail" data-id="'+n.receiptId+'">' +
+        '<div class="notif-unread-dot"></div>' +
+        '<div class="notif-content">' +
+          '<div class="notif-message">'+esc(n.message)+'</div>' +
+          '<div class="notif-date">'+formatNotifDate(n.created_at)+'</div>' +
+        '</div>' +
+        '<button class="notif-delete-x" data-action="delete-notification-inline" data-id="'+n.receiptId+'" aria-label="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6L6 18M6 6l12 12"/></svg></button>' +
+      '</div>';
+    }).join('');
+  }
+  function openNotificationDetail(receiptId){
+    var n = notifications.find(function(x){ return x.receiptId===receiptId; });
+    if(!n) return;
+    currentNotifDetailId = receiptId;
+    document.getElementById('notif-detail-date').textContent = formatNotifDate(n.created_at);
+    document.getElementById('notif-detail-message').textContent = n.message;
+    document.getElementById('modal-notification-detail').classList.remove('hidden');
+  }
+  function markNotificationRead(receiptId){
+    return sb.from('notification_receipts').update({ read:true }).eq('id', receiptId).then(function(res){
+      if(!res.error){
+        notifications = notifications.map(function(n){ return n.receiptId===receiptId ? Object.assign({}, n, { read:true }) : n; });
+        updateNotifDot();
+      }
+      return res;
+    });
+  }
+  function deleteNotification(receiptId){
+    return sb.from('notification_receipts').delete().eq('id', receiptId).then(function(res){
+      if(!res.error){
+        notifications = notifications.filter(function(n){ return n.receiptId!==receiptId; });
+        updateNotifDot();
+      }
+      return res;
+    });
+  }
+  function markAllNotificationsRead(){
+    var unreadIds = notifications.filter(function(n){ return !n.read; }).map(function(n){ return n.receiptId; });
+    if(unreadIds.length === 0) return;
+    sb.from('notification_receipts').update({ read:true }).in('id', unreadIds).then(function(res){
+      if(res.error){ alert('Error: '+res.error.message); return; }
+      notifications = notifications.map(function(n){ return Object.assign({}, n, { read:true }); });
+      updateNotifDot();
+      renderNotifList();
+    });
+  }
+  function deleteAllNotifications(){
+    if(notifications.length === 0) return;
+    var ids = notifications.map(function(n){ return n.receiptId; });
+    sb.from('notification_receipts').delete().in('id', ids).then(function(res){
+      if(res.error){ alert('Error: '+res.error.message); return; }
+      notifications = [];
+      updateNotifDot();
+      renderNotifList();
+    });
+  }
+
+  function saveTitle(newTitle){
+    var clean = Array.from(newTitle.trim()).slice(0, MAX_TITLE_CHARS).join('');
+    if(!clean) clean = DEFAULT_TITLE;
+    document.getElementById('app-title-text').textContent = clean;
+    dbSaveProfile(clean).then(function(res){
+      if(res.error){ alert('Error guardando el nombre: ' + res.error.message); }
+    });
+  }
+
+  document.getElementById('title-display').addEventListener('click', function(){
+    var titleEl = document.getElementById('app-title-text');
+    var input = document.getElementById('title-input');
+    input.value = titleEl.textContent;
+    document.getElementById('title-display').classList.add('hidden');
+    input.classList.remove('hidden');
+    input.focus();
+    input.select();
+  });
+
+  document.getElementById('title-input').addEventListener('input', function(e){
+    var chars = Array.from(e.target.value);
+    if(chars.length > MAX_TITLE_CHARS){ e.target.value = chars.slice(0, MAX_TITLE_CHARS).join(''); }
+  });
+
+  function finishTitleEdit(save){
+    var input = document.getElementById('title-input');
+    input.classList.add('hidden');
+    document.getElementById('title-display').classList.remove('hidden');
+    if(save){ saveTitle(input.value); }
+  }
+
+  document.getElementById('title-input').addEventListener('blur', function(){ finishTitleEdit(true); });
+  document.getElementById('title-input').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('title-input').blur(); }
+    if(e.key === 'Escape'){ e.preventDefault(); finishTitleEdit(false); }
+  });
+
+  // ---------- render helpers ----------
+  function coverHTML(cover, title){
+    if(cover){
+      return '<div class="cover-wrap">' +
+        '<img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+        '<div class="cover-placeholder" style="display:none"><span>'+esc(title)+'</span></div>' +
+        '</div>';
+    }
+    return '<div class="cover-wrap"><div class="cover-placeholder" style="display:flex"><span>'+esc(title)+'</span></div></div>';
+  }
+
+  function renderStats(){
+    var total = books.length;
+    var leidos = books.filter(function(b){ return b.status === 'leido'; }).length;
+    var leyendo = books.filter(function(b){ return b.status === 'leyendo'; }).length;
+    var pendientes = total - leidos - leyendo;
+    function activeClass(val){ return filters.status === val ? ' stat-active' : ''; }
+    document.getElementById('stats').innerHTML =
+      '<div class="stat clickable'+activeClass('')+'" data-action="filter-stat" data-status=""><b>'+total+'</b> <span>libros</span></div>' +
+      '<div class="stat clickable'+activeClass('leyendo')+'" data-action="filter-stat" data-status="leyendo"><b style="color:#8A5F2C">'+leyendo+'</b> <span>leyendo</span></div>' +
+      '<div class="stat clickable'+activeClass('leido')+'" data-action="filter-stat" data-status="leido"><b style="color:var(--sage-dark)">'+leidos+'</b> <span>leídos</span></div>' +
+      '<div class="stat clickable'+activeClass('pendiente')+'" data-action="filter-stat" data-status="pendiente"><b style="color:var(--burgundy-dark)">'+pendientes+'</b> <span>pendientes</span></div>';
+  }
+
+  function uniqueSorted(arr){
+    var set = {};
+    arr.forEach(function(v){ if(v) set[v]=true; });
+    return Object.keys(set).sort();
+  }
+
+  function renderFilterOptions(){
+    fillSelect('filter-author', uniqueSorted(books.map(function(b){return b.author;})), filters.author);
+    fillSelect('filter-saga', uniqueSorted(books.map(function(b){return b.saga;})), filters.saga);
+    fillSelect('filter-genre', uniqueSorted(books.map(function(b){return b.genre;})), filters.genre);
+  }
+  function fillSelect(id, options, selected){
+    var el = document.getElementById(id);
+    el.innerHTML = '<option value="">Todos</option>' + options.map(function(o){
+      return '<option value="'+esc(o)+'"'+(o===selected?' selected':'')+'>'+esc(o)+'</option>';
+    }).join('');
+  }
+
+  function filteredBooks(){
+    var s = filters.search.toLowerCase();
+    return books.filter(function(b){
+      if(s){
+        var hay = (b.title+' '+b.author+' '+(b.genre||'')+' '+(b.saga||'')).toLowerCase();
+        if(hay.indexOf(s) === -1) return false;
+      }
+      if(filters.author && b.author !== filters.author) return false;
+      if(filters.saga && b.saga !== filters.saga) return false;
+      if(filters.genre && b.genre !== filters.genre) return false;
+      if(filters.status && b.status !== filters.status) return false;
+      return true;
+    });
+  }
+
+  function bookCardHTML(b){
+    var tags = [b.saga, b.genre].filter(Boolean).join(' · ');
+    var stampHtml = '';
+    if(b.status==='leido') stampHtml = '<div class="stamp stamp-leido">LEÍDO</div>';
+    else if(b.status==='leyendo') stampHtml = '<div class="stamp stamp-leyendo">LEYENDO</div>';
+    return '<div class="card">' +
+      '<div class="cover-click" data-action="view-book" data-id="'+b.id+'" style="position:relative">' + coverHTML(b.cover, b.title) +
+        stampHtml +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-title">'+esc(b.title)+'</div>' +
+        '<div class="card-author">'+esc(b.author)+'</div>' +
+        (tags ? '<div class="card-tags">'+esc(tags)+'</div>' : '') +
+        '<div class="card-actions">' +
+          '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
+          '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+'</button>' +
+          '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+'</button>' +
+        '</div>' +
+      '</div></div>';
+  }
+
+  function emptyBooksHTML(){
+    return '<div class="empty" style="grid-column:1/-1">' + ICONS.book +
+      '<p class="title">'+(books.length===0 ? 'Tu biblioteca está vacía' : 'Ningún libro coincide con los filtros')+'</p>' +
+      '<p class="subtitle">'+(books.length===0 ? 'Añade el primer libro físico de tu colección.' : 'Prueba a ajustar la búsqueda o los filtros.')+'</p></div>';
+  }
+
+  function renderGroupedBooksGrid(list){
+    var grid = document.getElementById('grid-books');
+    var map = {};
+    list.forEach(function(b){
+      var raw = groupBy === 'status' ? b.status : (b[groupBy] || '');
+      var label = groupBy === 'status' ? STATUS_LABELS[raw] : (raw || GROUP_EMPTY_LABEL[groupBy]);
+      if(!map[raw]) map[raw] = { label: label, items: [] };
+      map[raw].items.push(b);
+    });
+    currentGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
+      return a.label.localeCompare(b.label, 'es');
+    });
+    grid.className = 'grid';
+    grid.innerHTML = currentGroups.map(function(g, i){
+      return '<div class="card group-card" data-action="open-group" data-index="'+i+'">' +
+        '<div class="group-card-inner">' +
+          '<div class="group-card-count">'+g.items.length+'</div>' +
+          '<div class="group-card-label">'+esc(g.label)+'</div>' +
+          '<div class="group-card-sub">'+(g.items.length===1?'libro':'libros')+'</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function renderBooksGrid(){
+    var list = filteredBooks();
+    var grid = document.getElementById('grid-books');
+    if(list.length === 0){
+      grid.className = '';
+      grid.innerHTML = emptyBooksHTML();
+      return;
+    }
+    if(groupBy){
+      renderGroupedBooksGrid(list);
+      return;
+    }
+    grid.className = 'grid';
+    grid.innerHTML = list.map(bookCardHTML).join('');
+  }
+
+  function wishCardHTML(w){
+    return '<div class="card">' + '<div class="cover-click" data-action="view-wish" data-id="'+w.id+'">' + coverHTML(w.cover, w.title) + '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-title">'+esc(w.title)+'</div>' +
+        '<div class="card-author">'+esc(w.author)+'</div>' +
+        (w.notas ? '<div class="card-notes">'+esc(w.notas)+'</div>' : '') +
+        '<div class="card-actions">' +
+          '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
+          '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+'</button>' +
+          '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'">'+ICONS.trash+'</button>' +
+        '</div>' +
+      '</div></div>';
+  }
+
+  function filteredWishlist(){
+    var s = wishFilters.search.toLowerCase();
+    return wishlist.filter(function(w){
+      if(s){
+        var hay = (w.title+' '+w.author).toLowerCase();
+        if(hay.indexOf(s) === -1) return false;
+      }
+      if(wishFilters.author && w.author !== wishFilters.author) return false;
+      return true;
+    });
+  }
+
+  function renderWishFilterOptions(){
+    fillSelect('wish-filter-author', uniqueSorted(wishlist.map(function(w){return w.author;})), wishFilters.author);
+  }
+
+  function emptyWishHTML(){
+    return '<div class="empty" style="grid-column:1/-1">' + ICONS.heart +
+      '<p class="title">'+(wishlist.length===0 ? 'Tu wishlist está vacía' : 'Ningún libro coincide con la búsqueda')+'</p>' +
+      '<p class="subtitle">'+(wishlist.length===0 ? 'Guardá aquí los libros que querés comprar más adelante.' : 'Prueba a ajustar la búsqueda o el filtro.')+'</p></div>';
+  }
+
+  function renderGroupedWishGrid(list){
+    var grid = document.getElementById('grid-wishlist');
+    var map = {};
+    list.forEach(function(w){
+      var raw = w.author || '';
+      var label = raw || 'Sin autor';
+      if(!map[raw]) map[raw] = { label: label, items: [] };
+      map[raw].items.push(w);
+    });
+    currentWishGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
+      return a.label.localeCompare(b.label, 'es');
+    });
+    grid.className = 'grid';
+    grid.innerHTML = currentWishGroups.map(function(g, i){
+      return '<div class="card group-card" data-action="open-wish-group" data-index="'+i+'">' +
+        '<div class="group-card-inner">' +
+          '<div class="group-card-count">'+g.items.length+'</div>' +
+          '<div class="group-card-label">'+esc(g.label)+'</div>' +
+          '<div class="group-card-sub">'+(g.items.length===1?'libro':'libros')+'</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function renderWishGrid(){
+    var grid = document.getElementById('grid-wishlist');
+    document.getElementById('wish-badge').textContent = wishlist.length;
+    document.getElementById('wish-badge').classList.toggle('hidden', wishlist.length===0);
+    var list = filteredWishlist();
+    if(list.length === 0){
+      grid.className = '';
+      grid.innerHTML = emptyWishHTML();
+      return;
+    }
+    if(wishGroupBy){
+      renderGroupedWishGrid(list);
+      return;
+    }
+    grid.className = 'grid';
+    grid.innerHTML = list.map(wishCardHTML).join('');
+  }
+
+  function syncGroupModal(){
+    if(document.getElementById('modal-group').classList.contains('hidden')) return;
+    if(!openGroupContext) return;
+    if(openGroupContext.type === 'book'){
+      renderGroupedBooksGrid(filteredBooks());
+      var g = currentGroups.find(function(x){ return x.label === openGroupContext.label; });
+      if(!g){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+      document.getElementById('group-modal-title').textContent = g.label + ' · ' + g.items.length + (g.items.length===1?' libro':' libros');
+      document.getElementById('grid-group-books').innerHTML = g.items.map(bookCardHTML).join('');
+    } else {
+      renderGroupedWishGrid(filteredWishlist());
+      var wg = currentWishGroups.find(function(x){ return x.label === openGroupContext.label; });
+      if(!wg){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+      document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
+      document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
+    }
+  }
+
+  function renderAll(){
+    renderStats();
+    renderFilterOptions();
+    renderWishFilterOptions();
+    syncControlsUI();
+    renderBooksGrid();
+    renderWishGrid();
+    syncGroupModal();
+  }
+
+  // ---------- modal helpers ----------
+  function setStatusUI(status){
+    currentStatus = status;
+    document.getElementById('status-pendiente').className = 'status-opt' + (status==='pendiente' ? ' selected-pendiente' : '');
+    document.getElementById('status-leyendo').className = 'status-opt' + (status==='leyendo' ? ' selected-leyendo' : '');
+    document.getElementById('status-leido').className = 'status-opt' + (status==='leido' ? ' selected-leido' : '');
+  }
+
+  var initialBookSnapshot = null;
+
+  function getBookFormData(){
+    return {
+      title: document.getElementById('f-title').value.trim(),
+      author: document.getElementById('f-author').value.trim(),
+      saga: document.getElementById('f-saga').value.trim(),
+      genre: document.getElementById('f-genre').value.trim(),
+      cover: document.getElementById('f-cover').value.trim(),
+      status: currentStatus
+    };
+  }
+
+  function openBookModal(book){
+    editingBookId = book ? book.id : null;
+    document.getElementById('book-modal-title').textContent = book ? 'Editar libro' : 'Añadir libro';
+    document.getElementById('book-submit-btn').textContent = book ? 'Guardar cambios' : 'Añadir a mi biblioteca';
+    document.getElementById('f-title').value = book ? book.title : '';
+    document.getElementById('f-author').value = book ? book.author : '';
+    document.getElementById('f-saga').value = book ? (book.saga||'') : '';
+    document.getElementById('f-genre').value = book ? (book.genre||'') : '';
+    document.getElementById('f-cover').value = book ? (book.cover||'') : '';
+    setStatusUI(book ? book.status : 'pendiente');
+    initialBookSnapshot = JSON.stringify(getBookFormData());
+    document.getElementById('modal-book').classList.remove('hidden');
+  }
+  function closeBookModal(){ document.getElementById('modal-book').classList.add('hidden'); }
+  function attemptCloseBookModal(){
+    var changed = JSON.stringify(getBookFormData()) !== initialBookSnapshot;
+    if(changed){
+      if(confirm('Tenés cambios sin guardar. ¿Salir sin guardarlos?')){ closeBookModal(); }
+    } else {
+      closeBookModal();
+    }
+  }
+
+  var initialWishSnapshot = null;
+
+  function getWishFormData(){
+    return {
+      title: document.getElementById('w-title').value.trim(),
+      author: document.getElementById('w-author').value.trim(),
+      cover: document.getElementById('w-cover').value.trim(),
+      notas: document.getElementById('w-notas').value.trim()
+    };
+  }
+
+  function openWishModal(item){
+    editingWishId = item ? item.id : null;
+    document.getElementById('wish-modal-title').textContent = item ? 'Editar deseo' : 'Añadir a wishlist';
+    document.getElementById('wish-submit-btn').textContent = item ? 'Guardar cambios' : 'Añadir a wishlist';
+    document.getElementById('w-title').value = item ? item.title : '';
+    document.getElementById('w-author').value = item ? item.author : '';
+    document.getElementById('w-cover').value = item ? (item.cover||'') : '';
+    document.getElementById('w-notas').value = item ? (item.notas||'') : '';
+    initialWishSnapshot = JSON.stringify(getWishFormData());
+    document.getElementById('modal-wish').classList.remove('hidden');
+  }
+  function closeWishModal(){ document.getElementById('modal-wish').classList.add('hidden'); }
+  function attemptCloseWishModal(){
+    var changed = JSON.stringify(getWishFormData()) !== initialWishSnapshot;
+    if(changed){
+      if(confirm('Tenés cambios sin guardar. ¿Salir sin guardarlos?')){ closeWishModal(); }
+    } else {
+      closeWishModal();
+    }
+  }
+
+  function openDetailModal(item, type){
+    document.getElementById('detail-cover').innerHTML = coverHTML(item.cover, item.title);
+    document.getElementById('detail-title').textContent = item.title;
+    document.getElementById('detail-author').textContent = item.author;
+
+    var sagaRow = document.getElementById('detail-saga-row');
+    var genreRow = document.getElementById('detail-genre-row');
+    var statusRow = document.getElementById('detail-status-row');
+    var notesRow = document.getElementById('detail-notes-row');
+
+    if(type === 'book'){
+      if(item.saga){ document.getElementById('detail-saga-value').textContent = item.saga; sagaRow.classList.remove('hidden'); } else { sagaRow.classList.add('hidden'); }
+      if(item.genre){ document.getElementById('detail-genre-value').textContent = item.genre; genreRow.classList.remove('hidden'); } else { genreRow.classList.add('hidden'); }
+      var badge = document.getElementById('detail-status-value');
+      badge.textContent = STATUS_LABELS[item.status];
+      badge.className = 'detail-status-badge status-badge-' + item.status;
+      statusRow.classList.remove('hidden');
+      notesRow.classList.add('hidden');
+    } else {
+      sagaRow.classList.add('hidden');
+      genreRow.classList.add('hidden');
+      statusRow.classList.add('hidden');
+      if(item.notas){ document.getElementById('detail-notes-value').textContent = item.notas; notesRow.classList.remove('hidden'); } else { notesRow.classList.add('hidden'); }
+    }
+
+    document.getElementById('modal-detail').classList.remove('hidden');
+  }
+
+  // ---------- eventos ----------
+  document.addEventListener('click', function(e){
+    if(e.target.id === 'modal-book'){ attemptCloseBookModal(); return; }
+    if(e.target.id === 'modal-wish'){ attemptCloseWishModal(); return; }
+    if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+    if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-notification-detail'){ document.getElementById('modal-notification-detail').classList.add('hidden'); return; }
+    var el = e.target.closest('[data-action]');
+    if(!el) return;
+    var action = el.getAttribute('data-action');
+    var id = el.getAttribute('data-id');
+
+    if(action === 'tab'){
+      var tab = el.getAttribute('data-tab');
+      document.getElementById('tab-biblioteca').classList.toggle('active', tab==='biblioteca');
+      document.getElementById('tab-wishlist').classList.toggle('active', tab==='wishlist');
+      document.getElementById('view-biblioteca').classList.toggle('hidden', tab!=='biblioteca');
+      document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
+    }
+    else if(action === 'toggle-filters'){
+      var panel = document.getElementById('filters-panel');
+      var willShow = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      if(willShow){ document.getElementById('group-panel').classList.add('hidden'); }
+    }
+    else if(action === 'toggle-group'){
+      var gpanel = document.getElementById('group-panel');
+      var gWillShow = gpanel.classList.contains('hidden');
+      gpanel.classList.toggle('hidden');
+      if(gWillShow){ document.getElementById('filters-panel').classList.add('hidden'); }
+    }
+    else if(action === 'set-group'){
+      var chosen = el.getAttribute('data-group');
+      groupBy = (groupBy === chosen) ? '' : chosen;
+      document.getElementById('group-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderBooksGrid();
+    }
+    else if(action === 'open-group'){
+      var gi = parseInt(el.getAttribute('data-index'), 10);
+      var g = currentGroups[gi];
+      if(!g) return;
+      openGroupContext = { type:'book', label: g.label };
+      document.getElementById('group-modal-title').textContent = g.label + ' · ' + g.items.length + (g.items.length===1?' libro':' libros');
+      document.getElementById('grid-group-books').innerHTML = g.items.map(bookCardHTML).join('');
+      document.getElementById('modal-group').classList.remove('hidden');
+    }
+    else if(action === 'close-group-modal'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; }
+    else if(action === 'toggle-wish-filters'){
+      var wfPanel = document.getElementById('wish-filters-panel');
+      var wfWillShow = wfPanel.classList.contains('hidden');
+      wfPanel.classList.toggle('hidden');
+      if(wfWillShow){ document.getElementById('wish-group-panel').classList.add('hidden'); }
+    }
+    else if(action === 'toggle-wish-group'){
+      var wgPanel = document.getElementById('wish-group-panel');
+      var wgWillShow = wgPanel.classList.contains('hidden');
+      wgPanel.classList.toggle('hidden');
+      if(wgWillShow){ document.getElementById('wish-filters-panel').classList.add('hidden'); }
+    }
+    else if(action === 'set-wish-group'){
+      var wChosen = el.getAttribute('data-group');
+      wishGroupBy = (wishGroupBy === wChosen) ? '' : wChosen;
+      document.getElementById('wish-group-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderWishGrid();
+    }
+    else if(action === 'open-wish-group'){
+      var wgi = parseInt(el.getAttribute('data-index'), 10);
+      var wg = currentWishGroups[wgi];
+      if(!wg) return;
+      openGroupContext = { type:'wish', label: wg.label };
+      document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
+      document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
+      document.getElementById('modal-group').classList.remove('hidden');
+    }
+    else if(action === 'filter-stat'){
+      var clickedStatus = el.getAttribute('data-status');
+      filters.status = (clickedStatus === '' ? '' : (filters.status === clickedStatus ? '' : clickedStatus));
+      document.getElementById('filter-status').value = filters.status;
+      savePrefs(); syncControlsUI();
+      renderStats();
+      renderBooksGrid();
+    }
+    else if(action === 'reset-book-filters'){
+      filters = { search: filters.search, author:'', saga:'', genre:'', status:'' };
+      document.getElementById('filter-author').value = '';
+      document.getElementById('filter-saga').value = '';
+      document.getElementById('filter-genre').value = '';
+      document.getElementById('filter-status').value = '';
+      savePrefs(); syncControlsUI();
+      renderBooksGrid();
+    }
+    else if(action === 'reset-wish-filters'){
+      wishFilters.author = '';
+      document.getElementById('wish-filter-author').value = '';
+      savePrefs(); syncControlsUI();
+      renderWishGrid();
+    }
+    else if(action === 'clear-book-all'){
+      filters = { search: filters.search, author:'', saga:'', genre:'', status:'' };
+      groupBy = '';
+      document.getElementById('filter-author').value = '';
+      document.getElementById('filter-saga').value = '';
+      document.getElementById('filter-genre').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filters-panel').classList.add('hidden');
+      document.getElementById('group-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderBooksGrid();
+    }
+    else if(action === 'clear-wish-all'){
+      wishFilters.author = '';
+      wishGroupBy = '';
+      document.getElementById('wish-filter-author').value = '';
+      document.getElementById('wish-filters-panel').classList.add('hidden');
+      document.getElementById('wish-group-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderWishGrid();
+    }
+    else if(action === 'add-book'){ openBookModal(null); }
+    else if(action === 'edit-book'){ openBookModal(books.find(function(b){return b.id===id;})); }
+    else if(action === 'view-book'){
+      var vb = books.find(function(x){return x.id===id;});
+      if(vb) openDetailModal(vb, 'book');
+    }
+    else if(action === 'view-wish'){
+      var vw = wishlist.find(function(x){return x.id===id;});
+      if(vw) openDetailModal(vw, 'wish');
+    }
+    else if(action === 'close-detail-modal'){ document.getElementById('modal-detail').classList.add('hidden'); }
+    else if(action === 'open-notifications'){
+      renderNotifList();
+      document.getElementById('modal-notifications').classList.remove('hidden');
+    }
+    else if(action === 'close-notifications-modal'){ document.getElementById('modal-notifications').classList.add('hidden'); }
+    else if(action === 'open-notification-detail'){ openNotificationDetail(id); }
+    else if(action === 'close-notification-detail-modal'){ document.getElementById('modal-notification-detail').classList.add('hidden'); }
+    else if(action === 'delete-notification-inline'){
+      deleteNotification(id).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        renderNotifList();
+      });
+    }
+    else if(action === 'mark-all-read'){ markAllNotificationsRead(); }
+    else if(action === 'delete-all-notifications'){
+      if(confirm('¿Eliminar todas las notificaciones? Esta acción no se puede deshacer.')){ deleteAllNotifications(); }
+    }
+    else if(action === 'mark-read-detail'){
+      markNotificationRead(currentNotifDetailId).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        document.getElementById('modal-notification-detail').classList.add('hidden');
+        renderNotifList();
+      });
+    }
+    else if(action === 'delete-notification-detail'){
+      deleteNotification(currentNotifDetailId).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        document.getElementById('modal-notification-detail').classList.add('hidden');
+        renderNotifList();
+      });
+    }
+    else if(action === 'close-book-modal'){ attemptCloseBookModal(); }
+    else if(action === 'close-wish-modal'){ attemptCloseWishModal(); }
+    else if(action === 'add-wish'){ openWishModal(null); }
+    else if(action === 'edit-wish'){ openWishModal(wishlist.find(function(w){return w.id===id;})); }
+    else if(action === 'set-status'){ setStatusUI(el.getAttribute('data-status')); }
+    else if(action === 'toggle-status'){
+      var book = books.find(function(b){return b.id===id;});
+      var newStatus = STATUS_NEXT[book.status] || 'pendiente';
+      dbUpdateBook(id, { status:newStatus }).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        books = books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
+        renderAll();
+      });
+    }
+    else if(action === 'delete-book'){
+      if(confirm('¿Eliminar este libro de tu biblioteca?')){
+        dbDeleteBook(id).then(function(res){
+          if(res.error){ alert('Error: '+res.error.message); return; }
+          books = books.filter(function(b){ return b.id!==id; });
+          renderAll();
+        });
+      }
+    }
+    else if(action === 'delete-wish'){
+      if(confirm('¿Eliminar este libro de tu wishlist?')){
+        dbDeleteWish(id).then(function(res){
+          if(res.error){ alert('Error: '+res.error.message); return; }
+          wishlist = wishlist.filter(function(w){ return w.id!==id; });
+          renderAll();
+        });
+      }
+    }
+    else if(action === 'buy-wish'){
+      var item = wishlist.find(function(w){return w.id===id;});
+      if(!item) return;
+      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, status:'pendiente' }).then(function(insRes){
+        if(insRes.error){ alert('Error: '+insRes.error.message); return; }
+        dbDeleteWish(id).then(function(delRes){
+          if(delRes.error){ alert('Error: '+delRes.error.message); return; }
+          books = (insRes.data || []).concat(books);
+          wishlist = wishlist.filter(function(w){ return w.id!==id; });
+          renderAll();
+        });
+      });
+    }
+  });
+
+  document.getElementById('search-input').addEventListener('input', function(e){
+    filters.search = e.target.value;
+    savePrefs();
+    renderBooksGrid();
+  });
+  ['filter-author','filter-saga','filter-genre','filter-status'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(e){
+      var key = id.replace('filter-','');
+      filters[key] = e.target.value;
+      savePrefs(); syncControlsUI();
+      renderBooksGrid();
+    });
+  });
+
+  document.getElementById('wish-search-input').addEventListener('input', function(e){
+    wishFilters.search = e.target.value;
+    savePrefs();
+    renderWishGrid();
+  });
+  document.getElementById('wish-filter-author').addEventListener('change', function(e){
+    wishFilters.author = e.target.value;
+    savePrefs(); syncControlsUI();
+    renderWishGrid();
+  });
+
+  document.getElementById('form-book').addEventListener('submit', function(e){
+    e.preventDefault();
+    var data = getBookFormData();
+    if(!data.title || !data.author) return;
+    if(editingBookId){
+      dbUpdateBook(editingBookId, data).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        books = books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
+        closeBookModal(); renderAll();
+      });
+    } else {
+      dbInsertBook(data).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        books = (res.data || []).concat(books);
+        closeBookModal(); renderAll();
+      });
+    }
+  });
+
+  document.getElementById('form-wish').addEventListener('submit', function(e){
+    e.preventDefault();
+    var data = getWishFormData();
+    if(!data.title || !data.author) return;
+    if(editingWishId){
+      dbUpdateWish(editingWishId, data).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        wishlist = wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
+        closeWishModal(); renderAll();
+      });
+    } else {
+      dbInsertWish(data).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        wishlist = (res.data || []).concat(wishlist);
+        closeWishModal(); renderAll();
+      });
+    }
+  });
+
+  // ---------- init ----------
+  sb.auth.getSession().then(function(res){
+    var recoveryVisible = !document.getElementById('recovery-screen').classList.contains('hidden');
+    if(recoveryVisible){ return; }
+    if(res.data && res.data.session){
+      currentUserId = res.data.session.user.id;
+      showApp();
+      loadData();
+    } else {
+      showAuthScreen();
+    }
+  });
+})();
+</script>
+</body>
+</html>
