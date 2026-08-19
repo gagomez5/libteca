@@ -149,6 +149,7 @@
   .toggle-btn.leido{background:rgba(91,123,98,.14);color:var(--sage-dark);}
   .buy-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:700;padding:7px 4px;border-radius:6px;background:rgba(184,135,79,.16);color:#8A5F2C;}
   .icon-btn{padding:6px;color:var(--text-muted);border-radius:6px;}
+  .icon-btn-especial{color:var(--emerald);}
 
   .empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:70px 20px;gap:6px;}
   .empty p.title{font-size:18px;font-weight:700;color:var(--ink);font-family:'Georgia',serif;margin:8px 0 0;}
@@ -723,6 +724,7 @@
     trash:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
     cart:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.4a2 2 0 002 1.6h9a2 2 0 002-1.8L21 7H6"/></svg>',
     heart:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B3A3A" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>',
+    gem:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>',
     book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
   };
 
@@ -1154,6 +1156,7 @@
         (tags ? '<div class="card-tags">'+esc(tags)+'</div>' : '') +
         '<div class="card-actions">' +
           '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
+          '<button class="icon-btn'+(b.edicion==='especial' ? ' icon-btn-especial' : '')+'" data-action="toggle-edicion" data-id="'+b.id+'" title="Edición especial">'+ICONS.gem+'</button>' +
           '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+'</button>' +
           '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+'</button>' +
         '</div>' +
@@ -1636,6 +1639,15 @@
       dbUpdateBook(id, { status:newStatus }).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
         books = books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
+        renderAll();
+      });
+    }
+    else if(action === 'toggle-edicion'){
+      var beBook = books.find(function(b){return b.id===id;});
+      var newEdicion = beBook.edicion === 'especial' ? 'normal' : 'especial';
+      dbUpdateBook(id, { edicion:newEdicion }).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        books = books.map(function(b){ return b.id===id ? Object.assign({},b,{edicion:newEdicion}) : b; });
         renderAll();
       });
     }
