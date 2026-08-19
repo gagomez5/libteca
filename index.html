@@ -318,6 +318,7 @@
     </section>
 
     <section id="view-wishlist" class="hidden">
+      <div class="stats" id="wish-stats"></div>
       <div class="controls">
         <div class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -375,6 +376,7 @@
         <div><label>Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
       </div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
+      <div class="field"><label>Costo (opcional)</label><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div>
       <div class="field">
         <label>Estado</label>
         <div class="status-row">
@@ -399,6 +401,7 @@
       <div class="field"><label>Título *</label><input required id="w-title" name="title"></div>
       <div class="field"><label>Autor *</label><input required id="w-author" name="author"></div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
+      <div class="field"><label>Costo (opcional)</label><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div>
       <div class="field"><label>Notas (opcional)</label><textarea id="w-notas" name="notas" rows="2"></textarea></div>
       <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
     </form>
@@ -428,6 +431,10 @@
         <div class="detail-row hidden" id="detail-status-row">
           <div class="detail-label">Estado</div>
           <span class="detail-status-badge" id="detail-status-value"></span>
+        </div>
+        <div class="detail-row hidden" id="detail-costo-row">
+          <div class="detail-label">Costo</div>
+          <div class="detail-value" id="detail-costo-value"></div>
         </div>
         <div class="detail-row hidden" id="detail-notes-row">
           <div class="detail-label">Notas</div>
@@ -602,10 +609,10 @@
     var gName = localStorage.getItem('guest_library_name');
     var tasks = [];
     gBooks.forEach(function(b){
-      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, status:b.status }]));
+      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status }]));
     });
     gWish.forEach(function(w){
-      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, notas:w.notas }]));
+      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, notas:w.notas }]));
     });
     if(gName){
       tasks.push(sb.from('profile').upsert({ user_id: currentUserId, library_name: gName }));
@@ -1241,8 +1248,18 @@
     }).join('');
   }
 
+  function renderWishStats(){
+    var withCosto = wishlist.filter(function(w){ return w.costo != null; });
+    var total = withCosto.reduce(function(sum, w){ return sum + Number(w.costo); }, 0);
+    var promedio = withCosto.length ? total / withCosto.length : 0;
+    document.getElementById('wish-stats').innerHTML =
+      '<div class="stat"><b>'+formatCosto(total)+'</b> <span>costo total</span></div>' +
+      '<div class="stat"><b>'+formatCosto(promedio)+'</b> <span>costo promedio</span></div>';
+  }
+
   function renderWishGrid(){
     var grid = document.getElementById('grid-wishlist');
+    renderWishStats();
     document.getElementById('wish-badge').textContent = wishlist.length;
     document.getElementById('wish-badge').classList.toggle('hidden', wishlist.length===0);
     var list = filteredWishlist();
@@ -1297,6 +1314,16 @@
 
   var initialBookSnapshot = null;
 
+  function parseCosto(str){
+    str = (str||'').trim();
+    if(str === '') return null;
+    var n = parseFloat(str);
+    return isNaN(n) ? null : n;
+  }
+  function formatCosto(n){
+    return '$' + Number(n).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
   function getBookFormData(){
     return {
       title: document.getElementById('f-title').value.trim(),
@@ -1304,6 +1331,7 @@
       saga: document.getElementById('f-saga').value.trim(),
       genre: document.getElementById('f-genre').value.trim(),
       cover: document.getElementById('f-cover').value.trim(),
+      costo: parseCosto(document.getElementById('f-costo').value),
       status: currentStatus
     };
   }
@@ -1317,6 +1345,7 @@
     document.getElementById('f-saga').value = book ? (book.saga||'') : '';
     document.getElementById('f-genre').value = book ? (book.genre||'') : '';
     document.getElementById('f-cover').value = book ? (book.cover||'') : '';
+    document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
     setStatusUI(book ? book.status : 'pendiente');
     initialBookSnapshot = JSON.stringify(getBookFormData());
     document.getElementById('modal-book').classList.remove('hidden');
@@ -1338,6 +1367,7 @@
       title: document.getElementById('w-title').value.trim(),
       author: document.getElementById('w-author').value.trim(),
       cover: document.getElementById('w-cover').value.trim(),
+      costo: parseCosto(document.getElementById('w-costo').value),
       notas: document.getElementById('w-notas').value.trim()
     };
   }
@@ -1349,6 +1379,7 @@
     document.getElementById('w-title').value = item ? item.title : '';
     document.getElementById('w-author').value = item ? item.author : '';
     document.getElementById('w-cover').value = item ? (item.cover||'') : '';
+    document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
     document.getElementById('w-notas').value = item ? (item.notas||'') : '';
     initialWishSnapshot = JSON.stringify(getWishFormData());
     document.getElementById('modal-wish').classList.remove('hidden');
@@ -1371,7 +1402,10 @@
     var sagaRow = document.getElementById('detail-saga-row');
     var genreRow = document.getElementById('detail-genre-row');
     var statusRow = document.getElementById('detail-status-row');
+    var costoRow = document.getElementById('detail-costo-row');
     var notesRow = document.getElementById('detail-notes-row');
+
+    if(item.costo != null){ document.getElementById('detail-costo-value').textContent = formatCosto(item.costo); costoRow.classList.remove('hidden'); } else { costoRow.classList.add('hidden'); }
 
     if(type === 'book'){
       if(item.saga){ document.getElementById('detail-saga-value').textContent = item.saga; sagaRow.classList.remove('hidden'); } else { sagaRow.classList.add('hidden'); }
@@ -1596,7 +1630,7 @@
     else if(action === 'buy-wish'){
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, status:'pendiente' }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, costo:item.costo, status:'pendiente' }).then(function(insRes){
         if(insRes.error){ alert('Error: '+insRes.error.message); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ alert('Error: '+delRes.error.message); return; }
