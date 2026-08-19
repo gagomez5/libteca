@@ -1479,6 +1479,7 @@
       document.getElementById('filter-genre').value = '';
       document.getElementById('filter-status').value = '';
       savePrefs(); syncControlsUI();
+      renderStats();
       renderBooksGrid();
     }
     else if(action === 'reset-wish-filters'){
@@ -1497,6 +1498,7 @@
       document.getElementById('filters-panel').classList.add('hidden');
       document.getElementById('group-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
+      renderStats();
       renderBooksGrid();
     }
     else if(action === 'clear-wish-all'){
