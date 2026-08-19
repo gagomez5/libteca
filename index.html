@@ -14,6 +14,7 @@
     --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
     --brass:#B8874F; --sage:#5B7B62; --sage-dark:#3F5A45;
     --burgundy:#8B3A3A; --burgundy-dark:#6E2C2C;
+    --emerald:#0F9D6E; --emerald-dark:#0B7A56;
     --text:#2A2A28; --text-muted:#6B6558;
   }
   *{box-sizing:border-box;}
@@ -128,6 +129,7 @@
 
   .cover-click{cursor:pointer;}
   .card{background:var(--paper);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .card-especial{border:2px solid var(--emerald);}
   .cover-wrap{position:relative;aspect-ratio:2/3;background:linear-gradient(135deg,#B8874F 0%,#1C2541 100%);}
   .cover-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
   .cover-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;}
@@ -169,6 +171,8 @@
   .status-opt.selected-pendiente{background:var(--burgundy);color:var(--paper);border-color:var(--burgundy);}
   .status-opt.selected-leyendo{background:var(--brass);color:var(--paper);border-color:var(--brass);}
   .status-opt.selected-leido{background:var(--sage);color:var(--paper);border-color:var(--sage);}
+  .status-opt.selected-normal{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .status-opt.selected-especial{background:var(--emerald);color:var(--paper);border-color:var(--emerald);}
   .submit-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;margin-top:6px;}
   .loading-note{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:13px;}
 
@@ -387,6 +391,13 @@
           <button type="button" class="status-opt" id="status-leido" data-action="set-status" data-status="leido">Leído</button>
         </div>
       </div>
+      <div class="field">
+        <label>Edición</label>
+        <div class="status-row">
+          <button type="button" class="status-opt" id="edicion-normal" data-action="set-edicion" data-edicion="normal">Normal</button>
+          <button type="button" class="status-opt" id="edicion-especial" data-action="set-edicion" data-edicion="especial">Especial</button>
+        </div>
+      </div>
       <button type="submit" class="submit-btn btn-dark" id="book-submit-btn">Añadir a mi biblioteca</button>
     </form>
   </div>
@@ -437,6 +448,10 @@
         <div class="detail-row hidden" id="detail-costo-row">
           <div class="detail-label">Costo</div>
           <div class="detail-value" id="detail-costo-value"></div>
+        </div>
+        <div class="detail-row hidden" id="detail-edicion-row">
+          <div class="detail-label">Edición</div>
+          <div class="detail-value" id="detail-edicion-value" style="color:var(--emerald);font-weight:600;">Especial</div>
         </div>
         <div class="detail-row hidden" id="detail-notes-row">
           <div class="detail-label">Notas</div>
@@ -611,7 +626,7 @@
     var gName = localStorage.getItem('guest_library_name');
     var tasks = [];
     gBooks.forEach(function(b){
-      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status }]));
+      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal' }]));
     });
     gWish.forEach(function(w){
       tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, notas:w.notas }]));
@@ -627,6 +642,7 @@
     });
   }
   var currentStatus = 'pendiente';
+  var currentEdicion = 'normal';
   var editingBookId = null;
   var editingWishId = null;
   var authMode = 'login'; // 'login' | 'signup' | 'recover'
@@ -1128,7 +1144,7 @@
     var stampHtml = '';
     if(b.status==='leido') stampHtml = '<div class="stamp stamp-leido">LEÍDO</div>';
     else if(b.status==='leyendo') stampHtml = '<div class="stamp stamp-leyendo">LEYENDO</div>';
-    return '<div class="card">' +
+    return '<div class="card'+(b.edicion==='especial' ? ' card-especial' : '')+'">' +
       '<div class="cover-click" data-action="view-book" data-id="'+b.id+'" style="position:relative">' + coverHTML(b.cover, b.title) +
         stampHtml +
       '</div>' +
@@ -1313,6 +1329,11 @@
     document.getElementById('status-leyendo').className = 'status-opt' + (status==='leyendo' ? ' selected-leyendo' : '');
     document.getElementById('status-leido').className = 'status-opt' + (status==='leido' ? ' selected-leido' : '');
   }
+  function setEdicionUI(edicion){
+    currentEdicion = edicion;
+    document.getElementById('edicion-normal').className = 'status-opt' + (edicion==='normal' ? ' selected-normal' : '');
+    document.getElementById('edicion-especial').className = 'status-opt' + (edicion==='especial' ? ' selected-especial' : '');
+  }
 
   var initialBookSnapshot = null;
 
@@ -1334,7 +1355,8 @@
       genre: document.getElementById('f-genre').value.trim(),
       cover: document.getElementById('f-cover').value.trim(),
       costo: parseCosto(document.getElementById('f-costo').value),
-      status: currentStatus
+      status: currentStatus,
+      edicion: currentEdicion
     };
   }
 
@@ -1349,6 +1371,7 @@
     document.getElementById('f-cover').value = book ? (book.cover||'') : '';
     document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
     setStatusUI(book ? book.status : 'pendiente');
+    setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
     initialBookSnapshot = JSON.stringify(getBookFormData());
     document.getElementById('modal-book').classList.remove('hidden');
   }
@@ -1405,6 +1428,7 @@
     var genreRow = document.getElementById('detail-genre-row');
     var statusRow = document.getElementById('detail-status-row');
     var costoRow = document.getElementById('detail-costo-row');
+    var edicionRow = document.getElementById('detail-edicion-row');
     var notesRow = document.getElementById('detail-notes-row');
 
     if(item.costo != null){ document.getElementById('detail-costo-value').textContent = formatCosto(item.costo); costoRow.classList.remove('hidden'); } else { costoRow.classList.add('hidden'); }
@@ -1416,11 +1440,13 @@
       badge.textContent = STATUS_LABELS[item.status];
       badge.className = 'detail-status-badge status-badge-' + item.status;
       statusRow.classList.remove('hidden');
+      edicionRow.classList.toggle('hidden', item.edicion !== 'especial');
       notesRow.classList.add('hidden');
     } else {
       sagaRow.classList.add('hidden');
       genreRow.classList.add('hidden');
       statusRow.classList.add('hidden');
+      edicionRow.classList.add('hidden');
       if(item.notas){ document.getElementById('detail-notes-value').textContent = item.notas; notesRow.classList.remove('hidden'); } else { notesRow.classList.add('hidden'); }
     }
 
@@ -1603,6 +1629,7 @@
     else if(action === 'add-wish'){ openWishModal(null); }
     else if(action === 'edit-wish'){ openWishModal(wishlist.find(function(w){return w.id===id;})); }
     else if(action === 'set-status'){ setStatusUI(el.getAttribute('data-status')); }
+    else if(action === 'set-edicion'){ setEdicionUI(el.getAttribute('data-edicion')); }
     else if(action === 'toggle-status'){
       var book = books.find(function(b){return b.id===id;});
       var newStatus = STATUS_NEXT[book.status] || 'pendiente';
@@ -1633,7 +1660,7 @@
     else if(action === 'buy-wish'){
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, costo:item.costo, status:'pendiente' }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
         if(insRes.error){ alert('Error: '+insRes.error.message); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ alert('Error: '+delRes.error.message); return; }
