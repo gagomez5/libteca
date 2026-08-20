@@ -61,6 +61,7 @@
   .header-wish-stats{display:flex;gap:10px;font-size:10.5px;color:rgba(250,246,236,.55);margin-left:auto;align-self:center;}
   .header-wish-stats b{color:rgba(250,246,236,.85);font-weight:600;}
   .icon-btn-header{position:relative;padding:6px;border-radius:8px;color:rgba(250,246,236,.7);flex-shrink:0;}
+  a.icon-btn-header{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
   .icon-btn-header.has-unread{color:var(--brass);}
   .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--burgundy);border:1.5px solid var(--ink);}
   .notif-actions-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
@@ -259,6 +260,9 @@
           <input id="title-input" class="title-input hidden" maxlength="40" autocomplete="off">
         </div>
         <div class="header-actions">
+          <a class="icon-btn-header hidden" id="btn-admin-link" href="admin.html" aria-label="Panel de administrador" title="Panel de administrador">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+          </a>
           <button class="icon-btn-header hidden" id="btn-notifications" data-action="open-notifications" aria-label="Notificaciones">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             <span class="notif-dot hidden" id="notif-dot"></span>
@@ -567,7 +571,7 @@
       var name = localStorage.getItem('guest_library_name');
       return Promise.resolve({ data: name ? { library_name:name } : null, error:null });
     }
-    return sb.from('profile').select('library_name').maybeSingle();
+    return sb.from('profile').select('library_name, role').maybeSingle();
   }
   function dbInsertBook(data){
     if(isGuest){
@@ -659,6 +663,7 @@
   var editingBookId = null;
   var editingWishId = null;
   var authMode = 'login'; // 'login' | 'signup' | 'recover'
+  var currentUserRole = 'free'; // 'administrador' | 'fundador' | 'premium' | 'free'
   var groupBy = ''; // '' | 'author' | 'saga' | 'genre' | 'status'
   var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
@@ -746,6 +751,11 @@
     document.getElementById('auth-modal-close').classList.add('hidden');
     document.getElementById('recovery-screen').classList.add('hidden');
     document.getElementById('app-root').classList.add('hidden');
+    currentUserRole = 'free';
+    updateAdminLink();
+  }
+  function updateAdminLink(){
+    document.getElementById('btn-admin-link').classList.toggle('hidden', isGuest || currentUserRole !== 'administrador');
   }
   function openAuthModal(){
     authMode = 'login';
@@ -964,6 +974,8 @@
       if(wRes.error){ alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
       var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
       document.getElementById('app-title-text').textContent = savedTitle;
+      currentUserRole = (!isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
+      updateAdminLink();
       renderAll();
     });
     document.getElementById('btn-notifications').classList.toggle('hidden', isGuest);

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel de administrador — Mi Biblioteca</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
+    --brass:#B8874F; --sage:#5B7B62; --sage-dark:#3F5A45;
+    --burgundy:#8B3A3A; --burgundy-dark:#6E2C2C;
+    --emerald:#0F9D6E; --emerald-dark:#0B7A56;
+    --text:#2A2A28; --text-muted:#6B6558;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;}
+  h1,.serif{font-family:'Georgia','Times New Roman',serif;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
+  a{color:inherit;}
+  .hidden{display:none !important;}
+
+  #login-screen,#denied-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));text-align:center;}
+  .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:16px;padding:28px 24px;border:1px solid var(--border);}
+  .auth-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
+  .auth-brand h1{font-size:19px;color:var(--ink);margin:0;}
+  .auth-sub{text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 20px;}
+  .auth-field{margin-bottom:12px;text-align:left;}
+  .auth-field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;}
+  .auth-field input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);outline:none;}
+  .auth-submit{width:100%;padding:11px;border-radius:10px;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;margin-top:6px;}
+  .msg-line{font-size:12.5px;text-align:center;margin:10px 0 0;min-height:16px;}
+  .msg-line.error{color:var(--burgundy);}
+  .msg-line.ok{color:var(--sage-dark);}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
+  .btn-dark{background:var(--ink);color:var(--paper);}
+  .btn-burgundy{background:var(--burgundy);color:var(--paper);}
+
+  header{background:var(--ink);padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));}
+  .header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand h1{font-size:17px;color:var(--paper);margin:0;}
+  .header-actions{display:flex;gap:8px;flex-shrink:0;}
+  .logout-btn{font-size:11.5px;color:rgba(250,246,236,.65);border:1px solid rgba(250,246,236,.25);padding:6px 9px;border-radius:8px;text-align:center;line-height:1.25;text-decoration:none;}
+
+  main{max-width:900px;margin:0 auto;padding:20px 16px 60px;padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));}
+  .tabs-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab-btn{padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;background:var(--paper);border:1px solid var(--border);color:var(--text);}
+  .tab-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+  .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;background:var(--paper);}
+  th,td{padding:10px 12px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);background:var(--bg);}
+  tr:last-child td{border-bottom:none;}
+  .role-select{padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:12.5px;}
+  .role-status{font-size:11px;margin-left:8px;color:var(--text-muted);}
+  .role-status.ok{color:var(--sage-dark);}
+  .role-status.error{color:var(--burgundy);}
+
+  .notif-form{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+  .notif-form label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+  .notif-form textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);min-height:80px;resize:vertical;outline:none;}
+
+  .notif-item{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .notif-item .msg{font-size:13.5px;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+  .notif-item .meta{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+  .empty-note{color:var(--text-muted);font-size:13px;text-align:center;padding:30px 0;}
+  .loading-note{color:var(--text-muted);font-size:13px;text-align:center;padding:60px 0;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+      <h1>Panel de administrador</h1>
+    </div>
+    <p class="auth-sub">Iniciá sesión con tu cuenta de administrador</p>
+    <form id="login-form">
+      <div class="auth-field"><label>Correo</label><input type="email" id="login-email" required autocomplete="email"></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="login-password" required autocomplete="current-password" minlength="6"></div>
+      <button type="submit" class="auth-submit">Iniciar sesión</button>
+    </form>
+    <p class="msg-line" id="login-msg"></p>
+    <p style="margin-top:16px;"><a href="index.html" style="font-size:12.5px;color:var(--text-muted);">← Volver a Mi Biblioteca</a></p>
+  </div>
+</div>
+
+<div id="denied-screen" class="hidden">
+  <div class="auth-card">
+    <h1 class="serif" style="font-size:19px;color:var(--ink);">Acceso denegado</h1>
+    <p style="font-size:13.5px;color:var(--text-muted);margin:10px 0 18px;">Esta cuenta no tiene permisos de administrador.</p>
+    <button class="btn btn-dark" id="denied-logout" style="width:100%;justify-content:center;">Cerrar sesión</button>
+    <p style="margin-top:16px;"><a href="index.html" style="font-size:12.5px;color:var(--text-muted);">← Volver a Mi Biblioteca</a></p>
+  </div>
+</div>
+
+<div id="admin-root" class="hidden">
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+        <h1>Panel de administrador</h1>
+      </div>
+      <div class="header-actions">
+        <a class="logout-btn" href="index.html">Volver a la app</a>
+        <button class="logout-btn" id="btn-admin-logout">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="tabs-row">
+      <button class="tab-btn active" data-tab="usuarios" id="tab-usuarios">Usuarios</button>
+      <button class="tab-btn" data-tab="notificaciones" id="tab-notificaciones">Notificaciones</button>
+    </div>
+
+    <section id="view-usuarios">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Correo</th><th>Alta</th><th>Rol</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-note hidden" id="users-empty">No hay usuarios.</p>
+    </section>
+
+    <section id="view-notificaciones" class="hidden">
+      <div class="notif-form">
+        <label>Nueva notificación para todos los usuarios</label>
+        <textarea id="notif-message" placeholder="Escribí el mensaje que verán todos los usuarios…"></textarea>
+        <button class="btn btn-dark" id="btn-send-notif" style="margin-top:10px;">Enviar a todos</button>
+        <p class="msg-line" id="notif-msg"></p>
+      </div>
+      <div id="notif-list"></div>
+      <p class="empty-note hidden" id="notif-empty">Todavía no enviaste notificaciones.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SUPABASE_URL = 'https://fvlfyezsegbbpwkkwcvm.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bGZ5ZXpzZWdiYnB3a2t3Y3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MjgyNTMsImV4cCI6MjEwMDMwNDI1M30.Nc7zcYF5bgxPhOYPNhjGa9HHYSywVOYxXJi-96zVfT0';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var ROLE_LABELS = { administrador:'Administrador', fundador:'Fundador', premium:'Premium', free:'Free' };
+  var ROLE_ORDER = ['administrador','fundador','premium','free'];
+  var users = [];
+  var notifs = [];
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function show(id){
+    ['login-screen','denied-screen','admin-root'].forEach(function(i){
+      document.getElementById(i).classList.toggle('hidden', i !== id);
+    });
+  }
+
+  function setMsg(id, text, kind){
+    var el = document.getElementById(id);
+    el.textContent = text || '';
+    el.className = 'msg-line' + (kind ? ' ' + kind : '');
+  }
+
+  function loadAdminData(){
+    Promise.all([
+      sb.rpc('admin_list_users'),
+      sb.rpc('admin_list_notifications')
+    ]).then(function(results){
+      var uRes = results[0], nRes = results[1];
+      if(uRes.error || nRes.error){
+        show('denied-screen');
+        return;
+      }
+      users = uRes.data || [];
+      notifs = nRes.data || [];
+      renderUsers();
+      renderNotifs();
+      show('admin-root');
+    });
+  }
+
+  function renderUsers(){
+    var tbody = document.getElementById('users-tbody');
+    document.getElementById('users-empty').classList.toggle('hidden', users.length > 0);
+    tbody.innerHTML = users.map(function(u){
+      var options = ROLE_ORDER.map(function(r){
+        return '<option value="' + r + '"' + (r === u.role ? ' selected' : '') + '>' + ROLE_LABELS[r] + '</option>';
+      }).join('');
+      var date = u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '';
+      return '<tr data-user-id="' + esc(u.user_id) + '">' +
+        '<td>' + esc(u.email) + '</td>' +
+        '<td>' + date + '</td>' +
+        '<td><select class="role-select" data-action="change-role">' + options + '</select><span class="role-status"></span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function changeRole(userId, newRole, selectEl){
+    var statusEl = selectEl.parentNode.querySelector('.role-status');
+    statusEl.textContent = 'Guardando…';
+    statusEl.className = 'role-status';
+    sb.rpc('admin_set_user_role', { target_user_id: userId, new_role: newRole }).then(function(res){
+      if(res.error){
+        statusEl.textContent = 'Error: ' + res.error.message;
+        statusEl.className = 'role-status error';
+        return;
+      }
+      statusEl.textContent = 'Guardado ✓';
+      statusEl.className = 'role-status ok';
+      users = users.map(function(u){ return u.user_id === userId ? Object.assign({}, u, { role:newRole }) : u; });
+      setTimeout(function(){ statusEl.textContent = ''; }, 2000);
+    });
+  }
+
+  function renderNotifs(){
+    var list = document.getElementById('notif-list');
+    document.getElementById('notif-empty').classList.toggle('hidden', notifs.length > 0);
+    list.innerHTML = notifs.map(function(n){
+      var date = n.created_at ? new Date(n.created_at).toLocaleString('es-AR') : '';
+      return '<div class="notif-item">' +
+        '<div><div class="msg">' + esc(n.message) + '</div>' +
+        '<div class="meta">' + date + ' · ' + (n.read_count || 0) + '/' + (n.receipt_count || 0) + ' leídas</div></div>' +
+        '<button class="btn btn-burgundy" data-action="delete-notif" data-id="' + esc(n.id) + '">Eliminar</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function deleteNotif(id){
+    if(!confirm('¿Eliminar esta notificación para todos los usuarios?')) return;
+    sb.rpc('admin_delete_notification', { target_id: id }).then(function(res){
+      if(res.error){ alert('Error: ' + res.error.message); return; }
+      notifs = notifs.filter(function(n){ return n.id !== id; });
+      renderNotifs();
+    });
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      document.getElementById('view-usuarios').classList.toggle('hidden', tab !== 'usuarios');
+      document.getElementById('view-notificaciones').classList.toggle('hidden', tab !== 'notificaciones');
+    });
+  });
+
+  document.getElementById('users-tbody').addEventListener('change', function(e){
+    var sel = e.target.closest('[data-action="change-role"]');
+    if(!sel) return;
+    var tr = sel.closest('tr');
+    changeRole(tr.getAttribute('data-user-id'), sel.value, sel);
+  });
+
+  document.getElementById('notif-list').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action="delete-notif"]');
+    if(!btn) return;
+    deleteNotif(btn.getAttribute('data-id'));
+  });
+
+  document.getElementById('btn-send-notif').addEventListener('click', function(){
+    var msgEl = document.getElementById('notif-message');
+    var msg = msgEl.value.trim();
+    if(!msg){ setMsg('notif-msg', 'Escribí un mensaje.', 'error'); return; }
+    setMsg('notif-msg', 'Enviando…');
+    sb.rpc('admin_send_notification', { msg: msg }).then(function(res){
+      if(res.error){ setMsg('notif-msg', res.error.message, 'error'); return; }
+      setMsg('notif-msg', 'Notificación enviada.', 'ok');
+      msgEl.value = '';
+      return sb.rpc('admin_list_notifications');
+    }).then(function(res){
+      if(res && !res.error){ notifs = res.data || []; renderNotifs(); }
+    });
+  });
+
+  document.getElementById('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    setMsg('login-msg', 'Un momento…');
+    sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
+      if(res.error){ setMsg('login-msg', res.error.message, 'error'); return; }
+      setMsg('login-msg', '');
+    });
+  });
+
+  document.getElementById('btn-admin-logout').addEventListener('click', function(){ sb.auth.signOut(); });
+  document.getElementById('denied-logout').addEventListener('click', function(){ sb.auth.signOut(); });
+
+  sb.auth.onAuthStateChange(function(event, session){
+    if(session && session.user){
+      loadAdminData();
+    } else {
+      show('login-screen');
+    }
+  });
+
+  sb.auth.getSession().then(function(res){
+    if(res.data && res.data.session){
+      loadAdminData();
+    } else {
+      show('login-screen');
+    }
+  });
+})();
+</script>
+</body>
+</html>
