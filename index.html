@@ -314,6 +314,13 @@
             <option value="leido">Leído</option>
           </select>
         </div>
+        <div class="filter-field"><label>Edición</label>
+          <select id="filter-edicion">
+            <option value="">Todas</option>
+            <option value="normal">Normal</option>
+            <option value="especial">Especial</option>
+          </select>
+        </div>
         <button type="button" class="filters-reset-btn" data-action="reset-book-filters">Restablecer filtros</button>
       </div>
 
@@ -655,7 +662,7 @@
   var groupBy = ''; // '' | 'author' | 'saga' | 'genre' | 'status'
   var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
-  var filters = { search:'', author:'', saga:'', genre:'', status:'' };
+  var filters = { search:'', author:'', saga:'', genre:'', status:'', edicion:'' };
   var wishFilters = { search:'', author:'' };
   var wishGroupBy = ''; // '' | 'author'
   var currentWishGroups = [];
@@ -678,7 +685,7 @@
   function loadPrefs(){
     try {
       var bf = localStorage.getItem(PREF_BOOK_FILTERS);
-      if(bf){ var parsedBf = JSON.parse(bf); filters.search = parsedBf.search||''; filters.author = parsedBf.author||''; filters.saga = parsedBf.saga||''; filters.genre = parsedBf.genre||''; filters.status = parsedBf.status||''; }
+      if(bf){ var parsedBf = JSON.parse(bf); filters.search = parsedBf.search||''; filters.author = parsedBf.author||''; filters.saga = parsedBf.saga||''; filters.genre = parsedBf.genre||''; filters.status = parsedBf.status||''; filters.edicion = parsedBf.edicion||''; }
       var bg = localStorage.getItem(PREF_BOOK_GROUP);
       if(bg !== null) groupBy = bg;
       var wf = localStorage.getItem(PREF_WISH_FILTERS);
@@ -703,7 +710,7 @@
     });
     document.getElementById('btn-toggle-wish-group').classList.toggle('active', !!wishGroupBy);
 
-    var bookFilterCount = ['author','saga','genre','status'].filter(function(k){ return !!filters[k]; }).length;
+    var bookFilterCount = ['author','saga','genre','status','edicion'].filter(function(k){ return !!filters[k]; }).length;
     document.getElementById('btn-toggle-filters').classList.toggle('active', bookFilterCount > 0);
     document.getElementById('filters-label').textContent = bookFilterCount > 0 ? 'Filtros ('+bookFilterCount+')' : 'Filtros';
 
@@ -1145,6 +1152,7 @@
     if(exclude !== 'saga' && filters.saga && b.saga !== filters.saga) return false;
     if(exclude !== 'genre' && filters.genre && b.genre !== filters.genre) return false;
     if(exclude !== 'status' && filters.status && b.status !== filters.status) return false;
+    if(exclude !== 'edicion' && filters.edicion && (b.edicion||'normal') !== filters.edicion) return false;
     return true;
   }
 
@@ -1568,11 +1576,12 @@
       renderBooksGrid();
     }
     else if(action === 'reset-book-filters'){
-      filters = { search: filters.search, author:'', saga:'', genre:'', status:'' };
+      filters = { search: filters.search, author:'', saga:'', genre:'', status:'', edicion:'' };
       document.getElementById('filter-author').value = '';
       document.getElementById('filter-saga').value = '';
       document.getElementById('filter-genre').value = '';
       document.getElementById('filter-status').value = '';
+      document.getElementById('filter-edicion').value = '';
       savePrefs(); syncControlsUI();
       renderStats();
       renderFilterOptions();
@@ -1714,7 +1723,7 @@
     renderFilterOptions();
     renderBooksGrid();
   });
-  ['filter-author','filter-saga','filter-genre','filter-status'].forEach(function(id){
+  ['filter-author','filter-saga','filter-genre','filter-status','filter-edicion'].forEach(function(id){
     document.getElementById(id).addEventListener('change', function(e){
       var key = id.replace('filter-','');
       filters[key] = e.target.value;
