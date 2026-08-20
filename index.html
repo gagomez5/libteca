@@ -26,8 +26,10 @@
 
   /* ---- auth screen ---- */
   #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+  #auth-screen.modal-mode{position:fixed;inset:0;min-height:0;background:rgba(28,37,65,.55);z-index:80;}
   #recovery-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
-  .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:16px;padding:28px 24px;border:1px solid var(--border);}
+  .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:16px;padding:28px 24px;border:1px solid var(--border);position:relative;}
+  .auth-modal-close{position:absolute;top:12px;right:12px;color:var(--text-muted);padding:4px;line-height:0;}
   .auth-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
   .auth-brand h1{font-size:20px;color:var(--ink);margin:0;}
   .auth-sub{text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 20px;}
@@ -200,6 +202,9 @@
 <!-- ---------- pantalla de acceso ---------- -->
 <div id="auth-screen">
   <div class="auth-card">
+    <button type="button" class="auth-modal-close hidden" id="auth-modal-close" aria-label="Cerrar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
     <div class="auth-brand">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
       <h1>Mi Biblioteca</h1>
@@ -730,15 +735,32 @@
 
   // ================= AUTENTICACIÓN =================
   function showAuthScreen(){
-    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('auth-screen').classList.remove('modal-mode', 'hidden');
+    document.getElementById('auth-modal-close').classList.add('hidden');
     document.getElementById('recovery-screen').classList.add('hidden');
     document.getElementById('app-root').classList.add('hidden');
+  }
+  function openAuthModal(){
+    authMode = 'login';
+    cameFromGuest = true;
+    document.getElementById('auth-screen').classList.add('modal-mode');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('auth-modal-close').classList.remove('hidden');
+    updateAuthUI();
+  }
+  function closeAuthModal(){
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('modal-mode');
+    document.getElementById('auth-modal-close').classList.add('hidden');
+    cameFromGuest = false;
   }
   function updateAccountButton(){
     document.getElementById('btn-logout').textContent = isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
   }
   function showApp(){
     document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('modal-mode');
+    document.getElementById('auth-modal-close').classList.add('hidden');
     document.getElementById('recovery-screen').classList.add('hidden');
     document.getElementById('app-root').classList.remove('hidden');
     updateAccountButton();
@@ -772,6 +794,7 @@
     var forgotLink = document.getElementById('forgot-password-link');
     var guestDivider = document.getElementById('guest-divider');
     var guestLink = document.getElementById('guest-link');
+    var isModal = document.getElementById('auth-screen').classList.contains('modal-mode');
 
     setAuthMsg('');
 
@@ -793,8 +816,8 @@
       toggleBtn.textContent = authMode === 'login' ? 'Crear una' : 'Iniciar sesión';
       toggleWrap.classList.remove('hidden');
       forgotWrap.classList.add('hidden');
-      guestDivider.classList.remove('hidden');
-      guestLink.classList.remove('hidden');
+      guestDivider.classList.toggle('hidden', isModal);
+      guestLink.classList.toggle('hidden', isModal);
     }
   }
 
@@ -876,14 +899,14 @@
 
   document.getElementById('btn-logout').addEventListener('click', function(){
     if(isGuest){
-      isGuest = false;
-      cameFromGuest = true;
-      authMode = 'login';
-      updateAuthUI();
-      showAuthScreen();
+      openAuthModal();
     } else {
       sb.auth.signOut();
     }
+  });
+
+  document.getElementById('auth-modal-close').addEventListener('click', function(){
+    closeAuthModal();
   });
 
   document.getElementById('guest-link').addEventListener('click', function(){
@@ -1458,6 +1481,7 @@
 
   // ---------- eventos ----------
   document.addEventListener('click', function(e){
+    if(e.target.id === 'auth-screen' && e.target.classList.contains('modal-mode')){ closeAuthModal(); return; }
     if(e.target.id === 'modal-book'){ attemptCloseBookModal(); return; }
     if(e.target.id === 'modal-wish'){ attemptCloseWishModal(); return; }
     if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
