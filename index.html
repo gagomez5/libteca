@@ -686,6 +686,7 @@
   var PREF_BOOK_GROUP = 'pref_book_group';
   var PREF_WISH_FILTERS = 'pref_wish_filters';
   var PREF_WISH_GROUP = 'pref_wish_group';
+  var PREF_NEW_BOOK_IDS = 'pref_new_book_ids';
 
   function savePrefs(){
     try {
@@ -705,9 +706,14 @@
       if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; }
       var wg = localStorage.getItem(PREF_WISH_GROUP);
       if(wg !== null) wishGroupBy = wg;
+      var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
+      if(nb){ JSON.parse(nb).forEach(function(bid){ newBookIds[bid] = true; }); }
     } catch(e){}
   }
   loadPrefs();
+  function saveNewBookIds(){
+    try { localStorage.setItem(PREF_NEW_BOOK_IDS, JSON.stringify(Object.keys(newBookIds))); } catch(e){}
+  }
 
   function syncControlsUI(){
     document.getElementById('search-input').value = filters.search;
@@ -1533,6 +1539,7 @@
 
     if(id && newBookIds[id]){
       delete newBookIds[id];
+      saveNewBookIds();
       renderBooksGrid();
     }
 
@@ -1747,6 +1754,7 @@
           var newBooks = insRes.data || [];
           books = newBooks.concat(books);
           newBooks.forEach(function(nb){ newBookIds[nb.id] = true; });
+          saveNewBookIds();
           wishlist = wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
           var libName = document.getElementById('app-title-text').textContent;
