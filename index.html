@@ -23,6 +23,9 @@
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
   input,select,textarea{font-family:inherit;font-size:14px;}
   .hidden{display:none !important;}
+  @media (max-width:768px){
+    input,select,textarea{font-size:16px;}
+  }
 
   /* ---- auth screen ---- */
   #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
