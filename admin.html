@@ -117,6 +117,7 @@
     <div class="tabs-row">
       <button class="tab-btn active" data-tab="usuarios" id="tab-usuarios">Usuarios</button>
       <button class="tab-btn" data-tab="notificaciones" id="tab-notificaciones">Notificaciones</button>
+      <button class="tab-btn" data-tab="feedback" id="tab-feedback">Feedback</button>
     </div>
 
     <section id="view-usuarios">
@@ -139,6 +140,11 @@
       <div id="notif-list"></div>
       <p class="empty-note hidden" id="notif-empty">Todavía no enviaste notificaciones.</p>
     </section>
+
+    <section id="view-feedback" class="hidden">
+      <div id="feedback-list"></div>
+      <p class="empty-note hidden" id="feedback-empty">Todavía no llegó feedback.</p>
+    </section>
   </main>
 </div>
 
@@ -154,6 +160,7 @@
   var ROLE_ORDER = ['administrador','fundador','premium','free'];
   var users = [];
   var notifs = [];
+  var feedbackItems = [];
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -176,17 +183,20 @@
   function loadAdminData(){
     Promise.all([
       sb.rpc('admin_list_users'),
-      sb.rpc('admin_list_notifications')
+      sb.rpc('admin_list_notifications'),
+      sb.rpc('admin_list_feedback')
     ]).then(function(results){
-      var uRes = results[0], nRes = results[1];
-      if(uRes.error || nRes.error){
+      var uRes = results[0], nRes = results[1], fRes = results[2];
+      if(uRes.error || nRes.error || fRes.error){
         show('denied-screen');
         return;
       }
       users = uRes.data || [];
       notifs = nRes.data || [];
+      feedbackItems = fRes.data || [];
       renderUsers();
       renderNotifs();
+      renderFeedback();
       show('admin-root');
     });
   }
@@ -246,6 +256,28 @@
     });
   }
 
+  function renderFeedback(){
+    var list = document.getElementById('feedback-list');
+    document.getElementById('feedback-empty').classList.toggle('hidden', feedbackItems.length > 0);
+    list.innerHTML = feedbackItems.map(function(f){
+      var date = f.created_at ? new Date(f.created_at).toLocaleString('es-AR') : '';
+      return '<div class="notif-item">' +
+        '<div><div class="msg">' + esc(f.message) + '</div>' +
+        '<div class="meta">' + esc(f.email) + ' · ' + date + '</div></div>' +
+        '<button class="btn btn-burgundy" data-action="delete-feedback" data-id="' + esc(f.id) + '">Eliminar</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function deleteFeedback(id){
+    if(!confirm('¿Eliminar este feedback?')) return;
+    sb.rpc('admin_delete_feedback', { target_id: id }).then(function(res){
+      if(res.error){ alert('Error: ' + res.error.message); return; }
+      feedbackItems = feedbackItems.filter(function(f){ return f.id !== id; });
+      renderFeedback();
+    });
+  }
+
   document.querySelectorAll('.tab-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -253,6 +285,7 @@
       var tab = btn.getAttribute('data-tab');
       document.getElementById('view-usuarios').classList.toggle('hidden', tab !== 'usuarios');
       document.getElementById('view-notificaciones').classList.toggle('hidden', tab !== 'notificaciones');
+      document.getElementById('view-feedback').classList.toggle('hidden', tab !== 'feedback');
     });
   });
 
@@ -267,6 +300,12 @@
     var btn = e.target.closest('[data-action="delete-notif"]');
     if(!btn) return;
     deleteNotif(btn.getAttribute('data-id'));
+  });
+
+  document.getElementById('feedback-list').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action="delete-feedback"]');
+    if(!btn) return;
+    deleteFeedback(btn.getAttribute('data-id'));
   });
 
   document.getElementById('btn-send-notif').addEventListener('click', function(){
