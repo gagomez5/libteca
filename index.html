@@ -418,11 +418,12 @@
     </div>
     <form id="form-book">
       <div class="field"><label>Título *</label><input required id="f-title" name="title"></div>
-      <div class="field"><label>Autor *</label><input required id="f-author" name="author"></div>
+      <div class="field"><label>Autor *</label><input required id="f-author" name="author" list="author-suggestions"></div>
       <div class="field field-row">
-        <div><label>Saga (opcional)</label><input id="f-saga" name="saga"></div>
+        <div><label>Saga (opcional)</label><input id="f-saga" name="saga" list="book-saga-suggestions"></div>
         <div><label>Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
       </div>
+      <div class="field"><label>Número en la saga (opcional)</label><input id="f-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
       <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
       <div class="field">
@@ -454,7 +455,11 @@
     </div>
     <form id="form-wish">
       <div class="field"><label>Título *</label><input required id="w-title" name="title"></div>
-      <div class="field"><label>Autor *</label><input required id="w-author" name="author"></div>
+      <div class="field"><label>Autor *</label><input required id="w-author" name="author" list="author-suggestions"></div>
+      <div class="field field-row">
+        <div><label>Saga (opcional)</label><input id="w-saga" name="saga" list="wish-saga-suggestions"></div>
+        <div><label>Número en la saga (opcional)</label><input id="w-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
+      </div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
       <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
       <div class="field"><label>Notas (opcional)</label><textarea id="w-notas" name="notas" rows="2"></textarea></div>
@@ -462,6 +467,10 @@
     </form>
   </div>
 </div>
+
+<datalist id="author-suggestions"></datalist>
+<datalist id="book-saga-suggestions"></datalist>
+<datalist id="wish-saga-suggestions"></datalist>
 
 <!-- Modal información (solo lectura) -->
 <div class="modal-overlay hidden" id="modal-detail">
@@ -478,6 +487,10 @@
         <div class="detail-row hidden" id="detail-saga-row">
           <div class="detail-label">Saga</div>
           <div class="detail-value" id="detail-saga-value"></div>
+        </div>
+        <div class="detail-row hidden" id="detail-numero-row">
+          <div class="detail-label">Número en la saga</div>
+          <div class="detail-value" id="detail-numero-value"></div>
         </div>
         <div class="detail-row hidden" id="detail-genre-row">
           <div class="detail-label">Género / tema</div>
@@ -559,6 +572,9 @@
 
   var books = [];
   var wishlist = [];
+  var allAuthors = [];
+  var bookNumeroTouched = false;
+  var wishNumeroTouched = false;
   var newBookIds = {};
   var currentUserId = null;
   var isGuest = false;
@@ -610,6 +626,12 @@
       return Promise.resolve({ data: arr, error: null });
     }
     return withClockSkewRetry(function(){ return sb.from('wishlist').select('*').order('created_at', { ascending:false }); });
+  }
+  // La tabla `authors` es de lectura pública (compartida entre todos los usuarios), no
+  // está sujeta a RLS por usuario como el resto de tablas, así que se consulta igual
+  // para invitados y usuarios con cuenta.
+  function dbSelectAuthors(){
+    return sb.from('authors').select('name').order('name');
   }
   function dbSelectProfile(){
     if(isGuest){
@@ -708,6 +730,25 @@
     var path = url.slice(COVERS_PUBLIC_PREFIX.length);
     sb.storage.from('covers').remove([path]).catch(function(){});
   }
+
+  function renderAuthorDatalist(){
+    var el = document.getElementById('author-suggestions');
+    el.innerHTML = allAuthors.map(function(a){ return '<option value="'+esc(a)+'">'; }).join('');
+  }
+  // Los invitados solo VEN la lista compartida de autores; un autor nuevo que escriban
+  // no se sube a la tabla global hasta que creen una cuenta (ver migrateGuestDataToAccount).
+  function ensureAuthorExists(name){
+    name = (name||'').trim();
+    if(!name || isGuest) return;
+    sb.from('authors').upsert([{ name:name }], { onConflict:'name', ignoreDuplicates:true }).then(function(){
+      var exists = allAuthors.some(function(a){ return a.toLowerCase() === name.toLowerCase(); });
+      if(!exists){
+        allAuthors.push(name);
+        allAuthors.sort();
+        renderAuthorDatalist();
+      }
+    }).catch(function(){});
+  }
   function resolveCoverAndSubmit(data, previousCover, submitBtnId, saveFn){
     if(!data.cover || isOwnCoverUrl(data.cover)){
       saveFn(data);
@@ -749,11 +790,14 @@
     var gWish = guestGet('guest_wishlist', []);
     var gName = localStorage.getItem('guest_library_name');
     var tasks = [];
+    uniqueSorted(gBooks.concat(gWish).map(function(x){ return x.author; })).forEach(function(a){
+      ensureAuthorExists(a);
+    });
     gBooks.forEach(function(b){
-      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal' }]));
+      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal', numero_saga:b.numero_saga||null }]));
     });
     gWish.forEach(function(w){
-      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, notas:w.notas }]));
+      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, notas:w.notas, saga:w.saga||'', numero_saga:w.numero_saga||null }]));
     });
     if(gName){
       tasks.push(sb.from('profile').upsert({ user_id: currentUserId, library_name: gName }));
@@ -1099,6 +1143,11 @@
       updateAdminLink();
       renderAll();
     });
+    dbSelectAuthors().then(function(res){
+      if(res.error) return;
+      allAuthors = uniqueSorted((res.data || []).map(function(a){ return a.name; }));
+      renderAuthorDatalist();
+    }).catch(function(){});
     document.getElementById('btn-notifications').classList.toggle('hidden', isGuest);
     if(isGuest){
       notifications = [];
@@ -1308,7 +1357,8 @@
   }
 
   function bookCardHTML(b){
-    var tags = [b.saga, b.genre].filter(Boolean).join(' · ');
+    var sagaTag = b.saga ? (b.saga + (b.numero_saga != null ? ' #'+b.numero_saga : '')) : '';
+    var tags = [sagaTag, b.genre].filter(Boolean).join(' · ');
     var stampHtml = '';
     if(b.status==='leido') stampHtml = '<div class="stamp stamp-leido">LEÍDO</div>';
     else if(b.status==='leyendo') stampHtml = '<div class="stamp stamp-leyendo">LEYENDO</div>';
@@ -1345,6 +1395,15 @@
       if(!map[raw]) map[raw] = { label: label, items: [] };
       map[raw].items.push(b);
     });
+    if(groupBy === 'saga'){
+      Object.keys(map).forEach(function(k){
+        map[k].items.sort(function(a,b){
+          if(a.numero_saga == null) return b.numero_saga == null ? 0 : 1;
+          if(b.numero_saga == null) return -1;
+          return a.numero_saga - b.numero_saga;
+        });
+      });
+    }
     currentGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
       return a.label.localeCompare(b.label, 'es');
     });
@@ -1376,10 +1435,12 @@
   }
 
   function wishCardHTML(w){
+    var sagaTag = w.saga ? (w.saga + (w.numero_saga != null ? ' #'+w.numero_saga : '')) : '';
     return '<div class="card">' + '<div class="cover-click" data-action="view-wish" data-id="'+w.id+'">' + coverHTML(w.cover, w.title) + '</div>' +
       '<div class="card-body">' +
         '<div class="card-title">'+esc(w.title)+'</div>' +
         '<div class="card-author">'+esc(w.author)+'</div>' +
+        (sagaTag ? '<div class="card-tags">'+esc(sagaTag)+'</div>' : '') +
         (w.notas ? '<div class="card-notes">'+esc(w.notas)+'</div>' : '') +
         '<div class="card-actions">' +
           '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
@@ -1530,12 +1591,61 @@
   function formatCosto(n){
     return '$' + Number(n).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
   }
+  function parseSagaNumber(str){
+    str = (str||'').trim();
+    if(str === '') return null;
+    var n = parseInt(str, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  // La saga es privada de cada usuario (a diferencia del autor): las sugerencias y la
+  // numeración se calculan solo sobre los propios libros/wishlist en memoria, que ya
+  // están limitados al usuario actual (por RLS o por localStorage en modo invitado).
+  function sagaKey(author, saga){
+    return (author||'').trim().toLowerCase() + '␟' + (saga||'').trim().toLowerCase();
+  }
+  function getUsedSagaNumbers(author, saga, excludeType, excludeId){
+    if(!(author||'').trim() || !(saga||'').trim()) return [];
+    var key = sagaKey(author, saga);
+    var used = [];
+    books.forEach(function(b){
+      if(excludeType==='book' && b.id===excludeId) return;
+      if(b.numero_saga != null && sagaKey(b.author, b.saga) === key) used.push(Number(b.numero_saga));
+    });
+    wishlist.forEach(function(w){
+      if(excludeType==='wish' && w.id===excludeId) return;
+      if(w.numero_saga != null && sagaKey(w.author, w.saga) === key) used.push(Number(w.numero_saga));
+    });
+    return used;
+  }
+  function suggestNextSagaNumber(author, saga, excludeType, excludeId){
+    var used = getUsedSagaNumbers(author, saga, excludeType, excludeId);
+    return used.length ? (Math.max.apply(null, used) + 1) : 1;
+  }
+  function updateSagaSuggestions(authorInputId, sagaDatalistId){
+    var author = document.getElementById(authorInputId).value.trim();
+    var sagas = uniqueSorted(
+      books.concat(wishlist)
+        .filter(function(x){ return x.author && x.author.trim().toLowerCase() === author.toLowerCase(); })
+        .map(function(x){ return x.saga; })
+    );
+    document.getElementById(sagaDatalistId).innerHTML = sagas.map(function(s){ return '<option value="'+esc(s)+'">'; }).join('');
+  }
+  function maybeSuggestNumeroSaga(authorInputId, sagaInputId, numeroInputId, touched, excludeType, excludeId){
+    if(touched) return;
+    var author = document.getElementById(authorInputId).value.trim();
+    var saga = document.getElementById(sagaInputId).value.trim();
+    var numeroEl = document.getElementById(numeroInputId);
+    if(!author || !saga){ numeroEl.value = ''; return; }
+    numeroEl.value = suggestNextSagaNumber(author, saga, excludeType, excludeId);
+  }
 
   function getBookFormData(){
     return {
       title: document.getElementById('f-title').value.trim(),
       author: document.getElementById('f-author').value.trim(),
       saga: document.getElementById('f-saga').value.trim(),
+      numero_saga: parseSagaNumber(document.getElementById('f-numero-saga').value),
       genre: document.getElementById('f-genre').value.trim(),
       cover: document.getElementById('f-cover').value.trim(),
       costo: parseCosto(document.getElementById('f-costo').value),
@@ -1552,11 +1662,14 @@
     document.getElementById('f-title').value = book ? book.title : '';
     document.getElementById('f-author').value = book ? book.author : '';
     document.getElementById('f-saga').value = book ? (book.saga||'') : '';
+    document.getElementById('f-numero-saga').value = (book && book.numero_saga != null) ? book.numero_saga : '';
     document.getElementById('f-genre').value = book ? (book.genre||'') : '';
     document.getElementById('f-cover').value = book ? (book.cover||'') : '';
     document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
     setStatusUI(book ? book.status : 'pendiente');
     setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
+    bookNumeroTouched = false;
+    updateSagaSuggestions('f-author', 'book-saga-suggestions');
     initialBookSnapshot = JSON.stringify(getBookFormData());
     document.getElementById('modal-book').classList.remove('hidden');
   }
@@ -1576,6 +1689,8 @@
     return {
       title: document.getElementById('w-title').value.trim(),
       author: document.getElementById('w-author').value.trim(),
+      saga: document.getElementById('w-saga').value.trim(),
+      numero_saga: parseSagaNumber(document.getElementById('w-numero-saga').value),
       cover: document.getElementById('w-cover').value.trim(),
       costo: parseCosto(document.getElementById('w-costo').value),
       notas: document.getElementById('w-notas').value.trim()
@@ -1589,9 +1704,13 @@
     document.getElementById('wish-submit-btn').textContent = item ? 'Guardar cambios' : 'Añadir a wishlist';
     document.getElementById('w-title').value = item ? item.title : '';
     document.getElementById('w-author').value = item ? item.author : '';
+    document.getElementById('w-saga').value = item ? (item.saga||'') : '';
+    document.getElementById('w-numero-saga').value = (item && item.numero_saga != null) ? item.numero_saga : '';
     document.getElementById('w-cover').value = item ? (item.cover||'') : '';
     document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
     document.getElementById('w-notas').value = item ? (item.notas||'') : '';
+    wishNumeroTouched = false;
+    updateSagaSuggestions('w-author', 'wish-saga-suggestions');
     initialWishSnapshot = JSON.stringify(getWishFormData());
     document.getElementById('modal-wish').classList.remove('hidden');
   }
@@ -1605,12 +1724,32 @@
     }
   }
 
+  document.getElementById('f-author').addEventListener('blur', function(e){ ensureAuthorExists(e.target.value); });
+  document.getElementById('w-author').addEventListener('blur', function(e){ ensureAuthorExists(e.target.value); });
+  document.getElementById('f-author').addEventListener('input', function(){
+    updateSagaSuggestions('f-author', 'book-saga-suggestions');
+    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', bookNumeroTouched, 'book', editingBookId);
+  });
+  document.getElementById('f-saga').addEventListener('input', function(){
+    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', bookNumeroTouched, 'book', editingBookId);
+  });
+  document.getElementById('f-numero-saga').addEventListener('input', function(){ bookNumeroTouched = true; });
+  document.getElementById('w-author').addEventListener('input', function(){
+    updateSagaSuggestions('w-author', 'wish-saga-suggestions');
+    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', wishNumeroTouched, 'wish', editingWishId);
+  });
+  document.getElementById('w-saga').addEventListener('input', function(){
+    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', wishNumeroTouched, 'wish', editingWishId);
+  });
+  document.getElementById('w-numero-saga').addEventListener('input', function(){ wishNumeroTouched = true; });
+
   function openDetailModal(item, type){
     document.getElementById('detail-cover').innerHTML = coverHTML(item.cover, item.title);
     document.getElementById('detail-title').textContent = item.title;
     document.getElementById('detail-author').textContent = item.author;
 
     var sagaRow = document.getElementById('detail-saga-row');
+    var numeroRow = document.getElementById('detail-numero-row');
     var genreRow = document.getElementById('detail-genre-row');
     var statusRow = document.getElementById('detail-status-row');
     var costoRow = document.getElementById('detail-costo-row');
@@ -1619,8 +1758,10 @@
 
     if(item.costo != null){ document.getElementById('detail-costo-value').textContent = formatCosto(item.costo); costoRow.classList.remove('hidden'); } else { costoRow.classList.add('hidden'); }
 
+    if(item.saga){ document.getElementById('detail-saga-value').textContent = item.saga; sagaRow.classList.remove('hidden'); } else { sagaRow.classList.add('hidden'); }
+    if(item.saga && item.numero_saga != null){ document.getElementById('detail-numero-value').textContent = item.numero_saga; numeroRow.classList.remove('hidden'); } else { numeroRow.classList.add('hidden'); }
+
     if(type === 'book'){
-      if(item.saga){ document.getElementById('detail-saga-value').textContent = item.saga; sagaRow.classList.remove('hidden'); } else { sagaRow.classList.add('hidden'); }
       if(item.genre){ document.getElementById('detail-genre-value').textContent = item.genre; genreRow.classList.remove('hidden'); } else { genreRow.classList.add('hidden'); }
       var badge = document.getElementById('detail-status-value');
       badge.textContent = STATUS_LABELS[item.status];
@@ -1629,7 +1770,6 @@
       edicionRow.classList.toggle('hidden', item.edicion !== 'especial');
       notesRow.classList.add('hidden');
     } else {
-      sagaRow.classList.add('hidden');
       genreRow.classList.add('hidden');
       statusRow.classList.add('hidden');
       edicionRow.classList.add('hidden');
@@ -1875,7 +2015,7 @@
     else if(action === 'buy-wish'){
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:'', genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
         if(insRes.error){ alert('Error: '+insRes.error.message); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ alert('Error: '+delRes.error.message); return; }
@@ -1935,6 +2075,7 @@
   });
 
   function saveBookData(data){
+    ensureAuthorExists(data.author);
     if(editingBookId){
       dbUpdateBook(editingBookId, data).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
@@ -1953,10 +2094,18 @@
     e.preventDefault();
     var data = getBookFormData();
     if(!data.title || !data.author) return;
+    if(data.saga && data.numero_saga != null){
+      var used = getUsedSagaNumbers(data.author, data.saga, 'book', editingBookId);
+      if(used.indexOf(data.numero_saga) !== -1){
+        alert('Ya existe el libro número '+data.numero_saga+' en la saga "'+data.saga+'" de '+data.author+'. Elige otro número.');
+        return;
+      }
+    }
     resolveCoverAndSubmit(data, editingBookOriginalCover, 'book-submit-btn', saveBookData);
   });
 
   function saveWishData(data){
+    ensureAuthorExists(data.author);
     if(editingWishId){
       dbUpdateWish(editingWishId, data).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
@@ -1975,6 +2124,13 @@
     e.preventDefault();
     var data = getWishFormData();
     if(!data.title || !data.author) return;
+    if(data.saga && data.numero_saga != null){
+      var used = getUsedSagaNumbers(data.author, data.saga, 'wish', editingWishId);
+      if(used.indexOf(data.numero_saga) !== -1){
+        alert('Ya existe el libro número '+data.numero_saga+' en la saga "'+data.saga+'" de '+data.author+'. Elige otro número.');
+        return;
+      }
+    }
     resolveCoverAndSubmit(data, editingWishOriginalCover, 'wish-submit-btn', saveWishData);
   });
 
