@@ -125,10 +125,12 @@
   .group-card-count{font-family:'Georgia',serif;font-size:34px;font-weight:800;color:var(--brass);}
   .group-card-label{color:var(--paper);font-size:13px;font-weight:700;margin-top:6px;line-height:1.25;}
   .group-card-sub{color:rgba(250,246,236,.6);font-size:11px;margin-top:2px;}
+  .filter-field{min-width:0;}
   .filter-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:4px;}
   .filter-field select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
-  .cost-filter-row{display:flex;gap:6px;}
-  .cost-filter-row select{flex:0 0 auto;width:auto;}
+  .filter-field-cost{grid-column:1/-1;}
+  .cost-filter-row{display:flex;gap:6px;min-width:0;}
+  .cost-filter-row select{flex:0 0 auto;width:auto;min-width:0;}
   .cost-filter-row input{flex:1;min-width:0;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
