@@ -386,7 +386,6 @@
           <label>Costo</label>
           <div class="cost-filter-row">
             <select id="wish-filter-costo-op">
-              <option value="">Cualquiera</option>
               <option value="gt">Mayor que</option>
               <option value="lt">Menor que</option>
             </select>
@@ -757,7 +756,7 @@
   var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
   var filters = { search:'', author:'', saga:'', genre:'', status:'', edicion:'' };
-  var wishFilters = { search:'', author:'', costoOp:'', costoVal:null };
+  var wishFilters = { search:'', author:'', costoOp:'gt', costoVal:null };
   var wishGroupBy = ''; // '' | 'author'
   var currentWishGroups = [];
   var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
@@ -784,7 +783,7 @@
       var bg = localStorage.getItem(PREF_BOOK_GROUP);
       if(bg !== null) groupBy = bg;
       var wf = localStorage.getItem(PREF_WISH_FILTERS);
-      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.costoOp = parsedWf.costoOp||''; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
+      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.costoOp = parsedWf.costoOp||'gt'; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
       var wg = localStorage.getItem(PREF_WISH_GROUP);
       if(wg !== null) wishGroupBy = wg;
       var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
@@ -1725,10 +1724,10 @@
     }
     else if(action === 'reset-wish-filters'){
       wishFilters.author = '';
-      wishFilters.costoOp = '';
+      wishFilters.costoOp = 'gt';
       wishFilters.costoVal = null;
       document.getElementById('wish-filter-author').value = '';
-      document.getElementById('wish-filter-costo-op').value = '';
+      document.getElementById('wish-filter-costo-op').value = 'gt';
       document.getElementById('wish-filter-costo-val').value = '';
       savePrefs(); syncControlsUI();
       renderWishFilterOptions();
@@ -1750,11 +1749,11 @@
     }
     else if(action === 'clear-wish-all'){
       wishFilters.author = '';
-      wishFilters.costoOp = '';
+      wishFilters.costoOp = 'gt';
       wishFilters.costoVal = null;
       wishGroupBy = '';
       document.getElementById('wish-filter-author').value = '';
-      document.getElementById('wish-filter-costo-op').value = '';
+      document.getElementById('wish-filter-costo-op').value = 'gt';
       document.getElementById('wish-filter-costo-val').value = '';
       document.getElementById('wish-filters-panel').classList.add('hidden');
       document.getElementById('wish-group-panel').classList.add('hidden');
