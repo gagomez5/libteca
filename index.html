@@ -127,6 +127,9 @@
   .group-card-sub{color:rgba(250,246,236,.6);font-size:11px;margin-top:2px;}
   .filter-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:4px;}
   .filter-field select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
+  .cost-filter-row{display:flex;gap:6px;}
+  .cost-filter-row select{flex:0 0 auto;width:auto;}
+  .cost-filter-row input{flex:1;min-width:0;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
   @media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr);}}
@@ -175,6 +178,9 @@
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;}
   .field input,.field textarea{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;}
+  .currency-input{position:relative;}
+  .currency-input .currency-prefix{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;pointer-events:none;}
+  .currency-input input{padding-left:38px;}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .status-row{display:flex;gap:8px;}
   .status-opt{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;text-align:center;}
@@ -376,6 +382,17 @@
 
       <div class="filters-panel hidden" id="wish-filters-panel">
         <div class="filter-field"><label>Autor</label><select id="wish-filter-author"></select></div>
+        <div class="filter-field filter-field-cost">
+          <label>Costo</label>
+          <div class="cost-filter-row">
+            <select id="wish-filter-costo-op">
+              <option value="">Cualquiera</option>
+              <option value="gt">Mayor que</option>
+              <option value="lt">Menor que</option>
+            </select>
+            <input id="wish-filter-costo-val" type="number" step="0.01" min="0" placeholder="USD 0.00">
+          </div>
+        </div>
         <button type="button" class="filters-reset-btn" data-action="reset-wish-filters">Restablecer filtros</button>
       </div>
 
@@ -406,7 +423,7 @@
         <div><label>Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
       </div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
-      <div class="field"><label>Costo (opcional)</label><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
       <div class="field">
         <label>Estado</label>
         <div class="status-row">
@@ -438,7 +455,7 @@
       <div class="field"><label>Título *</label><input required id="w-title" name="title"></div>
       <div class="field"><label>Autor *</label><input required id="w-author" name="author"></div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
-      <div class="field"><label>Costo (opcional)</label><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
       <div class="field"><label>Notas (opcional)</label><textarea id="w-notas" name="notas" rows="2"></textarea></div>
       <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
     </form>
@@ -740,7 +757,7 @@
   var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
   var filters = { search:'', author:'', saga:'', genre:'', status:'', edicion:'' };
-  var wishFilters = { search:'', author:'' };
+  var wishFilters = { search:'', author:'', costoOp:'', costoVal:null };
   var wishGroupBy = ''; // '' | 'author'
   var currentWishGroups = [];
   var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
@@ -767,7 +784,7 @@
       var bg = localStorage.getItem(PREF_BOOK_GROUP);
       if(bg !== null) groupBy = bg;
       var wf = localStorage.getItem(PREF_WISH_FILTERS);
-      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; }
+      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.costoOp = parsedWf.costoOp||''; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
       var wg = localStorage.getItem(PREF_WISH_GROUP);
       if(wg !== null) wishGroupBy = wg;
       var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
@@ -797,7 +814,13 @@
     document.getElementById('btn-toggle-filters').classList.toggle('active', bookFilterCount > 0);
     document.getElementById('filters-label').textContent = bookFilterCount > 0 ? 'Filtros ('+bookFilterCount+')' : 'Filtros';
 
-    var wishFilterActive = !!wishFilters.author;
+    document.getElementById('wish-filter-costo-op').value = wishFilters.costoOp;
+    var costoValInput = document.getElementById('wish-filter-costo-val');
+    if(document.activeElement !== costoValInput){
+      costoValInput.value = wishFilters.costoVal != null ? wishFilters.costoVal : '';
+    }
+
+    var wishFilterActive = !!wishFilters.author || (!!wishFilters.costoOp && wishFilters.costoVal != null);
     document.getElementById('btn-toggle-wish-filters').classList.toggle('active', wishFilterActive);
 
     document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !groupBy);
@@ -1351,6 +1374,11 @@
       if(hay.indexOf(s) === -1) return false;
     }
     if(exclude !== 'author' && wishFilters.author && w.author !== wishFilters.author) return false;
+    if(wishFilters.costoOp && wishFilters.costoVal != null){
+      if(w.costo == null) return false;
+      if(wishFilters.costoOp === 'gt' && !(Number(w.costo) > wishFilters.costoVal)) return false;
+      if(wishFilters.costoOp === 'lt' && !(Number(w.costo) < wishFilters.costoVal)) return false;
+    }
     return true;
   }
 
@@ -1697,7 +1725,11 @@
     }
     else if(action === 'reset-wish-filters'){
       wishFilters.author = '';
+      wishFilters.costoOp = '';
+      wishFilters.costoVal = null;
       document.getElementById('wish-filter-author').value = '';
+      document.getElementById('wish-filter-costo-op').value = '';
+      document.getElementById('wish-filter-costo-val').value = '';
       savePrefs(); syncControlsUI();
       renderWishFilterOptions();
       renderWishGrid();
@@ -1718,8 +1750,12 @@
     }
     else if(action === 'clear-wish-all'){
       wishFilters.author = '';
+      wishFilters.costoOp = '';
+      wishFilters.costoVal = null;
       wishGroupBy = '';
       document.getElementById('wish-filter-author').value = '';
+      document.getElementById('wish-filter-costo-op').value = '';
+      document.getElementById('wish-filter-costo-val').value = '';
       document.getElementById('wish-filters-panel').classList.add('hidden');
       document.getElementById('wish-group-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
@@ -1859,6 +1895,18 @@
   });
   document.getElementById('wish-filter-author').addEventListener('change', function(e){
     wishFilters.author = e.target.value;
+    savePrefs(); syncControlsUI();
+    renderWishFilterOptions();
+    renderWishGrid();
+  });
+  document.getElementById('wish-filter-costo-op').addEventListener('change', function(e){
+    wishFilters.costoOp = e.target.value;
+    savePrefs(); syncControlsUI();
+    renderWishFilterOptions();
+    renderWishGrid();
+  });
+  document.getElementById('wish-filter-costo-val').addEventListener('input', function(e){
+    wishFilters.costoVal = parseCosto(e.target.value);
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
