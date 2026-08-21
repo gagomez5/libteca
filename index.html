@@ -1150,15 +1150,20 @@
     if(!file) return;
     if(file.type.indexOf('image/') !== 0){ alert('Elegí un archivo de imagen.'); return; }
     if(file.size > 3*1024*1024){ alert('La imagen no puede pesar más de 3MB.'); return; }
-    var path = currentUserId + '/avatar';
-    sb.storage.from('avatars').upload(path, file, { upsert:true, contentType:file.type }).then(function(res){
-      if(res.error){ alert('Error subiendo la foto: '+res.error.message); return; }
-      var pub = sb.storage.from('avatars').getPublicUrl(path);
-      var url = pub.data.publicUrl + '?t=' + Date.now();
-      dbSaveAvatar(url).then(function(saveRes){
-        if(saveRes.error){ alert('Error: '+saveRes.error.message); return; }
-        updateUserAvatar(url);
-        showToast('Foto de perfil actualizada');
+    // Refresca la sesión antes de subir: si el token quedó vencido sin renovarse,
+    // Storage lo trata como anónimo y rechaza la subida con un error de RLS confuso.
+    sb.auth.getSession().then(function(sessRes){
+      if(!sessRes.data || !sessRes.data.session){ alert('Tu sesión expiró. Iniciá sesión de nuevo e intentá otra vez.'); return; }
+      var path = currentUserId + '/avatar';
+      sb.storage.from('avatars').upload(path, file, { upsert:true, contentType:file.type }).then(function(res){
+        if(res.error){ alert('Error subiendo la foto: '+res.error.message); return; }
+        var pub = sb.storage.from('avatars').getPublicUrl(path);
+        var url = pub.data.publicUrl + '?t=' + Date.now();
+        dbSaveAvatar(url).then(function(saveRes){
+          if(saveRes.error){ alert('Error: '+saveRes.error.message); return; }
+          updateUserAvatar(url);
+          showToast('Foto de perfil actualizada');
+        });
       });
     });
   });
