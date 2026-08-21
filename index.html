@@ -576,13 +576,32 @@
   }
   function guestUid(){ return 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
+  // Supabase's Auth y PostgREST corren en hosts distintos; justo tras iniciar sesión
+  // sus relojes pueden estar unos segundos desincronizados y PostgREST rechaza el JWT
+  // recién emitido con "JWT issued at future" (PGRST303). Se autocorrige en pocos
+  // segundos, así que reintentamos en vez de mostrar un error y dejar la lista vacía.
+  function isClockSkewError(err){
+    return !!err && (err.code === 'PGRST303' || /issued at future/i.test(err.message || ''));
+  }
+  function withClockSkewRetry(queryFn, attemptsLeft, delayMs){
+    attemptsLeft = attemptsLeft == null ? 3 : attemptsLeft;
+    delayMs = delayMs || 1500;
+    return queryFn().then(function(res){
+      if(res.error && isClockSkewError(res.error) && attemptsLeft > 1){
+        return new Promise(function(resolve){
+          setTimeout(function(){ resolve(withClockSkewRetry(queryFn, attemptsLeft - 1, delayMs)); }, delayMs);
+        });
+      }
+      return res;
+    });
+  }
   function dbSelectBooks(){
     if(isGuest){
       var arr = guestGet('guest_books', []);
       arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
       return Promise.resolve({ data: arr, error: null });
     }
-    return sb.from('books').select('*').order('created_at', { ascending:false });
+    return withClockSkewRetry(function(){ return sb.from('books').select('*').order('created_at', { ascending:false }); });
   }
   function dbSelectWishlist(){
     if(isGuest){
@@ -590,14 +609,14 @@
       arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
       return Promise.resolve({ data: arr, error: null });
     }
-    return sb.from('wishlist').select('*').order('created_at', { ascending:false });
+    return withClockSkewRetry(function(){ return sb.from('wishlist').select('*').order('created_at', { ascending:false }); });
   }
   function dbSelectProfile(){
     if(isGuest){
       var name = localStorage.getItem('guest_library_name');
       return Promise.resolve({ data: name ? { library_name:name } : null, error:null });
     }
-    return sb.from('profile').select('library_name, role').maybeSingle();
+    return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, role').maybeSingle(); });
   }
   function dbInsertBook(data){
     if(isGuest){
@@ -1093,9 +1112,11 @@
   function loadNotifications(){
     var expired = new Date(Date.now() - 30*24*60*60*1000).toISOString();
     return sb.from('notifications').delete().lt('created_at', expired).then(function(){
-      return sb.from('notification_receipts')
-        .select('id, read, created_at, notifications(message, created_at)')
-        .order('created_at', { ascending:true });
+      return withClockSkewRetry(function(){
+        return sb.from('notification_receipts')
+          .select('id, read, created_at, notifications(message, created_at)')
+          .order('created_at', { ascending:true });
+      });
     }).then(function(res){
       if(res.error){
         console.error(res.error);
