@@ -2097,8 +2097,7 @@
     if(data.saga && data.numero_saga != null){
       var used = getUsedSagaNumbers(data.author, data.saga, 'book', editingBookId);
       if(used.indexOf(data.numero_saga) !== -1){
-        alert('Ya existe el libro número '+data.numero_saga+' en la saga "'+data.saga+'" de '+data.author+'. Elige otro número.');
-        return;
+        showToast('El número '+data.numero_saga+' de la saga "'+data.saga+'" ya está repetido');
       }
     }
     resolveCoverAndSubmit(data, editingBookOriginalCover, 'book-submit-btn', saveBookData);
@@ -2127,8 +2126,7 @@
     if(data.saga && data.numero_saga != null){
       var used = getUsedSagaNumbers(data.author, data.saga, 'wish', editingWishId);
       if(used.indexOf(data.numero_saga) !== -1){
-        alert('Ya existe el libro número '+data.numero_saga+' en la saga "'+data.saga+'" de '+data.author+'. Elige otro número.');
-        return;
+        showToast('El número '+data.numero_saga+' de la saga "'+data.saga+'" ya está repetido');
       }
     }
     resolveCoverAndSubmit(data, editingWishOriginalCover, 'wish-submit-btn', saveWishData);
