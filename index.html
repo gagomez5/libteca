@@ -68,11 +68,14 @@
   .icon-btn-header.has-unread{color:var(--brass);}
   .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--burgundy);border:1.5px solid var(--ink);}
   .user-menu-wrap{position:relative;flex-shrink:0;}
-  .avatar-btn{width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(250,246,236,.12);color:rgba(250,246,236,.8);flex-shrink:0;}
-  .avatar-btn img{width:100%;height:100%;object-fit:cover;}
+  .avatar-btn{width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(250,246,236,.12);color:rgba(250,246,236,.8);flex-shrink:0;font-size:17px;}
   .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:60;}
   .user-dropdown button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:6px;font-size:13.5px;color:var(--text);}
   .user-dropdown button:hover{background:var(--bg);}
+  .icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .icon-picker-opt{aspect-ratio:1;border-radius:50%;background:var(--bg);border:1px solid var(--border);font-size:22px;display:flex;align-items:center;justify-content:center;}
+  .icon-picker-opt:hover{background:var(--border);}
+  .icon-picker-opt.selected{background:var(--brass);border-color:var(--brass);}
   .notif-actions-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .notif-action-btn{font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);}
   .notif-action-danger{color:var(--burgundy-dark);}
@@ -292,15 +295,14 @@
           <button class="logout-btn" id="btn-logout">Cerrar sesión</button>
           <div class="user-menu-wrap hidden" id="user-menu-wrap">
             <button class="avatar-btn" id="btn-user-menu" data-action="toggle-user-menu" aria-label="Cuenta">
-              <img id="user-avatar-img" class="hidden" alt="">
+              <span id="user-avatar-icon" class="hidden"></span>
               <svg id="user-avatar-default" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
             </button>
             <div class="user-dropdown hidden" id="user-dropdown">
-              <button type="button" data-action="trigger-avatar-upload">Cambiar foto de perfil</button>
+              <button type="button" data-action="open-icon-picker">Cambiar ícono de perfil</button>
               <button type="button" data-action="open-feedback">Feedback</button>
               <button type="button" data-action="do-logout">Cerrar sesión</button>
             </div>
-            <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
           </div>
         </div>
       </div>
@@ -579,6 +581,17 @@
     <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Contanos qué te gustaría mejorar o qué problema encontraste. Solo lo ven los administradores.</p>
     <div class="field"><textarea id="feedback-message" rows="5" placeholder="Escribí tu feedback…"></textarea></div>
     <button type="button" class="submit-btn btn-dark" id="feedback-submit-btn" data-action="submit-feedback">Enviar</button>
+  </div>
+</div>
+
+<!-- Modal selector de ícono de perfil -->
+<div class="modal-overlay hidden" id="modal-icon-picker">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="serif">Elegí tu ícono</h2>
+      <button data-action="close-icon-picker-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="icon-picker-grid" id="icon-picker-grid"></div>
   </div>
 </div>
 
@@ -979,18 +992,26 @@
     document.getElementById('user-menu-wrap').classList.toggle('hidden', isGuest);
     if(isGuest){ updateUserAvatar(null); }
   }
-  function updateUserAvatar(url){
-    var img = document.getElementById('user-avatar-img');
+  var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
+  var currentAvatarIcon = null;
+  function updateUserAvatar(icon){
+    currentAvatarIcon = icon || null;
+    var iconEl = document.getElementById('user-avatar-icon');
     var def = document.getElementById('user-avatar-default');
-    if(url){
-      img.src = url;
-      img.classList.remove('hidden');
+    if(icon){
+      iconEl.textContent = icon;
+      iconEl.classList.remove('hidden');
       def.classList.add('hidden');
     } else {
-      img.classList.add('hidden');
-      img.src = '';
+      iconEl.classList.add('hidden');
+      iconEl.textContent = '';
       def.classList.remove('hidden');
     }
+  }
+  function renderIconPicker(){
+    document.getElementById('icon-picker-grid').innerHTML = AVATAR_ICONS.map(function(icon){
+      return '<button type="button" class="icon-picker-opt'+(icon===currentAvatarIcon?' selected':'')+'" data-action="pick-avatar-icon" data-icon="'+icon+'">'+icon+'</button>';
+    }).join('');
   }
   function showApp(){
     document.getElementById('auth-screen').classList.add('hidden');
@@ -1142,30 +1163,6 @@
 
   document.getElementById('auth-modal-close').addEventListener('click', function(){
     closeAuthModal();
-  });
-
-  document.getElementById('avatar-file-input').addEventListener('change', function(e){
-    var file = e.target.files[0];
-    e.target.value = '';
-    if(!file) return;
-    if(file.type.indexOf('image/') !== 0){ alert('Elegí un archivo de imagen.'); return; }
-    if(file.size > 3*1024*1024){ alert('La imagen no puede pesar más de 3MB.'); return; }
-    // Refresca la sesión antes de subir: si el token quedó vencido sin renovarse,
-    // Storage lo trata como anónimo y rechaza la subida con un error de RLS confuso.
-    sb.auth.getSession().then(function(sessRes){
-      if(!sessRes.data || !sessRes.data.session){ alert('Tu sesión expiró. Iniciá sesión de nuevo e intentá otra vez.'); return; }
-      var path = currentUserId + '/avatar';
-      sb.storage.from('avatars').upload(path, file, { upsert:true, contentType:file.type }).then(function(res){
-        if(res.error){ alert('Error subiendo la foto: '+res.error.message); return; }
-        var pub = sb.storage.from('avatars').getPublicUrl(path);
-        var url = pub.data.publicUrl + '?t=' + Date.now();
-        dbSaveAvatar(url).then(function(saveRes){
-          if(saveRes.error){ alert('Error: '+saveRes.error.message); return; }
-          updateUserAvatar(url);
-          showToast('Foto de perfil actualizada');
-        });
-      });
-    });
   });
 
   document.getElementById('guest-link').addEventListener('click', function(){
@@ -1870,6 +1867,7 @@
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notification-detail'){ document.getElementById('modal-notification-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-feedback'){ document.getElementById('modal-feedback').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-icon-picker'){ document.getElementById('modal-icon-picker').classList.add('hidden'); return; }
     var userDropdown = document.getElementById('user-dropdown');
     if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
       userDropdown.classList.add('hidden');
@@ -2057,9 +2055,20 @@
       });
     }
     else if(action === 'toggle-user-menu'){ document.getElementById('user-dropdown').classList.toggle('hidden'); }
-    else if(action === 'trigger-avatar-upload'){
+    else if(action === 'open-icon-picker'){
       document.getElementById('user-dropdown').classList.add('hidden');
-      document.getElementById('avatar-file-input').click();
+      renderIconPicker();
+      document.getElementById('modal-icon-picker').classList.remove('hidden');
+    }
+    else if(action === 'close-icon-picker-modal'){ document.getElementById('modal-icon-picker').classList.add('hidden'); }
+    else if(action === 'pick-avatar-icon'){
+      var pickedIcon = el.getAttribute('data-icon');
+      dbSaveAvatar(pickedIcon).then(function(res){
+        if(res.error){ alert('Error: '+res.error.message); return; }
+        updateUserAvatar(pickedIcon);
+        document.getElementById('modal-icon-picker').classList.add('hidden');
+        showToast('Ícono de perfil actualizado');
+      });
     }
     else if(action === 'do-logout'){
       document.getElementById('user-dropdown').classList.add('hidden');
