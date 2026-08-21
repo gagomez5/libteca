@@ -394,6 +394,7 @@
             <input id="wish-filter-costo-val" type="number" step="0.01" min="0" placeholder="USD 0.00">
           </div>
         </div>
+        <div class="filter-field"><label>Tienda</label><select id="wish-filter-tienda"></select></div>
         <button type="button" class="filters-reset-btn" data-action="reset-wish-filters">Restablecer filtros</button>
       </div>
 
@@ -426,6 +427,7 @@
       <div class="field"><label>Número en la saga (opcional)</label><input id="f-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
       <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
+      <div class="field"><label>Tienda (opcional)</label><input id="f-tienda" name="tienda"></div>
       <div class="field">
         <label>Estado</label>
         <div class="status-row">
@@ -462,7 +464,7 @@
       </div>
       <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
       <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
-      <div class="field"><label>Notas (opcional)</label><textarea id="w-notas" name="notas" rows="2"></textarea></div>
+      <div class="field"><label>Tienda (opcional)</label><input id="w-tienda" name="tienda"></div>
       <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
     </form>
   </div>
@@ -508,9 +510,9 @@
           <div class="detail-label">Edición</div>
           <div class="detail-value" id="detail-edicion-value" style="color:var(--emerald);font-weight:600;">Especial</div>
         </div>
-        <div class="detail-row hidden" id="detail-notes-row">
-          <div class="detail-label">Notas</div>
-          <div class="detail-value" id="detail-notes-value"></div>
+        <div class="detail-row hidden" id="detail-tienda-row">
+          <div class="detail-label">Tienda</div>
+          <div class="detail-value" id="detail-tienda-value"></div>
         </div>
       </div>
     </div>
@@ -794,10 +796,10 @@
       ensureAuthorExists(a);
     });
     gBooks.forEach(function(b){
-      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal', numero_saga:b.numero_saga||null }]));
+      tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal', numero_saga:b.numero_saga||null, tienda:b.tienda||'' }]));
     });
     gWish.forEach(function(w){
-      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, notas:w.notas, saga:w.saga||'', numero_saga:w.numero_saga||null }]));
+      tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, tienda:w.tienda||'', saga:w.saga||'', numero_saga:w.numero_saga||null }]));
     });
     if(gName){
       tasks.push(sb.from('profile').upsert({ user_id: currentUserId, library_name: gName }));
@@ -821,7 +823,7 @@
   var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
   var filters = { search:'', author:'', saga:'', genre:'', status:'', edicion:'' };
-  var wishFilters = { search:'', author:'', costoOp:'gt', costoVal:null };
+  var wishFilters = { search:'', author:'', tienda:'', costoOp:'gt', costoVal:null };
   var wishGroupBy = ''; // '' | 'author'
   var currentWishGroups = [];
   var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
@@ -848,7 +850,7 @@
       var bg = localStorage.getItem(PREF_BOOK_GROUP);
       if(bg !== null) groupBy = bg;
       var wf = localStorage.getItem(PREF_WISH_FILTERS);
-      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.costoOp = parsedWf.costoOp||'gt'; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
+      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.tienda = parsedWf.tienda||''; wishFilters.costoOp = parsedWf.costoOp||'gt'; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
       var wg = localStorage.getItem(PREF_WISH_GROUP);
       if(wg !== null) wishGroupBy = wg;
       var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
@@ -884,7 +886,7 @@
       costoValInput.value = wishFilters.costoVal != null ? wishFilters.costoVal : '';
     }
 
-    var wishFilterActive = !!wishFilters.author || (!!wishFilters.costoOp && wishFilters.costoVal != null);
+    var wishFilterActive = !!wishFilters.author || !!wishFilters.tienda || (!!wishFilters.costoOp && wishFilters.costoVal != null);
     document.getElementById('btn-toggle-wish-filters').classList.toggle('active', wishFilterActive);
 
     document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !groupBy);
@@ -1441,7 +1443,7 @@
         '<div class="card-title">'+esc(w.title)+'</div>' +
         '<div class="card-author">'+esc(w.author)+'</div>' +
         (sagaTag ? '<div class="card-tags">'+esc(sagaTag)+'</div>' : '') +
-        (w.notas ? '<div class="card-notes">'+esc(w.notas)+'</div>' : '') +
+        (w.tienda ? '<div class="card-notes">'+esc(w.tienda)+'</div>' : '') +
         '<div class="card-actions">' +
           '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
           '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+'</button>' +
@@ -1457,6 +1459,7 @@
       if(hay.indexOf(s) === -1) return false;
     }
     if(exclude !== 'author' && wishFilters.author && w.author !== wishFilters.author) return false;
+    if(exclude !== 'tienda' && wishFilters.tienda && (w.tienda||'') !== wishFilters.tienda) return false;
     if(wishFilters.costoOp && wishFilters.costoVal != null){
       if(w.costo == null) return false;
       if(wishFilters.costoOp === 'gt' && !(Number(w.costo) > wishFilters.costoVal)) return false;
@@ -1471,6 +1474,7 @@
 
   function renderWishFilterOptions(){
     fillSelect('wish-filter-author', uniqueSorted(wishlist.filter(function(w){return wishMatchesFilters(w,'author');}).map(function(w){return w.author;})), wishFilters.author);
+    fillSelect('wish-filter-tienda', uniqueSorted(wishlist.filter(function(w){return wishMatchesFilters(w,'tienda');}).map(function(w){return w.tienda;})), wishFilters.tienda);
   }
 
   function emptyWishHTML(){
@@ -1649,6 +1653,7 @@
       genre: document.getElementById('f-genre').value.trim(),
       cover: document.getElementById('f-cover').value.trim(),
       costo: parseCosto(document.getElementById('f-costo').value),
+      tienda: document.getElementById('f-tienda').value.trim(),
       status: currentStatus,
       edicion: currentEdicion
     };
@@ -1666,6 +1671,7 @@
     document.getElementById('f-genre').value = book ? (book.genre||'') : '';
     document.getElementById('f-cover').value = book ? (book.cover||'') : '';
     document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
+    document.getElementById('f-tienda').value = book ? (book.tienda||'') : '';
     setStatusUI(book ? book.status : 'pendiente');
     setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
     bookNumeroTouched = false;
@@ -1693,7 +1699,7 @@
       numero_saga: parseSagaNumber(document.getElementById('w-numero-saga').value),
       cover: document.getElementById('w-cover').value.trim(),
       costo: parseCosto(document.getElementById('w-costo').value),
-      notas: document.getElementById('w-notas').value.trim()
+      tienda: document.getElementById('w-tienda').value.trim()
     };
   }
 
@@ -1708,7 +1714,7 @@
     document.getElementById('w-numero-saga').value = (item && item.numero_saga != null) ? item.numero_saga : '';
     document.getElementById('w-cover').value = item ? (item.cover||'') : '';
     document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
-    document.getElementById('w-notas').value = item ? (item.notas||'') : '';
+    document.getElementById('w-tienda').value = item ? (item.tienda||'') : '';
     wishNumeroTouched = false;
     updateSagaSuggestions('w-author', 'wish-saga-suggestions');
     initialWishSnapshot = JSON.stringify(getWishFormData());
@@ -1754,12 +1760,13 @@
     var statusRow = document.getElementById('detail-status-row');
     var costoRow = document.getElementById('detail-costo-row');
     var edicionRow = document.getElementById('detail-edicion-row');
-    var notesRow = document.getElementById('detail-notes-row');
+    var tiendaRow = document.getElementById('detail-tienda-row');
 
     if(item.costo != null){ document.getElementById('detail-costo-value').textContent = formatCosto(item.costo); costoRow.classList.remove('hidden'); } else { costoRow.classList.add('hidden'); }
 
     if(item.saga){ document.getElementById('detail-saga-value').textContent = item.saga; sagaRow.classList.remove('hidden'); } else { sagaRow.classList.add('hidden'); }
     if(item.saga && item.numero_saga != null){ document.getElementById('detail-numero-value').textContent = item.numero_saga; numeroRow.classList.remove('hidden'); } else { numeroRow.classList.add('hidden'); }
+    if(item.tienda){ document.getElementById('detail-tienda-value').textContent = item.tienda; tiendaRow.classList.remove('hidden'); } else { tiendaRow.classList.add('hidden'); }
 
     if(type === 'book'){
       if(item.genre){ document.getElementById('detail-genre-value').textContent = item.genre; genreRow.classList.remove('hidden'); } else { genreRow.classList.add('hidden'); }
@@ -1768,12 +1775,10 @@
       badge.className = 'detail-status-badge status-badge-' + item.status;
       statusRow.classList.remove('hidden');
       edicionRow.classList.toggle('hidden', item.edicion !== 'especial');
-      notesRow.classList.add('hidden');
     } else {
       genreRow.classList.add('hidden');
       statusRow.classList.add('hidden');
       edicionRow.classList.add('hidden');
-      if(item.notas){ document.getElementById('detail-notes-value').textContent = item.notas; notesRow.classList.remove('hidden'); } else { notesRow.classList.add('hidden'); }
     }
 
     document.getElementById('modal-detail').classList.remove('hidden');
@@ -1887,9 +1892,11 @@
     }
     else if(action === 'reset-wish-filters'){
       wishFilters.author = '';
+      wishFilters.tienda = '';
       wishFilters.costoOp = 'gt';
       wishFilters.costoVal = null;
       document.getElementById('wish-filter-author').value = '';
+      document.getElementById('wish-filter-tienda').value = '';
       document.getElementById('wish-filter-costo-op').value = 'gt';
       document.getElementById('wish-filter-costo-val').value = '';
       savePrefs(); syncControlsUI();
@@ -1912,10 +1919,12 @@
     }
     else if(action === 'clear-wish-all'){
       wishFilters.author = '';
+      wishFilters.tienda = '';
       wishFilters.costoOp = 'gt';
       wishFilters.costoVal = null;
       wishGroupBy = '';
       document.getElementById('wish-filter-author').value = '';
+      document.getElementById('wish-filter-tienda').value = '';
       document.getElementById('wish-filter-costo-op').value = 'gt';
       document.getElementById('wish-filter-costo-val').value = '';
       document.getElementById('wish-filters-panel').classList.add('hidden');
@@ -2057,6 +2066,12 @@
   });
   document.getElementById('wish-filter-author').addEventListener('change', function(e){
     wishFilters.author = e.target.value;
+    savePrefs(); syncControlsUI();
+    renderWishFilterOptions();
+    renderWishGrid();
+  });
+  document.getElementById('wish-filter-tienda').addEventListener('change', function(e){
+    wishFilters.tienda = e.target.value;
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
