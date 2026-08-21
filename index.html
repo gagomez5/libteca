@@ -645,6 +645,68 @@
     return sb.from('profile').upsert({ user_id: currentUserId, library_name: name });
   }
 
+  // ================= PORTADAS (descarga permanente vía Edge Function) =================
+  var COVERS_PUBLIC_PREFIX = SUPABASE_URL + '/storage/v1/object/public/covers/';
+  function isOwnCoverUrl(url){
+    return !!url && url.indexOf(COVERS_PUBLIC_PREFIX) === 0;
+  }
+  function validateImageLoads(url){
+    return new Promise(function(resolve){
+      var done = false;
+      var img = new Image();
+      var timer = setTimeout(function(){ if(!done){ done = true; resolve(false); } }, 8000);
+      img.onload = function(){ if(!done){ done = true; clearTimeout(timer); resolve(true); } };
+      img.onerror = function(){ if(!done){ done = true; clearTimeout(timer); resolve(false); } };
+      img.src = url;
+    });
+  }
+  function downloadCoverToStorage(url){
+    return sb.functions.invoke('download-cover', { body: { url: url } }).then(function(res){
+      if(res.error || !res.data || !res.data.url) throw new Error('download_failed');
+      return res.data.url;
+    });
+  }
+  function deleteOwnStorageCover(url){
+    if(!isOwnCoverUrl(url)) return;
+    var path = url.slice(COVERS_PUBLIC_PREFIX.length);
+    sb.storage.from('covers').remove([path]).catch(function(){});
+  }
+  function resolveCoverAndSubmit(data, previousCover, submitBtnId, saveFn){
+    if(!data.cover || isOwnCoverUrl(data.cover)){
+      saveFn(data);
+      if(!data.cover && previousCover && isOwnCoverUrl(previousCover)){
+        deleteOwnStorageCover(previousCover);
+      }
+      return;
+    }
+    var btn = document.getElementById(submitBtnId);
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Guardando portada…';
+    function restoreBtn(){ btn.disabled = false; btn.textContent = originalText; }
+    function askKeepOrDrop(){
+      restoreBtn();
+      var proceed = confirm('El link de la portada no parece ser una imagen válida.\n\nAceptar: guardar el libro sin portada.\nCancelar: seguir editando el link.');
+      if(proceed){
+        data.cover = '';
+        saveFn(data);
+      }
+    }
+    validateImageLoads(data.cover).then(function(ok){
+      if(!ok){ askKeepOrDrop(); return; }
+      downloadCoverToStorage(data.cover).then(function(newUrl){
+        data.cover = newUrl;
+        restoreBtn();
+        saveFn(data);
+        if(previousCover && isOwnCoverUrl(previousCover) && previousCover !== newUrl){
+          deleteOwnStorageCover(previousCover);
+        }
+      }).catch(function(){
+        askKeepOrDrop();
+      });
+    });
+  }
+
   function migrateGuestDataToAccount(){
     var gBooks = guestGet('guest_books', []);
     var gWish = guestGet('guest_wishlist', []);
@@ -670,6 +732,8 @@
   var currentEdicion = 'normal';
   var editingBookId = null;
   var editingWishId = null;
+  var editingBookOriginalCover = '';
+  var editingWishOriginalCover = '';
   var authMode = 'login'; // 'login' | 'signup' | 'recover'
   var currentUserRole = 'free'; // 'administrador' | 'fundador' | 'premium' | 'free'
   var groupBy = ''; // '' | 'author' | 'saga' | 'genre' | 'status'
@@ -1432,6 +1496,7 @@
 
   function openBookModal(book){
     editingBookId = book ? book.id : null;
+    editingBookOriginalCover = book ? (book.cover||'') : '';
     document.getElementById('book-modal-title').textContent = book ? 'Editar libro' : 'Añadir libro';
     document.getElementById('book-submit-btn').textContent = book ? 'Guardar cambios' : 'Añadir a mi biblioteca';
     document.getElementById('f-title').value = book ? book.title : '';
@@ -1469,6 +1534,7 @@
 
   function openWishModal(item){
     editingWishId = item ? item.id : null;
+    editingWishOriginalCover = item ? (item.cover||'') : '';
     document.getElementById('wish-modal-title').textContent = item ? 'Editar deseo' : 'Añadir a wishlist';
     document.getElementById('wish-submit-btn').textContent = item ? 'Guardar cambios' : 'Añadir a wishlist';
     document.getElementById('w-title').value = item ? item.title : '';
@@ -1728,19 +1794,23 @@
     }
     else if(action === 'delete-book'){
       if(confirm('¿Eliminar este libro de tu biblioteca?')){
+        var delBook = books.find(function(b){return b.id===id;});
         dbDeleteBook(id).then(function(res){
           if(res.error){ alert('Error: '+res.error.message); return; }
           books = books.filter(function(b){ return b.id!==id; });
           renderAll();
+          if(delBook) deleteOwnStorageCover(delBook.cover);
         });
       }
     }
     else if(action === 'delete-wish'){
       if(confirm('¿Eliminar este libro de tu wishlist?')){
+        var delWish = wishlist.find(function(w){return w.id===id;});
         dbDeleteWish(id).then(function(res){
           if(res.error){ alert('Error: '+res.error.message); return; }
           wishlist = wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
+          if(delWish) deleteOwnStorageCover(delWish.cover);
         });
       }
     }
@@ -1794,10 +1864,7 @@
     renderWishGrid();
   });
 
-  document.getElementById('form-book').addEventListener('submit', function(e){
-    e.preventDefault();
-    var data = getBookFormData();
-    if(!data.title || !data.author) return;
+  function saveBookData(data){
     if(editingBookId){
       dbUpdateBook(editingBookId, data).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
@@ -1811,12 +1878,15 @@
         closeBookModal(); renderAll();
       });
     }
+  }
+  document.getElementById('form-book').addEventListener('submit', function(e){
+    e.preventDefault();
+    var data = getBookFormData();
+    if(!data.title || !data.author) return;
+    resolveCoverAndSubmit(data, editingBookOriginalCover, 'book-submit-btn', saveBookData);
   });
 
-  document.getElementById('form-wish').addEventListener('submit', function(e){
-    e.preventDefault();
-    var data = getWishFormData();
-    if(!data.title || !data.author) return;
+  function saveWishData(data){
     if(editingWishId){
       dbUpdateWish(editingWishId, data).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
@@ -1830,6 +1900,12 @@
         closeWishModal(); renderAll();
       });
     }
+  }
+  document.getElementById('form-wish').addEventListener('submit', function(e){
+    e.preventDefault();
+    var data = getWishFormData();
+    if(!data.title || !data.author) return;
+    resolveCoverAndSubmit(data, editingWishOriginalCover, 'wish-submit-btn', saveWishData);
   });
 
   // ---------- init ----------
