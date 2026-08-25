@@ -136,9 +136,10 @@
   .group-opt{padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;color:var(--text);}
   .group-opt.selected{background:var(--ink);color:var(--paper);border-color:var(--ink);}
   .filters-reset-btn{grid-column:1/-1;justify-self:start;margin-top:2px;font-size:12px;font-weight:600;color:var(--burgundy-dark);text-decoration:underline;padding:2px;}
-  .column-config-note{font-size:11px;color:var(--text-muted);margin:2px 0 4px;}
-  .column-config-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);padding:4px 0;cursor:pointer;}
-  .column-config-row input{width:16px;height:16px;accent-color:var(--brass);}
+  .column-config-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--text);padding:4px 0;}
+  .column-config-row.col-hidden{color:var(--text-muted);}
+  .column-visibility-btn{padding:4px;color:var(--text-muted);border-radius:6px;}
+  .column-config-row:not(.col-hidden) .column-visibility-btn{color:var(--ink);}
 
   .group-card{cursor:pointer;}
   .group-card-inner{aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1C2541 0%,#3a4a6b 100%);padding:14px;text-align:center;}
@@ -1101,7 +1102,9 @@
     book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
     sortAsc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
     sortDesc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
-    sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>'
+    sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
+    eye:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.27 21.27 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.27 21.27 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>'
   };
 
   // ================= COLUMNAS DE LA VISTA LISTADO =================
@@ -1936,9 +1939,13 @@
     var visibilityMap = scope === 'book' ? bookTableColumns : wishTableColumns;
     var panel = document.getElementById(scope === 'book' ? 'book-columns-panel' : 'wish-columns-panel');
     var rows = colDefs.map(function(c){
-      return '<label class="column-config-row"><input type="checkbox" data-action="toggle-column" data-scope="'+scope+'" data-column="'+c.key+'"'+(visibilityMap[c.key]?' checked':'')+'>'+esc(c.label)+'</label>';
+      var visible = !!visibilityMap[c.key];
+      return '<div class="column-config-row'+(visible ? '' : ' col-hidden')+'">' +
+        '<span>'+esc(c.label)+'</span>' +
+        '<button type="button" class="column-visibility-btn" data-action="toggle-column" data-scope="'+scope+'" data-column="'+c.key+'" title="'+(visible ? 'Ocultar' : 'Mostrar')+'">'+(visible ? ICONS.eye : ICONS.eyeOff)+'</button>' +
+      '</div>';
     }).join('');
-    panel.innerHTML = '<span class="group-panel-label">Columnas visibles</span><p class="column-config-note">Título y Acciones siempre visibles.</p>' + rows;
+    panel.innerHTML = '<span class="group-panel-label">Ver/Ocultar</span>' + rows;
   }
 
   function renderBooksTable(list){
@@ -2322,7 +2329,7 @@
       var tcScope = el.getAttribute('data-scope');
       var tcCol = el.getAttribute('data-column');
       var tcMap = tcScope === 'book' ? bookTableColumns : wishTableColumns;
-      tcMap[tcCol] = el.checked;
+      tcMap[tcCol] = !tcMap[tcCol];
       savePrefs();
       if(tcScope === 'book') renderBooksGrid(); else renderWishGrid();
     }
