@@ -171,7 +171,7 @@
   .data-table .sort-icon.sort-active{opacity:1;color:var(--brass);}
   .data-table tbody tr:hover{background:rgba(28,37,65,.04);}
   .data-table tbody tr:last-child td{border-bottom:none;}
-  .col-title-sticky{position:sticky;left:0;font-weight:700;font-family:'Georgia',serif;white-space:normal;max-width:180px;background:var(--paper);}
+  .col-title-sticky{position:sticky;left:0;font-weight:700;font-family:'Georgia',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;background:var(--paper);cursor:help;}
   .data-table thead .col-title-sticky{background:var(--bg);}
   .data-table tbody tr:hover .col-title-sticky{background:#f2ede0;}
   .col-actions-sticky{position:sticky;right:0;background:var(--paper);}
@@ -1919,7 +1919,7 @@
   }
 
   function tableRowHTML(item, colDefs, visibilityMap, actionsFn){
-    var titleTd = '<td class="col-title-sticky">'+esc(item.title)+'</td>';
+    var titleTd = '<td class="col-title-sticky" title="'+esc(item.title)+'" data-action="show-full-title" data-title="'+esc(item.title)+'">'+esc(item.title)+'</td>';
     var midTd = colDefs.filter(function(c){ return visibilityMap[c.key]; }).map(function(c){ return c.renderCell(item); }).join('');
     var actionsTd = '<td class="col-actions-sticky"><div class="table-row-actions">'+actionsFn(item)+'</div></td>';
     return '<tr>'+titleTd+midTd+actionsTd+'</tr>';
@@ -2333,6 +2333,9 @@
       else { scState.key = scCol; scState.dir = 'asc'; }
       savePrefs();
       if(scScope === 'book') renderBooksGrid(); else renderWishGrid();
+    }
+    else if(action === 'show-full-title'){
+      showToast(el.getAttribute('data-title'));
     }
     else if(action === 'filter-stat'){
       var clickedStatus = el.getAttribute('data-status');
