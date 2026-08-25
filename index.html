@@ -217,6 +217,9 @@
   .empty p.title{font-size:18px;font-weight:700;color:var(--ink);font-family:'Georgia',serif;margin:8px 0 0;}
   .empty p.subtitle{font-size:13px;color:var(--text-muted);margin:0;}
 
+  html.scroll-locked{overflow:hidden;}
+  html.scroll-locked body{overflow:hidden;}
+
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
   #modal-book,#modal-wish,#modal-detail{z-index:60;}
   @media(min-width:640px){.modal-overlay{align-items:center;}}
@@ -2230,6 +2233,30 @@
 
     document.getElementById('modal-detail').classList.remove('hidden');
   }
+
+  // ================= BLOQUEO DE SCROLL DE FONDO =================
+  function syncScrollLock(){
+    var overlayOpen = Array.prototype.some.call(document.querySelectorAll('.modal-overlay'), function(el){
+      return !el.classList.contains('hidden');
+    });
+    var authScreen = document.getElementById('auth-screen');
+    var authModalOpen = authScreen.classList.contains('modal-mode') && !authScreen.classList.contains('hidden');
+    var bookColOpen = !document.getElementById('book-columns-panel').classList.contains('hidden');
+    var wishColOpen = !document.getElementById('wish-columns-panel').classList.contains('hidden');
+    var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
+    var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
+    document.documentElement.classList.toggle('scroll-locked', anyOpen);
+  }
+
+  var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
+    'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
+    'auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+  var scrollLockObserver = new MutationObserver(syncScrollLock);
+  SCROLL_LOCK_WATCH_IDS.forEach(function(elId){
+    var target = document.getElementById(elId);
+    if(target) scrollLockObserver.observe(target, { attributes:true, attributeFilter:['class'] });
+  });
+  syncScrollLock();
 
   // ---------- eventos ----------
   document.addEventListener('click', function(e){
