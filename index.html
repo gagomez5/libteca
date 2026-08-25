@@ -178,13 +178,13 @@
   .data-table thead .col-title-sticky{background:var(--bg);}
   .data-table tbody tr:hover .col-title-sticky{background:#f2ede0;}
   .cell-truncate{max-width:140px;overflow:hidden;text-overflow:ellipsis;cursor:help;}
-  .col-actions-sticky{position:sticky;right:0;background:var(--paper);}
-  .data-table thead .col-actions-sticky{background:var(--bg);}
-  .data-table tbody tr:hover .col-actions-sticky{background:#f2ede0;}
-  .table-row-actions{display:flex;align-items:center;gap:2px;}
-  .table-row-actions .toggle-btn,.table-row-actions .buy-btn{flex:0 0 auto;padding:5px 6px;font-size:9.5px;white-space:nowrap;}
+  .col-actions{text-align:center;}
   .cover-thumb-sm{width:26px;height:39px;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#B8874F 0%,#1C2541 100%);flex-shrink:0;}
   .cover-thumb-sm img{width:100%;height:100%;object-fit:cover;display:block;}
+  .row-actions-list{display:flex;flex-direction:column;gap:4px;}
+  .row-action-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--text);}
+  .row-action-item:hover{background:var(--bg);}
+  .row-action-danger{color:var(--burgundy-dark);}
 
   .cover-click{cursor:pointer;}
   .card{background:var(--paper);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -223,6 +223,7 @@
   .modal{width:100%;max-width:440px;background:var(--paper);border-radius:16px 16px 0 0;padding:20px;max-height:92vh;max-height:92dvh;overflow-y:auto;}
   @media(min-width:640px){.modal{border-radius:16px;}}
   .modal-wide{max-width:820px;}
+  .modal-narrow{max-width:320px;}
   .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:sticky;top:0;background:var(--paper);z-index:1;}
   .modal-head h2{font-size:18px;margin:0;color:var(--ink);}
   .field{margin-bottom:12px;}
@@ -689,6 +690,16 @@
       <button data-action="close-group-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div id="grid-group-books" class="grid" style="zoom:.7"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-row-actions">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 id="row-actions-title" class="serif"></h2>
+      <button data-action="close-row-actions-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="row-actions-body" class="row-actions-list"></div>
   </div>
 </div>
 
@@ -1927,15 +1938,28 @@
       var attrs = sortable ? ' data-action="sort-column" data-scope="'+scope+'" data-column="'+c.key+'"' : '';
       return '<th'+attrs+'><span class="th-inner">'+esc(c.label)+sortIcon(c.key, sortable)+'</span></th>';
     }).join('');
-    var actionsTh = '<th class="col-actions-sticky">Acciones</th>';
+    var actionsTh = '<th class="col-actions">Acciones</th>';
     return '<thead><tr>'+titleTh+midTh+actionsTh+'</tr></thead>';
   }
 
-  function tableRowHTML(item, colDefs, visibilityMap, actionsFn){
+  function tableRowHTML(item, colDefs, visibilityMap, scope){
     var titleTd = '<td class="col-title-sticky" title="'+esc(item.title)+'" data-action="show-full-title" data-title="'+esc(item.title)+'">'+esc(item.title)+'</td>';
     var midTd = colDefs.filter(function(c){ return visibilityMap[c.key]; }).map(function(c){ return c.renderCell(item); }).join('');
-    var actionsTd = '<td class="col-actions-sticky"><div class="table-row-actions">'+actionsFn(item)+'</div></td>';
+    var actionsTd = '<td class="col-actions"><button type="button" class="icon-btn" data-action="open-row-actions" data-scope="'+scope+'" data-id="'+item.id+'" title="Acciones">'+ICONS.edit+'</button></td>';
     return '<tr>'+titleTd+midTd+actionsTd+'</tr>';
+  }
+
+  function bookRowActionsSheetHTML(b){
+    return '<button type="button" class="row-action-item" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' Marcar como '+STATUS_LABELS[STATUS_NEXT[b.status]]+'</button>' +
+      '<button type="button" class="row-action-item" data-action="toggle-edicion" data-id="'+b.id+'">'+ICONS.gem+' '+(b.edicion==='especial' ? 'Quitar edición especial' : 'Marcar edición especial')+'</button>' +
+      '<button type="button" class="row-action-item" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+' Editar</button>' +
+      '<button type="button" class="row-action-item row-action-danger" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+' Eliminar</button>';
+  }
+
+  function wishRowActionsSheetHTML(w){
+    return '<button type="button" class="row-action-item" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
+      '<button type="button" class="row-action-item" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+' Editar</button>' +
+      '<button type="button" class="row-action-item row-action-danger" data-action="delete-wish" data-id="'+w.id+'">'+ICONS.trash+' Eliminar</button>';
   }
 
   function renderColumnConfigPanel(scope){
@@ -1963,7 +1987,7 @@
     var sorted = sortItems(list, bookTableSort.key, bookTableSort.dir, BOOK_COLUMNS);
     wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
       tableHeaderHTML(BOOK_COLUMNS, bookTableColumns, bookTableSort, 'book') +
-      '<tbody>' + sorted.map(function(b){ return tableRowHTML(b, BOOK_COLUMNS, bookTableColumns, bookActionsHTML); }).join('') + '</tbody></table></div>';
+      '<tbody>' + sorted.map(function(b){ return tableRowHTML(b, BOOK_COLUMNS, bookTableColumns, 'book'); }).join('') + '</tbody></table></div>';
   }
 
   function renderWishTable(list){
@@ -1972,7 +1996,7 @@
     var sorted = sortItems(list, wishTableSort.key, wishTableSort.dir, WISH_COLUMNS);
     wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
       tableHeaderHTML(WISH_COLUMNS, wishTableColumns, wishTableSort, 'wish') +
-      '<tbody>' + sorted.map(function(w){ return tableRowHTML(w, WISH_COLUMNS, wishTableColumns, wishActionsHTML); }).join('') + '</tbody></table></div>';
+      '<tbody>' + sorted.map(function(w){ return tableRowHTML(w, WISH_COLUMNS, wishTableColumns, 'wish'); }).join('') + '</tbody></table></div>';
   }
 
   var toastTimer = null;
@@ -2218,6 +2242,7 @@
     if(e.target.id === 'modal-notification-detail'){ document.getElementById('modal-notification-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-feedback'){ document.getElementById('modal-feedback').classList.add('hidden'); return; }
     if(e.target.id === 'modal-icon-picker'){ document.getElementById('modal-icon-picker').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-row-actions'){ document.getElementById('modal-row-actions').classList.add('hidden'); return; }
     var userDropdown = document.getElementById('user-dropdown');
     if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
       userDropdown.classList.add('hidden');
@@ -2234,6 +2259,10 @@
     if(!el) return;
     var action = el.getAttribute('data-action');
     var id = el.getAttribute('data-id');
+
+    if(action !== 'open-row-actions' && action !== 'close-row-actions-modal' && el.closest('#modal-row-actions')){
+      document.getElementById('modal-row-actions').classList.add('hidden');
+    }
 
     if(id && newBookIds[id]){
       delete newBookIds[id];
@@ -2367,6 +2396,15 @@
     else if(action === 'show-full-title'){
       showToast(el.getAttribute('data-title'));
     }
+    else if(action === 'open-row-actions'){
+      var oraScope = el.getAttribute('data-scope');
+      var oraItem = oraScope === 'book' ? books.find(function(b){return b.id===id;}) : wishlist.find(function(w){return w.id===id;});
+      if(!oraItem) return;
+      document.getElementById('row-actions-title').textContent = oraItem.title;
+      document.getElementById('row-actions-body').innerHTML = oraScope === 'book' ? bookRowActionsSheetHTML(oraItem) : wishRowActionsSheetHTML(oraItem);
+      document.getElementById('modal-row-actions').classList.remove('hidden');
+    }
+    else if(action === 'close-row-actions-modal'){ document.getElementById('modal-row-actions').classList.add('hidden'); }
     else if(action === 'filter-stat'){
       var clickedStatus = el.getAttribute('data-status');
       filters.status = (clickedStatus === '' ? '' : (filters.status === clickedStatus ? '' : clickedStatus));
