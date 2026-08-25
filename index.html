@@ -791,6 +791,7 @@
     if(isGuest){
       var arr = guestGet('guest_books', []);
       var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
+      row.fecha_leido = (data.status === 'leido') ? new Date().toISOString() : null;
       arr.unshift(row);
       guestSet('guest_books', arr);
       return Promise.resolve({ data:[row], error:null });
@@ -801,7 +802,15 @@
     if(isGuest){
       var arr = guestGet('guest_books', []);
       var updated = null;
-      arr = arr.map(function(b){ if(b.id===id){ updated = Object.assign({}, b, data); return updated; } return b; });
+      arr = arr.map(function(b){
+        if(b.id===id){
+          updated = Object.assign({}, b, data);
+          // fecha_leido no es editable por el usuario: solo se fija al pasar a "leido" por primera vez.
+          updated.fecha_leido = (data.status === 'leido' && b.status !== 'leido') ? new Date().toISOString() : (b.fecha_leido || null);
+          return updated;
+        }
+        return b;
+      });
       guestSet('guest_books', arr);
       return Promise.resolve({ data:[updated], error:null });
     }
@@ -1437,6 +1446,16 @@
   var DEFAULT_TITLE = 'Mi Biblioteca';
   var MAX_TITLE_CHARS = 20;
 
+  function backfillGuestFechaLeido(){
+    var today = new Date().toISOString();
+    var changed = false;
+    books = books.map(function(b){
+      if(b.status === 'leido' && !b.fecha_leido){ changed = true; return Object.assign({}, b, { fecha_leido: today }); }
+      return b;
+    });
+    if(changed) guestSet('guest_books', books);
+  }
+
   function loadData(){
     Promise.all([
       dbSelectBooks(),
@@ -1444,7 +1463,7 @@
       dbSelectProfile()
     ]).then(function(results){
       var bRes = results[0], wRes = results[1], pRes = results[2];
-      if(bRes.error){ alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; }
+      if(bRes.error){ alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
       if(wRes.error){ alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
       var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
       document.getElementById('app-title-text').textContent = savedTitle;
