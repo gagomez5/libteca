@@ -120,6 +120,12 @@
   .btn-ghost.active{background:var(--brass);color:var(--paper);border-color:var(--brass);}
   .btn-dark{background:var(--ink);color:var(--paper);}
   .btn-burgundy{background:var(--burgundy);color:var(--paper);}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;}
+
+  .view-toggle-group{display:flex;}
+  .view-toggle-group .btn{border-radius:0;}
+  .view-toggle-group .btn:first-child{border-radius:10px 0 0 10px;}
+  .view-toggle-group .btn:last-child{border-radius:0 10px 10px 0;border-left:none;}
 
   .filters-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;padding:14px;border-radius:10px;background:var(--paper);border:1px solid var(--border);}
   @media(min-width:640px){.filters-panel{grid-template-columns:repeat(4,1fr);}}
@@ -130,6 +136,9 @@
   .group-opt{padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;color:var(--text);}
   .group-opt.selected{background:var(--ink);color:var(--paper);border-color:var(--ink);}
   .filters-reset-btn{grid-column:1/-1;justify-self:start;margin-top:2px;font-size:12px;font-weight:600;color:var(--burgundy-dark);text-decoration:underline;padding:2px;}
+  .column-config-note{font-size:11px;color:var(--text-muted);margin:2px 0 4px;}
+  .column-config-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);padding:4px 0;cursor:pointer;}
+  .column-config-row input{width:16px;height:16px;accent-color:var(--brass);}
 
   .group-card{cursor:pointer;}
   .group-card-inner{aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1C2541 0%,#3a4a6b 100%);padding:14px;text-align:center;}
@@ -149,6 +158,29 @@
   @media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr);}}
   @media(min-width:800px){.grid{grid-template-columns:repeat(4,1fr);}}
   @media(min-width:1050px){.grid{grid-template-columns:repeat(5,1fr);}}
+
+  .table-wrap{margin-bottom:18px;}
+  .table-scroll{overflow-x:auto;border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06);background:var(--paper);}
+  .data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .data-table th,.data-table td{padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);}
+  .data-table thead th{background:var(--bg);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);font-weight:700;user-select:none;}
+  .data-table th[data-action="sort-column"]{cursor:pointer;}
+  .data-table th[data-action="sort-column"]:hover{color:var(--ink);}
+  .data-table .th-inner{display:flex;align-items:center;gap:4px;}
+  .data-table .sort-icon{opacity:.35;flex-shrink:0;display:inline-flex;}
+  .data-table .sort-icon.sort-active{opacity:1;color:var(--brass);}
+  .data-table tbody tr:hover{background:rgba(28,37,65,.04);}
+  .data-table tbody tr:last-child td{border-bottom:none;}
+  .col-title-sticky{position:sticky;left:0;font-weight:700;font-family:'Georgia',serif;white-space:normal;max-width:180px;background:var(--paper);}
+  .data-table thead .col-title-sticky{background:var(--bg);}
+  .data-table tbody tr:hover .col-title-sticky{background:#f2ede0;}
+  .col-actions-sticky{position:sticky;right:0;background:var(--paper);}
+  .data-table thead .col-actions-sticky{background:var(--bg);}
+  .data-table tbody tr:hover .col-actions-sticky{background:#f2ede0;}
+  .table-row-actions{display:flex;align-items:center;gap:2px;}
+  .table-row-actions .toggle-btn,.table-row-actions .buy-btn{flex:0 0 auto;padding:5px 6px;font-size:9.5px;white-space:nowrap;}
+  .cover-thumb-sm{width:26px;height:39px;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#B8874F 0%,#1C2541 100%);flex-shrink:0;}
+  .cover-thumb-sm img{width:100%;height:100%;object-fit:cover;display:block;}
 
   .cover-click{cursor:pointer;}
   .card{background:var(--paper);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -236,7 +268,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
       <h1>Mi Biblioteca</h1>
     </div>
-    <p class="auth-sub" id="auth-subtitle">Iniciá sesión para ver tus libros</p>
+    <p class="auth-sub" id="auth-subtitle">Inicia sesión para ver tus libros</p>
     <div id="oauth-buttons">
       <button type="button" class="guest-btn oauth-btn" id="google-oauth-btn">
         <svg class="oauth-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
@@ -254,7 +286,7 @@
         <span>Continuar con Apple</span>
       </button>
     </div>
-    <div class="guest-divider" id="oauth-divider"><span>o continuá con tu correo</span></div>
+    <div class="guest-divider" id="oauth-divider"><span>o continúa con tu correo</span></div>
     <form id="auth-form">
       <div class="auth-field"><label>Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
       <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="6"></div>
@@ -265,7 +297,7 @@
       <button type="button" id="forgot-password-link">¿Olvidaste tu contraseña?</button>
     </p>
     <p class="auth-toggle" id="auth-toggle-wrap">
-      <span id="auth-toggle-text">¿No tenés cuenta?</span>
+      <span id="auth-toggle-text">¿No tienes cuenta?</span>
       <button type="button" id="auth-toggle-btn">Crear una</button>
     </p>
     <div class="guest-divider" id="guest-divider"><span>o</span></div>
@@ -280,7 +312,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
       <h1>Mi Biblioteca</h1>
     </div>
-    <p class="auth-sub">Elegí tu nueva contraseña</p>
+    <p class="auth-sub">Elige tu nueva contraseña</p>
     <form id="recovery-form">
       <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="recovery-password" required minlength="6" autocomplete="new-password"></div>
       <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="6" autocomplete="new-password"></div>
@@ -343,6 +375,14 @@
           <input id="search-input" type="text" placeholder="Buscar por título, autor, saga o género…">
         </div>
         <div class="btn-row">
+          <div class="view-toggle-group" role="group" aria-label="Vista">
+            <button type="button" class="btn btn-ghost active" id="btn-book-view-mosaico" data-action="set-book-view" data-view="mosaico" title="Vista mosaico">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            </button>
+            <button type="button" class="btn btn-ghost" id="btn-book-view-listado" data-action="set-book-view" data-view="listado" title="Vista listado">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
+            </button>
+          </div>
           <button class="btn btn-ghost" id="btn-toggle-filters" data-action="toggle-filters">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
             <span id="filters-label">Filtros</span>
@@ -350,6 +390,9 @@
           <button class="btn btn-ghost" id="btn-toggle-group" data-action="toggle-group">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Agrupar
+          </button>
+          <button class="btn btn-ghost hidden" id="btn-book-columns" data-action="toggle-column-config" data-scope="book" title="Configurar columnas">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09A1.65 1.65 0 0019.4 15z"/></svg>
           </button>
           <button class="btn btn-ghost hidden" id="btn-clear-book-all" data-action="clear-book-all">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -394,7 +437,10 @@
         </div>
       </div>
 
+      <div class="group-panel hidden" id="book-columns-panel"></div>
+
       <div id="grid-books" class="grid"></div>
+      <div id="table-books" class="table-wrap hidden"></div>
     </section>
 
     <section id="view-wishlist" class="hidden">
@@ -404,6 +450,14 @@
           <input id="wish-search-input" type="text" placeholder="Buscar por título o autor…">
         </div>
         <div class="btn-row">
+          <div class="view-toggle-group" role="group" aria-label="Vista">
+            <button type="button" class="btn btn-ghost active" id="btn-wish-view-mosaico" data-action="set-wish-view" data-view="mosaico" title="Vista mosaico">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            </button>
+            <button type="button" class="btn btn-ghost" id="btn-wish-view-listado" data-action="set-wish-view" data-view="listado" title="Vista listado">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
+            </button>
+          </div>
           <button class="btn btn-ghost" id="btn-toggle-wish-filters" data-action="toggle-wish-filters">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
             Filtros
@@ -411,6 +465,9 @@
           <button class="btn btn-ghost" id="btn-toggle-wish-group" data-action="toggle-wish-group">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Agrupar
+          </button>
+          <button class="btn btn-ghost hidden" id="btn-wish-columns" data-action="toggle-column-config" data-scope="wish" title="Configurar columnas">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09A1.65 1.65 0 0019.4 15z"/></svg>
           </button>
           <button class="btn btn-ghost hidden" id="btn-clear-wish-all" data-action="clear-wish-all">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -446,7 +503,10 @@
         </div>
       </div>
 
+      <div class="group-panel hidden" id="wish-columns-panel"></div>
+
       <div id="grid-wishlist" class="grid"></div>
+      <div id="table-wishlist" class="table-wrap hidden"></div>
     </section>
   </main>
 </div>
@@ -599,7 +659,7 @@
       <button data-action="close-feedback-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Contanos qué te gustaría mejorar o qué problema encontraste. Solo lo ven los administradores.</p>
-    <div class="field"><textarea id="feedback-message" rows="5" placeholder="Escribí tu feedback…"></textarea></div>
+    <div class="field"><textarea id="feedback-message" rows="5" placeholder="Escribe tu feedback…"></textarea></div>
     <button type="button" class="submit-btn btn-dark" id="feedback-submit-btn" data-action="submit-feedback">Enviar</button>
   </div>
 </div>
@@ -608,7 +668,7 @@
 <div class="modal-overlay hidden" id="modal-icon-picker">
   <div class="modal">
     <div class="modal-head">
-      <h2 class="serif">Elegí tu ícono</h2>
+      <h2 class="serif">Elige tu ícono</h2>
       <button data-action="close-icon-picker-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="icon-picker-grid" id="icon-picker-grid"></div>
@@ -896,12 +956,33 @@
   var currentWishGroups = [];
   var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
 
+  var bookViewMode = 'mosaico'; // 'mosaico' | 'listado'
+  var wishViewMode = 'mosaico'; // 'mosaico' | 'listado'
+  var bookTableSort = { key: 'title', dir: 'asc' }; // dir: 'asc' | 'desc'
+  var wishTableSort = { key: 'title', dir: 'asc' };
+  // key -> boolean. 'title' y 'actions' no están aquí: son columnas fijas siempre visibles.
+  var bookTableColumns = {
+    cover:false, author:true, saga:true, numero_saga:true,
+    genre:false, status:true, edicion:false, costo:true,
+    tienda:false, created_at:false
+  };
+  var wishTableColumns = {
+    cover:false, author:true, saga:true, numero_saga:true,
+    costo:true, tienda:true, created_at:false
+  };
+
   // ================= PERSISTENCIA DE FILTROS/AGRUPAMIENTO (por navegador) =================
   var PREF_BOOK_FILTERS = 'pref_book_filters';
   var PREF_BOOK_GROUP = 'pref_book_group';
   var PREF_WISH_FILTERS = 'pref_wish_filters';
   var PREF_WISH_GROUP = 'pref_wish_group';
   var PREF_NEW_BOOK_IDS = 'pref_new_book_ids';
+  var PREF_BOOK_VIEW = 'pref_book_view';
+  var PREF_WISH_VIEW = 'pref_wish_view';
+  var PREF_BOOK_TABLE_SORT = 'pref_book_table_sort';
+  var PREF_WISH_TABLE_SORT = 'pref_wish_table_sort';
+  var PREF_BOOK_TABLE_COLUMNS = 'pref_book_table_columns';
+  var PREF_WISH_TABLE_COLUMNS = 'pref_wish_table_columns';
 
   function savePrefs(){
     try {
@@ -909,6 +990,12 @@
       localStorage.setItem(PREF_BOOK_GROUP, groupBy);
       localStorage.setItem(PREF_WISH_FILTERS, JSON.stringify(wishFilters));
       localStorage.setItem(PREF_WISH_GROUP, wishGroupBy);
+      localStorage.setItem(PREF_BOOK_VIEW, bookViewMode);
+      localStorage.setItem(PREF_WISH_VIEW, wishViewMode);
+      localStorage.setItem(PREF_BOOK_TABLE_SORT, JSON.stringify(bookTableSort));
+      localStorage.setItem(PREF_WISH_TABLE_SORT, JSON.stringify(wishTableSort));
+      localStorage.setItem(PREF_BOOK_TABLE_COLUMNS, JSON.stringify(bookTableColumns));
+      localStorage.setItem(PREF_WISH_TABLE_COLUMNS, JSON.stringify(wishTableColumns));
     } catch(e){}
   }
   function loadPrefs(){
@@ -923,6 +1010,28 @@
       if(wg !== null) wishGroupBy = wg;
       var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
       if(nb){ JSON.parse(nb).forEach(function(bid){ newBookIds[bid] = true; }); }
+      var bv = localStorage.getItem(PREF_BOOK_VIEW);
+      if(bv === 'mosaico' || bv === 'listado') bookViewMode = bv;
+      var wv = localStorage.getItem(PREF_WISH_VIEW);
+      if(wv === 'mosaico' || wv === 'listado') wishViewMode = wv;
+      var bts = localStorage.getItem(PREF_BOOK_TABLE_SORT);
+      if(bts){ try{ var pbts = JSON.parse(bts);
+        if(pbts && typeof pbts.key==='string') bookTableSort.key = pbts.key;
+        if(pbts && (pbts.dir==='asc'||pbts.dir==='desc')) bookTableSort.dir = pbts.dir;
+      } catch(e2){} }
+      var wts = localStorage.getItem(PREF_WISH_TABLE_SORT);
+      if(wts){ try{ var pwts = JSON.parse(wts);
+        if(pwts && typeof pwts.key==='string') wishTableSort.key = pwts.key;
+        if(pwts && (pwts.dir==='asc'||pwts.dir==='desc')) wishTableSort.dir = pwts.dir;
+      } catch(e3){} }
+      var btc = localStorage.getItem(PREF_BOOK_TABLE_COLUMNS);
+      if(btc){ try{ var pbtc = JSON.parse(btc);
+        Object.keys(bookTableColumns).forEach(function(k){ if(typeof pbtc[k]==='boolean') bookTableColumns[k]=pbtc[k]; });
+      } catch(e4){} }
+      var wtc = localStorage.getItem(PREF_WISH_TABLE_COLUMNS);
+      if(wtc){ try{ var pwtc = JSON.parse(wtc);
+        Object.keys(wishTableColumns).forEach(function(k){ if(typeof pwtc[k]==='boolean') wishTableColumns[k]=pwtc[k]; });
+      } catch(e5){} }
     } catch(e){}
   }
   loadPrefs();
@@ -959,6 +1068,17 @@
 
     document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !groupBy);
     document.getElementById('btn-clear-wish-all').classList.toggle('hidden', !wishFilterActive && !wishGroupBy);
+
+    document.getElementById('btn-book-view-mosaico').classList.toggle('active', bookViewMode === 'mosaico');
+    document.getElementById('btn-book-view-listado').classList.toggle('active', bookViewMode === 'listado');
+    document.getElementById('btn-wish-view-mosaico').classList.toggle('active', wishViewMode === 'mosaico');
+    document.getElementById('btn-wish-view-listado').classList.toggle('active', wishViewMode === 'listado');
+
+    document.getElementById('btn-toggle-group').disabled = (bookViewMode === 'listado');
+    document.getElementById('btn-toggle-wish-group').disabled = (wishViewMode === 'listado');
+
+    document.getElementById('btn-book-columns').classList.toggle('hidden', bookViewMode !== 'listado');
+    document.getElementById('btn-wish-columns').classList.toggle('hidden', wishViewMode !== 'listado');
   }
 
   function esc(s){
@@ -977,8 +1097,57 @@
     cart:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.4a2 2 0 002 1.6h9a2 2 0 002-1.8L21 7H6"/></svg>',
     heart:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B3A3A" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>',
     gem:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>',
-    book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+    book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+    sortAsc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+    sortDesc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
+    sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>'
   };
+
+  // ================= COLUMNAS DE LA VISTA LISTADO =================
+  function formatShortDate(iso){
+    if(!iso) return '';
+    return new Date(iso).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  var BOOK_COLUMNS = [
+    { key:'cover', label:'Portada', sortType:null,
+      renderCell:function(b){ return '<td>'+coverThumbHTML(b.cover, b.title)+'</td>'; } },
+    { key:'author', label:'Autor', sortType:'string', sortValue:function(b){ return b.author||''; },
+      renderCell:function(b){ return '<td>'+esc(b.author||'—')+'</td>'; } },
+    { key:'saga', label:'Saga', sortType:'string', sortValue:function(b){ return b.saga||''; },
+      renderCell:function(b){ return '<td>'+esc(b.saga||'—')+'</td>'; } },
+    { key:'numero_saga', label:'Nº', sortType:'numeric', sortValue:function(b){ return b.numero_saga; },
+      renderCell:function(b){ return '<td>'+(b.numero_saga!=null ? esc(b.numero_saga) : '—')+'</td>'; } },
+    { key:'genre', label:'Género', sortType:'string', sortValue:function(b){ return b.genre||''; },
+      renderCell:function(b){ return '<td>'+esc(b.genre||'—')+'</td>'; } },
+    { key:'status', label:'Estado', sortType:'string', sortValue:function(b){ return STATUS_LABELS[b.status]||''; },
+      renderCell:function(b){ return '<td>'+esc(STATUS_LABELS[b.status]||'')+'</td>'; } },
+    { key:'edicion', label:'Edición', sortType:'string', sortValue:function(b){ return b.edicion==='especial'?'Especial':'Normal'; },
+      renderCell:function(b){ return '<td>'+(b.edicion==='especial' ? '<span style="color:var(--emerald);font-weight:700">Especial</span>' : 'Normal')+'</td>'; } },
+    { key:'costo', label:'Costo', sortType:'numeric', sortValue:function(b){ return b.costo; },
+      renderCell:function(b){ return '<td>'+(b.costo!=null ? esc(formatCosto(b.costo)) : '—')+'</td>'; } },
+    { key:'tienda', label:'Tienda', sortType:'string', sortValue:function(b){ return b.tienda||''; },
+      renderCell:function(b){ return '<td>'+esc(b.tienda||'—')+'</td>'; } },
+    { key:'created_at', label:'Añadido', sortType:'date', sortValue:function(b){ return b.created_at||''; },
+      renderCell:function(b){ return '<td>'+esc(formatShortDate(b.created_at))+'</td>'; } }
+  ];
+
+  var WISH_COLUMNS = [
+    { key:'cover', label:'Portada', sortType:null,
+      renderCell:function(w){ return '<td>'+coverThumbHTML(w.cover, w.title)+'</td>'; } },
+    { key:'author', label:'Autor', sortType:'string', sortValue:function(w){ return w.author||''; },
+      renderCell:function(w){ return '<td>'+esc(w.author||'—')+'</td>'; } },
+    { key:'saga', label:'Saga', sortType:'string', sortValue:function(w){ return w.saga||''; },
+      renderCell:function(w){ return '<td>'+esc(w.saga||'—')+'</td>'; } },
+    { key:'numero_saga', label:'Nº', sortType:'numeric', sortValue:function(w){ return w.numero_saga; },
+      renderCell:function(w){ return '<td>'+(w.numero_saga!=null ? esc(w.numero_saga) : '—')+'</td>'; } },
+    { key:'costo', label:'Costo', sortType:'numeric', sortValue:function(w){ return w.costo; },
+      renderCell:function(w){ return '<td>'+(w.costo!=null ? esc(formatCosto(w.costo)) : '—')+'</td>'; } },
+    { key:'tienda', label:'Tienda', sortType:'string', sortValue:function(w){ return w.tienda||''; },
+      renderCell:function(w){ return '<td>'+esc(w.tienda||'—')+'</td>'; } },
+    { key:'created_at', label:'Añadido', sortType:'date', sortValue:function(w){ return w.created_at||''; },
+      renderCell:function(w){ return '<td>'+esc(formatShortDate(w.created_at))+'</td>'; } }
+  ];
 
   // ================= AUTENTICACIÓN =================
   function showAuthScreen(){
@@ -1080,7 +1249,7 @@
       pwField.classList.add('hidden');
       pwInput.value = '';
       submitBtn.textContent = 'Enviar enlace de recuperación';
-      subtitle.textContent = 'Ingresá tu correo para recuperar tu contraseña';
+      subtitle.textContent = 'Ingresa tu correo para recuperar tu contraseña';
       toggleWrap.classList.add('hidden');
       forgotWrap.classList.remove('hidden');
       forgotLink.textContent = 'Volver a iniciar sesión';
@@ -1091,8 +1260,8 @@
     } else {
       pwField.classList.remove('hidden');
       submitBtn.textContent = authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
-      subtitle.textContent = authMode === 'login' ? 'Iniciá sesión para ver tus libros' : 'Creá tu cuenta para empezar tu biblioteca';
-      toggleText.textContent = authMode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?';
+      subtitle.textContent = authMode === 'login' ? 'Inicia sesión para ver tus libros' : 'Crea tu cuenta para empezar tu biblioteca';
+      toggleText.textContent = authMode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?';
       toggleBtn.textContent = authMode === 'login' ? 'Crear una' : 'Iniciar sesión';
       toggleWrap.classList.remove('hidden');
       forgotWrap.classList.add('hidden');
@@ -1119,18 +1288,18 @@
     var password = document.getElementById('auth-password').value;
 
     if(authMode === 'recover'){
-      if(!email){ setAuthMsg('Ingresá tu correo.', 'error'); return; }
+      if(!email){ setAuthMsg('Ingresa tu correo.', 'error'); return; }
       setAuthMsg('Enviando…');
       sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
         if(res.error){ setAuthMsg(res.error.message, 'error'); return; }
-        setAuthMsg('Si ese correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisá tu bandeja de entrada (y spam).', 'ok');
+        setAuthMsg('Si ese correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada (y spam).', 'ok');
       });
       return;
     }
 
     setAuthMsg('Un momento…');
     if(authMode === 'login'){
-      if(!password){ setAuthMsg('Ingresá tu contraseña.', 'error'); return; }
+      if(!password){ setAuthMsg('Ingresa tu contraseña.', 'error'); return; }
       sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
         if(res.error){
           setAuthMsg(res.error.message, 'error');
@@ -1141,14 +1310,14 @@
         setAuthMsg('');
       });
     } else {
-      if(!password){ setAuthMsg('Ingresá una contraseña.', 'error'); return; }
+      if(!password){ setAuthMsg('Ingresa una contraseña.', 'error'); return; }
       sb.auth.signUp({ email: email, password: password }).then(function(res){
         if(res.error){ setAuthMsg(res.error.message, 'error'); return; }
         if(cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); cameFromGuest = false; }
         if(res.data && res.data.session){
           setAuthMsg('');
         } else {
-          setAuthMsg('Cuenta creada. Revisá tu correo para confirmar antes de iniciar sesión.', 'ok');
+          setAuthMsg('Cuenta creada. Revisa tu correo para confirmar antes de iniciar sesión.', 'ok');
         }
       });
     }
@@ -1312,7 +1481,7 @@
   function renderNotifList(){
     var container = document.getElementById('notif-list');
     if(notifications.length === 0){
-      container.innerHTML = '<div class="notif-empty">No tenés notificaciones todavía.</div>';
+      container.innerHTML = '<div class="notif-empty">No tienes notificaciones todavía.</div>';
       return;
     }
     container.innerHTML = notifications.map(function(n){
@@ -1421,6 +1590,13 @@
     return '<div class="cover-wrap"><div class="cover-placeholder" style="display:flex"><span>'+esc(title)+'</span></div></div>';
   }
 
+  function coverThumbHTML(cover, title){
+    if(cover){
+      return '<div class="cover-thumb-sm"><img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\'"></div>';
+    }
+    return '<div class="cover-thumb-sm"></div>';
+  }
+
   function renderStats(){
     var total = books.length;
     var leidos = books.filter(function(b){ return b.status === 'leido'; }).length;
@@ -1485,13 +1661,16 @@
         '<div class="card-title">'+esc(b.title)+'</div>' +
         '<div class="card-author">'+esc(b.author)+'</div>' +
         (tags ? '<div class="card-tags">'+esc(tags)+'</div>' : '') +
-        '<div class="card-actions">' +
-          '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
-          '<button class="icon-btn'+(b.edicion==='especial' ? ' icon-btn-especial' : '')+'" data-action="toggle-edicion" data-id="'+b.id+'" title="Edición especial">'+ICONS.gem+'</button>' +
-          '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+'</button>' +
-          '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+'</button>' +
+        '<div class="card-actions">' + bookActionsHTML(b) +
         '</div>' +
       '</div></div>';
+  }
+
+  function bookActionsHTML(b){
+    return '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
+      '<button class="icon-btn'+(b.edicion==='especial' ? ' icon-btn-especial' : '')+'" data-action="toggle-edicion" data-id="'+b.id+'" title="Edición especial">'+ICONS.gem+'</button>' +
+      '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+'</button>' +
+      '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+'</button>';
   }
 
   function emptyBooksHTML(){
@@ -1533,8 +1712,18 @@
   }
 
   function renderBooksGrid(){
+    renderColumnConfigPanel('book');
     var list = filteredBooks();
     var grid = document.getElementById('grid-books');
+    var table = document.getElementById('table-books');
+    if(bookViewMode === 'listado'){
+      grid.className = 'hidden';
+      grid.innerHTML = '';
+      table.classList.remove('hidden');
+      renderBooksTable(list);
+      return;
+    }
+    table.classList.add('hidden');
     if(list.length === 0){
       grid.className = '';
       grid.innerHTML = emptyBooksHTML();
@@ -1556,12 +1745,15 @@
         '<div class="card-author">'+esc(w.author)+'</div>' +
         (sagaTag ? '<div class="card-tags">'+esc(sagaTag)+'</div>' : '') +
         (w.tienda ? '<div class="card-notes">'+esc(w.tienda)+'</div>' : '') +
-        '<div class="card-actions">' +
-          '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
-          '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+'</button>' +
-          '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'">'+ICONS.trash+'</button>' +
+        '<div class="card-actions">' + wishActionsHTML(w) +
         '</div>' +
       '</div></div>';
+  }
+
+  function wishActionsHTML(w){
+    return '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
+      '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+'</button>' +
+      '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'">'+ICONS.trash+'</button>';
   }
 
   function wishMatchesFilters(w, exclude){
@@ -1592,7 +1784,7 @@
   function emptyWishHTML(){
     return '<div class="empty" style="grid-column:1/-1">' + ICONS.heart +
       '<p class="title">'+(wishlist.length===0 ? 'Tu wishlist está vacía' : 'Ningún libro coincide con la búsqueda')+'</p>' +
-      '<p class="subtitle">'+(wishlist.length===0 ? 'Guardá aquí los libros que querés comprar más adelante.' : 'Prueba a ajustar la búsqueda o el filtro.')+'</p></div>';
+      '<p class="subtitle">'+(wishlist.length===0 ? 'Guarda aquí los libros que quieres comprar más adelante.' : 'Prueba a ajustar la búsqueda o el filtro.')+'</p></div>';
   }
 
   function renderGroupedWishGrid(list){
@@ -1628,11 +1820,21 @@
   }
 
   function renderWishGrid(){
+    renderColumnConfigPanel('wish');
     var grid = document.getElementById('grid-wishlist');
+    var table = document.getElementById('table-wishlist');
     renderWishStats();
     document.getElementById('wish-badge').textContent = wishlist.length;
     document.getElementById('wish-badge').classList.toggle('hidden', wishlist.length===0);
     var list = filteredWishlist();
+    if(wishViewMode === 'listado'){
+      grid.className = 'hidden';
+      grid.innerHTML = '';
+      table.classList.remove('hidden');
+      renderWishTable(list);
+      return;
+    }
+    table.classList.add('hidden');
     if(list.length === 0){
       grid.className = '';
       grid.innerHTML = emptyWishHTML();
@@ -1662,6 +1864,93 @@
       document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
     }
+  }
+
+  // ================= VISTA LISTADO (TABLA) =================
+  function compareByColumn(a, b, colDef, dir){
+    var av = colDef.sortValue(a), bv = colDef.sortValue(b);
+    var mul = dir === 'desc' ? -1 : 1;
+    if(colDef.sortType === 'numeric'){
+      var aNull = (av == null), bNull = (bv == null);
+      if(aNull && bNull) return 0;
+      if(aNull) return 1;
+      if(bNull) return -1;
+      return (av - bv) * mul;
+    }
+    if(colDef.sortType === 'date'){
+      av = av || ''; bv = bv || '';
+      if(!av && !bv) return 0;
+      if(!av) return 1;
+      if(!bv) return -1;
+      return (av < bv ? -1 : (av > bv ? 1 : 0)) * mul;
+    }
+    av = (av||'').toString(); bv = (bv||'').toString();
+    if(!av && !bv) return 0;
+    if(!av) return 1;
+    if(!bv) return -1;
+    return av.localeCompare(bv, 'es', { sensitivity:'base' }) * mul;
+  }
+
+  function sortItems(list, sortKey, sortDir, colDefs){
+    var colDef;
+    if(sortKey === 'title'){
+      colDef = { sortType:'string', sortValue:function(item){ return item.title || ''; } };
+    } else {
+      colDef = colDefs.filter(function(c){ return c.key === sortKey; })[0];
+    }
+    if(!colDef || !colDef.sortType) return list.slice();
+    return list.slice().sort(function(a, b){ return compareByColumn(a, b, colDef, sortDir); });
+  }
+
+  function tableHeaderHTML(colDefs, visibilityMap, sortState, scope){
+    function sortIcon(key, sortable){
+      if(!sortable) return '';
+      if(sortState.key === key) return '<span class="sort-icon sort-active">'+(sortState.dir==='asc'?ICONS.sortAsc:ICONS.sortDesc)+'</span>';
+      return '<span class="sort-icon">'+ICONS.sortNeutral+'</span>';
+    }
+    var titleTh = '<th class="col-title-sticky" data-action="sort-column" data-scope="'+scope+'" data-column="title"><span class="th-inner">Título'+sortIcon('title', true)+'</span></th>';
+    var midTh = colDefs.filter(function(c){ return visibilityMap[c.key]; }).map(function(c){
+      var sortable = !!c.sortType;
+      var attrs = sortable ? ' data-action="sort-column" data-scope="'+scope+'" data-column="'+c.key+'"' : '';
+      return '<th'+attrs+'><span class="th-inner">'+esc(c.label)+sortIcon(c.key, sortable)+'</span></th>';
+    }).join('');
+    var actionsTh = '<th class="col-actions-sticky">Acciones</th>';
+    return '<thead><tr>'+titleTh+midTh+actionsTh+'</tr></thead>';
+  }
+
+  function tableRowHTML(item, colDefs, visibilityMap, actionsFn){
+    var titleTd = '<td class="col-title-sticky">'+esc(item.title)+'</td>';
+    var midTd = colDefs.filter(function(c){ return visibilityMap[c.key]; }).map(function(c){ return c.renderCell(item); }).join('');
+    var actionsTd = '<td class="col-actions-sticky"><div class="table-row-actions">'+actionsFn(item)+'</div></td>';
+    return '<tr>'+titleTd+midTd+actionsTd+'</tr>';
+  }
+
+  function renderColumnConfigPanel(scope){
+    var colDefs = scope === 'book' ? BOOK_COLUMNS : WISH_COLUMNS;
+    var visibilityMap = scope === 'book' ? bookTableColumns : wishTableColumns;
+    var panel = document.getElementById(scope === 'book' ? 'book-columns-panel' : 'wish-columns-panel');
+    var rows = colDefs.map(function(c){
+      return '<label class="column-config-row"><input type="checkbox" data-action="toggle-column" data-scope="'+scope+'" data-column="'+c.key+'"'+(visibilityMap[c.key]?' checked':'')+'>'+esc(c.label)+'</label>';
+    }).join('');
+    panel.innerHTML = '<span class="group-panel-label">Columnas visibles</span><p class="column-config-note">Título y Acciones siempre visibles.</p>' + rows;
+  }
+
+  function renderBooksTable(list){
+    var wrap = document.getElementById('table-books');
+    if(list.length === 0){ wrap.innerHTML = emptyBooksHTML(); return; }
+    var sorted = sortItems(list, bookTableSort.key, bookTableSort.dir, BOOK_COLUMNS);
+    wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
+      tableHeaderHTML(BOOK_COLUMNS, bookTableColumns, bookTableSort, 'book') +
+      '<tbody>' + sorted.map(function(b){ return tableRowHTML(b, BOOK_COLUMNS, bookTableColumns, bookActionsHTML); }).join('') + '</tbody></table></div>';
+  }
+
+  function renderWishTable(list){
+    var wrap = document.getElementById('table-wishlist');
+    if(list.length === 0){ wrap.innerHTML = emptyWishHTML(); return; }
+    var sorted = sortItems(list, wishTableSort.key, wishTableSort.dir, WISH_COLUMNS);
+    wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
+      tableHeaderHTML(WISH_COLUMNS, wishTableColumns, wishTableSort, 'wish') +
+      '<tbody>' + sorted.map(function(w){ return tableRowHTML(w, WISH_COLUMNS, wishTableColumns, wishActionsHTML); }).join('') + '</tbody></table></div>';
   }
 
   var toastTimer = null;
@@ -1795,7 +2084,7 @@
   function attemptCloseBookModal(){
     var changed = JSON.stringify(getBookFormData()) !== initialBookSnapshot;
     if(changed){
-      if(confirm('Tenés cambios sin guardar. ¿Salir sin guardarlos?')){ closeBookModal(); }
+      if(confirm('Tienes cambios sin guardar. ¿Salir sin guardarlos?')){ closeBookModal(); }
     } else {
       closeBookModal();
     }
@@ -1836,7 +2125,7 @@
   function attemptCloseWishModal(){
     var changed = JSON.stringify(getWishFormData()) !== initialWishSnapshot;
     if(changed){
-      if(confirm('Tenés cambios sin guardar. ¿Salir sin guardarlos?')){ closeWishModal(); }
+      if(confirm('Tienes cambios sin guardar. ¿Salir sin guardarlos?')){ closeWishModal(); }
     } else {
       closeWishModal();
     }
@@ -1934,13 +2223,14 @@
       var panel = document.getElementById('filters-panel');
       var willShow = panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
-      if(willShow){ document.getElementById('group-panel').classList.add('hidden'); }
+      if(willShow){ document.getElementById('group-panel').classList.add('hidden'); document.getElementById('book-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'toggle-group'){
+      if(bookViewMode === 'listado') return;
       var gpanel = document.getElementById('group-panel');
       var gWillShow = gpanel.classList.contains('hidden');
       gpanel.classList.toggle('hidden');
-      if(gWillShow){ document.getElementById('filters-panel').classList.add('hidden'); }
+      if(gWillShow){ document.getElementById('filters-panel').classList.add('hidden'); document.getElementById('book-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'set-group'){
       var chosen = el.getAttribute('data-group');
@@ -1963,13 +2253,14 @@
       var wfPanel = document.getElementById('wish-filters-panel');
       var wfWillShow = wfPanel.classList.contains('hidden');
       wfPanel.classList.toggle('hidden');
-      if(wfWillShow){ document.getElementById('wish-group-panel').classList.add('hidden'); }
+      if(wfWillShow){ document.getElementById('wish-group-panel').classList.add('hidden'); document.getElementById('wish-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'toggle-wish-group'){
+      if(wishViewMode === 'listado') return;
       var wgPanel = document.getElementById('wish-group-panel');
       var wgWillShow = wgPanel.classList.contains('hidden');
       wgPanel.classList.toggle('hidden');
-      if(wgWillShow){ document.getElementById('wish-filters-panel').classList.add('hidden'); }
+      if(wgWillShow){ document.getElementById('wish-filters-panel').classList.add('hidden'); document.getElementById('wish-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'set-wish-group'){
       var wChosen = el.getAttribute('data-group');
@@ -1986,6 +2277,62 @@
       document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
       document.getElementById('modal-group').classList.remove('hidden');
+    }
+    else if(action === 'set-book-view'){
+      var newBookView = el.getAttribute('data-view');
+      if(newBookView === bookViewMode) return;
+      bookViewMode = newBookView;
+      if(bookViewMode === 'listado'){ document.getElementById('group-panel').classList.add('hidden'); }
+      document.getElementById('book-columns-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderBooksGrid();
+    }
+    else if(action === 'set-wish-view'){
+      var newWishView = el.getAttribute('data-view');
+      if(newWishView === wishViewMode) return;
+      wishViewMode = newWishView;
+      if(wishViewMode === 'listado'){ document.getElementById('wish-group-panel').classList.add('hidden'); }
+      document.getElementById('wish-columns-panel').classList.add('hidden');
+      savePrefs(); syncControlsUI();
+      renderWishGrid();
+    }
+    else if(action === 'toggle-column-config'){
+      var ccScope = el.getAttribute('data-scope');
+      var panelId = ccScope === 'book' ? 'book-columns-panel' : 'wish-columns-panel';
+      var cpanel = document.getElementById(panelId);
+      var ccWillShow = cpanel.classList.contains('hidden');
+      cpanel.classList.toggle('hidden');
+      if(ccWillShow){
+        if(ccScope === 'book'){
+          document.getElementById('filters-panel').classList.add('hidden');
+          document.getElementById('group-panel').classList.add('hidden');
+        } else {
+          document.getElementById('wish-filters-panel').classList.add('hidden');
+          document.getElementById('wish-group-panel').classList.add('hidden');
+        }
+      }
+    }
+    else if(action === 'toggle-column'){
+      var tcScope = el.getAttribute('data-scope');
+      var tcCol = el.getAttribute('data-column');
+      var tcMap = tcScope === 'book' ? bookTableColumns : wishTableColumns;
+      tcMap[tcCol] = el.checked;
+      savePrefs();
+      if(tcScope === 'book') renderBooksGrid(); else renderWishGrid();
+    }
+    else if(action === 'sort-column'){
+      var scScope = el.getAttribute('data-scope');
+      var scCol = el.getAttribute('data-column');
+      var scColDefs = scScope === 'book' ? BOOK_COLUMNS : WISH_COLUMNS;
+      var scState = scScope === 'book' ? bookTableSort : wishTableSort;
+      if(scCol !== 'title'){
+        var scDef = scColDefs.filter(function(c){ return c.key === scCol; })[0];
+        if(!scDef || !scDef.sortType) return;
+      }
+      if(scState.key === scCol){ scState.dir = scState.dir === 'asc' ? 'desc' : 'asc'; }
+      else { scState.key = scCol; scState.dir = 'asc'; }
+      savePrefs();
+      if(scScope === 'book') renderBooksGrid(); else renderWishGrid();
     }
     else if(action === 'filter-stat'){
       var clickedStatus = el.getAttribute('data-status');
@@ -2121,7 +2468,7 @@
     else if(action === 'close-feedback-modal'){ document.getElementById('modal-feedback').classList.add('hidden'); }
     else if(action === 'submit-feedback'){
       var feedbackText = document.getElementById('feedback-message').value.trim();
-      if(!feedbackText){ alert('Escribí un mensaje.'); return; }
+      if(!feedbackText){ alert('Escribe un mensaje.'); return; }
       var feedbackBtn = document.getElementById('feedback-submit-btn');
       feedbackBtn.disabled = true;
       sb.rpc('submit_feedback', { message: feedbackText }).then(function(res){
