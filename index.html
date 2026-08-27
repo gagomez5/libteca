@@ -1415,6 +1415,20 @@
     currentUserId = null;
     showApp();
     loadData();
+    history.pushState({ guestEntry: true }, '', location.href);
+  });
+
+  window.addEventListener('popstate', function(e){
+    if(e.state && e.state.guestEntry){
+      isGuest = true;
+      currentUserId = null;
+      showApp();
+      loadData();
+    } else if(isGuest){
+      isGuest = false;
+      currentUserId = null;
+      showAuthScreen();
+    }
   });
 
   function startOAuth(provider){
