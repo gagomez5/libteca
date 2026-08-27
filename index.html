@@ -2271,6 +2271,7 @@
       scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
       document.body.style.top = (-scrollLockY) + 'px';
       document.documentElement.classList.add('scroll-locked');
+      window.scrollTo(0, 0);
     } else if(!anyOpen && wasLocked){
       document.documentElement.classList.remove('scroll-locked');
       document.body.style.top = '';
