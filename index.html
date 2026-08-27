@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Bruukion — Tu biblioteca personal">
 <meta name="twitter:description" content="Organizá, registrá y seguí los libros que leíste, estás leyendo y querés comprar.">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
 <style>
   :root{
     --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
@@ -310,7 +310,7 @@
     <div class="guest-divider" id="oauth-divider"><span>o continúa con tu correo</span></div>
     <form id="auth-form">
       <div class="auth-field"><label>Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
-      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="6"></div>
+      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="6" required></div>
       <button type="submit" class="auth-submit" id="auth-submit-btn">Iniciar sesión</button>
     </form>
     <p class="auth-msg" id="auth-msg"></p>
@@ -1308,6 +1308,7 @@
       oauthDivider.classList.add('hidden');
     } else {
       pwField.classList.remove('hidden');
+      pwInput.autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
       submitBtn.textContent = authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
       subtitle.textContent = authMode === 'login' ? 'Inicia sesión para ver tus libros' : 'Crea tu cuenta para empezar tu biblioteca';
       toggleText.textContent = authMode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?';
