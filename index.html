@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Biblioteca">
 <meta name="theme-color" content="#1C2541">
-<title>Mi Biblioteca</title>
+<title>Bruukion</title>
 <link rel="canonical" href="https://bruukion.com/">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -219,7 +219,7 @@
   .empty p.subtitle{font-size:13px;color:var(--text-muted);margin:0;}
 
   html.scroll-locked{overflow:hidden;}
-  html.scroll-locked body{overflow:hidden;}
+  html.scroll-locked body{overflow:hidden;position:fixed;left:0;right:0;}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
   #modal-book,#modal-wish,#modal-detail{z-index:60;}
@@ -275,7 +275,7 @@
     </button>
     <div class="auth-brand">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
-      <h1>Mi Biblioteca</h1>
+      <h1>Bruukion</h1>
     </div>
     <p class="auth-sub" id="auth-subtitle">Inicia sesión para ver tus libros</p>
     <div id="oauth-buttons">
@@ -319,7 +319,7 @@
   <div class="auth-card">
     <div class="auth-brand">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
-      <h1>Mi Biblioteca</h1>
+      <h1>Bruukion</h1>
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
     <form id="recovery-form">
@@ -2255,6 +2255,7 @@
   }
 
   // ================= BLOQUEO DE SCROLL DE FONDO =================
+  var scrollLockY = 0;
   function syncScrollLock(){
     var overlayOpen = Array.prototype.some.call(document.querySelectorAll('.modal-overlay'), function(el){
       return !el.classList.contains('hidden');
@@ -2265,7 +2266,16 @@
     var wishColOpen = !document.getElementById('wish-columns-panel').classList.contains('hidden');
     var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
     var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
-    document.documentElement.classList.toggle('scroll-locked', anyOpen);
+    var wasLocked = document.documentElement.classList.contains('scroll-locked');
+    if(anyOpen && !wasLocked){
+      scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+      document.body.style.top = (-scrollLockY) + 'px';
+      document.documentElement.classList.add('scroll-locked');
+    } else if(!anyOpen && wasLocked){
+      document.documentElement.classList.remove('scroll-locked');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollLockY);
+    }
   }
 
   var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
