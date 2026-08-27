@@ -310,7 +310,7 @@
     <div class="guest-divider" id="oauth-divider"><span>o continúa con tu correo</span></div>
     <form id="auth-form">
       <div class="auth-field"><label>Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
-      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="6" required></div>
+      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="8" required></div>
       <button type="submit" class="auth-submit" id="auth-submit-btn">Iniciar sesión</button>
     </form>
     <p class="auth-msg" id="auth-msg"></p>
@@ -335,8 +335,8 @@
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
     <form id="recovery-form">
-      <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="recovery-password" required minlength="6" autocomplete="new-password"></div>
-      <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="6" autocomplete="new-password"></div>
+      <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="recovery-password" required minlength="8" autocomplete="new-password"></div>
+      <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="8" autocomplete="new-password"></div>
       <button type="submit" class="auth-submit">Guardar nueva contraseña</button>
     </form>
     <p class="auth-msg" id="recovery-msg"></p>
@@ -1378,7 +1378,7 @@
     var p1 = document.getElementById('recovery-password').value;
     var p2 = document.getElementById('recovery-password-confirm').value;
     if(p1 !== p2){ setRecoveryMsg('Las contraseñas no coinciden.', 'error'); return; }
-    if(p1.length < 6){ setRecoveryMsg('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+    if(p1.length < 8){ setRecoveryMsg('La contraseña debe tener al menos 8 caracteres.', 'error'); return; }
     setRecoveryMsg('Guardando…');
     sb.auth.updateUser({ password: p1 }).then(function(res){
       if(res.error){ setRecoveryMsg(res.error.message, 'error'); return; }
