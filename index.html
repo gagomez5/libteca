@@ -1418,17 +1418,25 @@
     history.pushState({ guestEntry: true }, '', location.href);
   });
 
+  var authBackGuardActive = false;
+
   window.addEventListener('popstate', function(e){
     if(e.state && e.state.guestEntry){
       isGuest = true;
       currentUserId = null;
       showApp();
       loadData();
+    } else if(authBackGuardActive){
+      history.pushState({ authApp: true }, '', location.href);
     } else if(isGuest){
       isGuest = false;
       currentUserId = null;
       showAuthScreen();
     }
+  });
+
+  window.addEventListener('pageshow', function(e){
+    if(e.persisted){ location.reload(); }
   });
 
   function startOAuth(provider){
@@ -1451,6 +1459,10 @@
     if(session && session.user){
       currentUserId = session.user.id;
       isGuest = false;
+      if(!authBackGuardActive){
+        authBackGuardActive = true;
+        history.pushState({ authApp: true }, '', location.href);
+      }
       if(localStorage.getItem('guest_pending_migration') === '1'){
         migrationInProgress = true;
         migrateGuestDataToAccount().then(function(){
@@ -1465,6 +1477,7 @@
       loadData();
     } else {
       currentUserId = null;
+      authBackGuardActive = false;
       localStorage.removeItem('guest_pending_migration');
       showAuthScreen();
     }
