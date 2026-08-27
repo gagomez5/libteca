@@ -157,7 +157,7 @@
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bGZ5ZXpzZWdiYnB3a2t3Y3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MjgyNTMsImV4cCI6MjEwMDMwNDI1M30.Nc7zcYF5bgxPhOYPNhjGa9HHYSywVOYxXJi-96zVfT0';
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var ROLE_LABELS = { administrador:'Administrador', fundador:'Fundador', premium:'Premium', free:'Free' };
+  var ROLE_LABELS = { administrador:'Administrador', fundador:'Lector Fundador', premium:'Lector Premium', free:'Lector' };
   var ROLE_ORDER = ['administrador','fundador','premium','free'];
   var users = [];
   var notifs = [];
