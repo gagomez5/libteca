@@ -2731,7 +2731,7 @@
       }
     }
     else if(action === 'buy-wish'){
-      if(!canAddBook()){ showToast('Alcanzaste el límite de libros. Actualiza a Lector Premium para agregarlo.'); return; }
+      if(!canAddBook()){ showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregarlo.'); return; }
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
