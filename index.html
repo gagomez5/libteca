@@ -2502,6 +2502,12 @@
     );
   }
 
+  function getInitialFocusTarget(overlay){
+    var field = overlay.querySelector('form input:not([type="hidden"]):not([disabled]), form select:not([disabled]), form textarea:not([disabled])');
+    if(field && field.offsetParent !== null) return field;
+    return overlay;
+  }
+
   var a11yPrevFocus = null;
   var a11yCurrentTarget = null;
   function syncModalFocus(){
@@ -2510,7 +2516,7 @@
     if(topEl){
       if(!a11yPrevFocus) a11yPrevFocus = document.activeElement;
       if(!topEl.hasAttribute('tabindex')) topEl.setAttribute('tabindex', '-1');
-      topEl.focus();
+      getInitialFocusTarget(topEl).focus();
     } else {
       if(a11yPrevFocus && typeof a11yPrevFocus.focus === 'function' && document.body.contains(a11yPrevFocus)) a11yPrevFocus.focus();
       a11yPrevFocus = null;
