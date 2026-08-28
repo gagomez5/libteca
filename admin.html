@@ -40,6 +40,16 @@
   .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
   .btn-dark{background:var(--ink);color:var(--paper);}
   .btn-burgundy{background:var(--burgundy);color:var(--paper);}
+  .btn-ghost{background:var(--paper);border-color:var(--border);color:var(--text);}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:65;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+  @media(min-width:640px){.modal-overlay{align-items:center;}}
+  .modal{width:100%;max-width:440px;background:var(--paper);border-radius:16px 16px 0 0;padding:20px;max-height:92vh;max-height:92dvh;overflow-y:auto;}
+  @media(min-width:640px){.modal{border-radius:16px;}}
+  .modal-narrow{max-width:320px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;}
+  .modal-head h2{font-size:18px;margin:0;color:var(--ink);}
+  .confirm-actions{display:flex;gap:10px;}
 
   header{background:var(--ink);padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));}
   .header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
@@ -155,6 +165,20 @@
   </main>
 </div>
 
+<div class="modal-overlay hidden" id="modal-confirm">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif" id="confirm-modal-title">Confirmar</h2>
+      <button data-action="close-confirm-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p id="confirm-modal-message" style="font-size:14px;color:var(--text);margin:0 0 18px;"></p>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-confirm-modal">Cancelar</button>
+      <button type="button" class="btn btn-burgundy" id="confirm-modal-accept">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -202,6 +226,27 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, type === 'error' ? 5000 : 3500);
   }
+
+  var confirmModalCallback = null;
+  function openConfirmModal(title, message, onConfirm, acceptLabel){
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    document.getElementById('confirm-modal-accept').textContent = acceptLabel || 'Eliminar';
+    confirmModalCallback = onConfirm;
+    document.getElementById('modal-confirm').classList.remove('hidden');
+  }
+  function closeConfirmModal(){
+    document.getElementById('modal-confirm').classList.add('hidden');
+    confirmModalCallback = null;
+  }
+  document.getElementById('modal-confirm').addEventListener('click', function(e){
+    if(e.target.id === 'modal-confirm' || e.target.closest('[data-action="close-confirm-modal"]')) closeConfirmModal();
+  });
+  document.getElementById('confirm-modal-accept').addEventListener('click', function(){
+    var cb = confirmModalCallback;
+    closeConfirmModal();
+    if(cb) cb();
+  });
 
   function show(id){
     ['login-screen','denied-screen','admin-root'].forEach(function(i){
@@ -283,11 +328,12 @@
   }
 
   function deleteNotif(id){
-    if(!confirm('¿Eliminar esta notificación para todos los usuarios?')) return;
-    sb.rpc('admin_delete_notification', { target_id: id }).then(function(res){
-      if(res.error){ reportError(res.error); showToast('Error: ' + res.error.message, 'error'); return; }
-      notifs = notifs.filter(function(n){ return n.id !== id; });
-      renderNotifs();
+    openConfirmModal('Eliminar notificación', '¿Eliminar esta notificación para todos los usuarios?', function(){
+      sb.rpc('admin_delete_notification', { target_id: id }).then(function(res){
+        if(res.error){ reportError(res.error); showToast('Error: ' + res.error.message, 'error'); return; }
+        notifs = notifs.filter(function(n){ return n.id !== id; });
+        renderNotifs();
+      });
     });
   }
 
@@ -305,11 +351,12 @@
   }
 
   function deleteFeedback(id){
-    if(!confirm('¿Eliminar este feedback?')) return;
-    sb.rpc('admin_delete_feedback', { target_id: id }).then(function(res){
-      if(res.error){ reportError(res.error); showToast('Error: ' + res.error.message, 'error'); return; }
-      feedbackItems = feedbackItems.filter(function(f){ return f.id !== id; });
-      renderFeedback();
+    openConfirmModal('Eliminar feedback', '¿Eliminar este feedback?', function(){
+      sb.rpc('admin_delete_feedback', { target_id: id }).then(function(res){
+        if(res.error){ reportError(res.error); showToast('Error: ' + res.error.message, 'error'); return; }
+        feedbackItems = feedbackItems.filter(function(f){ return f.id !== id; });
+        renderFeedback();
+      });
     });
   }
 

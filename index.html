@@ -245,6 +245,7 @@
 
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
   #modal-book,#modal-wish,#modal-detail{z-index:60;}
+  #modal-confirm{z-index:65;}
   @media(min-width:640px){.modal-overlay{align-items:center;}}
   .modal{width:100%;max-width:440px;background:var(--paper);border-radius:16px 16px 0 0;padding:20px;max-height:92vh;max-height:92dvh;overflow-y:auto;}
   @media(min-width:640px){.modal{border-radius:16px;}}
@@ -1002,11 +1003,10 @@
     function restoreBtn(){ btn.disabled = false; btn.textContent = originalText; }
     function askKeepOrDrop(){
       restoreBtn();
-      var proceed = confirm('El link de la portada no parece ser una imagen válida.\n\nAceptar: guardar el libro sin portada.\nCancelar: seguir editando el link.');
-      if(proceed){
+      openConfirmModal('Portada no válida', 'El link de la portada no parece ser una imagen válida. Puedes guardar el libro sin portada, o cancelar y seguir editando el link.', function(){
         data.cover = '';
         saveFn(data);
-      }
+      }, 'Guardar sin portada');
     }
     validateImageLoads(data.cover).then(function(ok){
       if(!ok){ askKeepOrDrop(); return; }
@@ -2289,7 +2289,7 @@
   function attemptCloseBookModal(){
     var changed = JSON.stringify(getBookFormData()) !== initialBookSnapshot;
     if(changed){
-      if(confirm('Tienes cambios sin guardar. ¿Salir sin guardarlos?')){ closeBookModal(); }
+      openConfirmModal('Cambios sin guardar', 'Tienes cambios sin guardar. ¿Salir sin guardarlos?', function(){ closeBookModal(); }, 'Salir sin guardar');
     } else {
       closeBookModal();
     }
@@ -2331,7 +2331,7 @@
   function attemptCloseWishModal(){
     var changed = JSON.stringify(getWishFormData()) !== initialWishSnapshot;
     if(changed){
-      if(confirm('Tienes cambios sin guardar. ¿Salir sin guardarlos?')){ closeWishModal(); }
+      openConfirmModal('Cambios sin guardar', 'Tienes cambios sin guardar. ¿Salir sin guardarlos?', function(){ closeWishModal(); }, 'Salir sin guardar');
     } else {
       closeWishModal();
     }
@@ -2393,9 +2393,10 @@
   }
 
   var confirmModalCallback = null;
-  function openConfirmModal(title, message, onConfirm){
+  function openConfirmModal(title, message, onConfirm, acceptLabel){
     document.getElementById('confirm-modal-title').textContent = title;
     document.getElementById('confirm-modal-message').textContent = message;
+    document.getElementById('confirm-modal-accept').textContent = acceptLabel || 'Eliminar';
     confirmModalCallback = onConfirm;
     document.getElementById('modal-confirm').classList.remove('hidden');
     document.querySelector('#modal-confirm .modal').scrollTop = 0;
@@ -2718,7 +2719,7 @@
     }
     else if(action === 'mark-all-read'){ markAllNotificationsRead(); }
     else if(action === 'delete-all-notifications'){
-      if(confirm('¿Eliminar todas las notificaciones? Esta acción no se puede deshacer.')){ deleteAllNotifications(); }
+      openConfirmModal('Eliminar notificaciones', '¿Eliminar todas las notificaciones? Esta acción no se puede deshacer.', function(){ deleteAllNotifications(); });
     }
     else if(action === 'mark-read-detail'){
       markNotificationRead(currentNotifDetailId).then(function(res){
