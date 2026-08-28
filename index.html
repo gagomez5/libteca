@@ -220,6 +220,7 @@
   .new-badge{position:absolute;top:8px;left:8px;background:var(--burgundy);color:var(--paper);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:800;letter-spacing:.6px;box-shadow:0 1px 3px rgba(0,0,0,.25);}
   .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:100;max-width:90vw;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s;}
   .toast.show{opacity:1;}
+  .toast.error{background:var(--burgundy-dark);}
   .card-body{padding:10px;}
   .card-title{font-size:12px;font-weight:700;font-family:'Georgia',serif;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .card-author{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1592,8 +1593,8 @@
       dbSelectProfile()
     ]).then(function(results){
       var bRes = results[0], wRes = results[1], pRes = results[2];
-      if(bRes.error){ reportError(bRes.error); alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
-      if(wRes.error){ reportError(wRes.error); alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
+      if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
+      if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); wishlist = []; } else { wishlist = wRes.data || []; }
       var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
       document.getElementById('app-title-text').textContent = savedTitle;
       currentUserRole = (!isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
@@ -1701,7 +1702,7 @@
     var unreadIds = notifications.filter(function(n){ return !n.read; }).map(function(n){ return n.receiptId; });
     if(unreadIds.length === 0) return;
     sb.from('notification_receipts').update({ read:true }).in('id', unreadIds).then(function(res){
-      if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+      if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
       notifications = notifications.map(function(n){ return Object.assign({}, n, { read:true }); });
       updateNotifDot();
       renderNotifList();
@@ -1711,7 +1712,7 @@
     if(notifications.length === 0) return;
     var ids = notifications.map(function(n){ return n.receiptId; });
     sb.from('notification_receipts').delete().in('id', ids).then(function(res){
-      if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+      if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
       notifications = [];
       updateNotifDot();
       renderNotifList();
@@ -1723,7 +1724,7 @@
     if(!clean) clean = DEFAULT_TITLE;
     document.getElementById('app-title-text').textContent = clean;
     dbSaveProfile(clean).then(function(res){
-      if(res.error){ reportError(res.error); alert('Error guardando el nombre: ' + res.error.message); }
+      if(res.error){ reportError(res.error); showToast('Error guardando el nombre: ' + res.error.message, 'error'); }
     });
   }
 
@@ -2157,12 +2158,12 @@
   }
 
   var toastTimer = null;
-  function showToast(msg){
+  function showToast(msg, type){
     var t = document.getElementById('toast');
     t.textContent = msg;
-    t.classList.add('show');
+    t.className = 'toast show' + (type ? ' ' + type : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, type === 'error' ? 5000 : 3500);
   }
 
   function renderAll(){
@@ -2711,7 +2712,7 @@
     else if(action === 'close-confirm-modal'){ closeConfirmModal(); }
     else if(action === 'delete-notification-inline'){
       deleteNotification(id).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         renderNotifList();
       });
     }
@@ -2721,14 +2722,14 @@
     }
     else if(action === 'mark-read-detail'){
       markNotificationRead(currentNotifDetailId).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
       });
     }
     else if(action === 'delete-notification-detail'){
       deleteNotification(currentNotifDetailId).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
       });
@@ -2743,7 +2744,7 @@
     else if(action === 'pick-avatar-icon'){
       var pickedIcon = el.getAttribute('data-icon');
       dbSaveAvatar(pickedIcon).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         updateUserAvatar(pickedIcon);
         document.getElementById('modal-icon-picker').classList.add('hidden');
         showToast('Ícono de perfil actualizado');
@@ -2761,12 +2762,12 @@
     else if(action === 'close-feedback-modal'){ document.getElementById('modal-feedback').classList.add('hidden'); }
     else if(action === 'submit-feedback'){
       var feedbackText = document.getElementById('feedback-message').value.trim();
-      if(!feedbackText){ alert('Escribe un mensaje.'); return; }
+      if(!feedbackText){ showToast('Escribe un mensaje.'); return; }
       var feedbackBtn = document.getElementById('feedback-submit-btn');
       feedbackBtn.disabled = true;
       sb.rpc('submit_feedback', { message: feedbackText }).then(function(res){
         feedbackBtn.disabled = false;
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         document.getElementById('modal-feedback').classList.add('hidden');
         showToast('¡Gracias por tu feedback!');
       });
@@ -2784,7 +2785,7 @@
       var book = books.find(function(b){return b.id===id;});
       var newStatus = STATUS_NEXT[book.status] || 'pendiente';
       dbUpdateBook(id, { status:newStatus }).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         books = books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
         renderAll();
       });
@@ -2793,7 +2794,7 @@
       var beBook = books.find(function(b){return b.id===id;});
       var newEdicion = beBook.edicion === 'especial' ? 'normal' : 'especial';
       dbUpdateBook(id, { edicion:newEdicion }).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         books = books.map(function(b){ return b.id===id ? Object.assign({},b,{edicion:newEdicion}) : b; });
         renderAll();
       });
@@ -2802,7 +2803,7 @@
       openConfirmModal('Eliminar libro', 'Vas a eliminar este libro de tu biblioteca. Esta acción es permanente y no se puede deshacer.', function(){
         var delBook = books.find(function(b){return b.id===id;});
         dbDeleteBook(id).then(function(res){
-          if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+          if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
           books = books.filter(function(b){ return b.id!==id; });
           renderAll();
           if(delBook) deleteOwnStorageCover(delBook.cover);
@@ -2813,7 +2814,7 @@
       openConfirmModal('Eliminar de la wishlist', 'Vas a eliminar este libro de tu wishlist. Esta acción es permanente y no se puede deshacer.', function(){
         var delWish = wishlist.find(function(w){return w.id===id;});
         dbDeleteWish(id).then(function(res){
-          if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+          if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
           wishlist = wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
           if(delWish) deleteOwnStorageCover(delWish.cover);
@@ -2825,9 +2826,9 @@
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
-        if(insRes.error){ reportError(insRes.error); alert('Error: '+insRes.error.message); return; }
+        if(insRes.error){ reportError(insRes.error); showToast('Error: '+insRes.error.message, 'error'); return; }
         dbDeleteWish(id).then(function(delRes){
-          if(delRes.error){ reportError(delRes.error); alert('Error: '+delRes.error.message); return; }
+          if(delRes.error){ reportError(delRes.error); showToast('Error: '+delRes.error.message, 'error'); return; }
           var newBooks = insRes.data || [];
           books = newBooks.concat(books);
           newBooks.forEach(function(nb){ newBookIds[nb.id] = true; });
@@ -2893,13 +2894,13 @@
     ensureAuthorExists(data.author);
     if(editingBookId){
       dbUpdateBook(editingBookId, data).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         books = books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
         closeBookModal(); renderAll();
       });
     } else {
       dbInsertBook(data).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         books = (res.data || []).concat(books);
         closeBookModal(); renderAll();
       });
@@ -2922,13 +2923,13 @@
     ensureAuthorExists(data.author);
     if(editingWishId){
       dbUpdateWish(editingWishId, data).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         wishlist = wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
         closeWishModal(); renderAll();
       });
     } else {
       dbInsertWish(data).then(function(res){
-        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         wishlist = (res.data || []).concat(wishlist);
         closeWishModal(); renderAll();
       });
