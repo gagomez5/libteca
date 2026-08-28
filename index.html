@@ -232,10 +232,9 @@
   .empty p.title{font-size:18px;font-weight:700;color:var(--ink);font-family:'Georgia',serif;margin:8px 0 0;}
   .empty p.subtitle{font-size:13px;color:var(--text-muted);margin:0;}
 
-  html{scrollbar-gutter:stable;}
   html.scroll-locked{overflow:hidden;}
-  html.scroll-locked body{overflow:hidden;position:fixed;left:0;right:0;}
-  html.scroll-locked header{position:fixed;top:0;left:0;right:0;}
+  html.scroll-locked body{overflow:hidden;position:fixed;left:0;right:var(--sbw, 0px);}
+  html.scroll-locked header{position:fixed;top:0;left:0;right:var(--sbw, 0px);}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
   #modal-book,#modal-wish,#modal-detail{z-index:60;}
@@ -2373,6 +2372,8 @@
     if(anyOpen && !wasLocked){
       scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
       document.body.style.top = (-scrollLockY) + 'px';
+      var sbw = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty('--sbw', sbw + 'px');
       document.documentElement.classList.add('scroll-locked');
       window.scrollTo(0, 0);
     } else if(!anyOpen && wasLocked){
