@@ -63,6 +63,8 @@
   .oauth-icon{flex-shrink:0;width:18px;height:18px;}
   .auth-msg.error{color:var(--burgundy);}
   .auth-msg.ok{color:var(--sage-dark);}
+  .auth-legal{font-size:11px;color:var(--text-muted);text-align:center;margin:12px 0 0;line-height:1.5;}
+  .auth-legal a{color:var(--text-muted);text-decoration:underline;}
 
   header{background:var(--ink);padding:20px 16px 0;padding-top:calc(20px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15);}
   .header-inner{max-width:1100px;margin:0 auto;}
@@ -317,6 +319,7 @@
       <button type="submit" class="auth-submit" id="auth-submit-btn">Iniciar sesión</button>
     </form>
     <p class="auth-msg" id="auth-msg"></p>
+    <p class="auth-legal hidden" id="auth-legal-notice">Al continuar, aceptas los <a href="/terms.html" target="_blank" rel="noopener">Términos de servicio</a> y la <a href="/privacy.html" target="_blank" rel="noopener">Política de privacidad</a>.</p>
     <p class="auth-toggle hidden" id="forgot-password-wrap">
       <button type="button" id="forgot-password-link">¿Olvidaste tu contraseña?</button>
     </p>
@@ -1325,9 +1328,11 @@
     var guestLink = document.getElementById('guest-link');
     var oauthButtons = document.getElementById('oauth-buttons');
     var oauthDivider = document.getElementById('oauth-divider');
+    var legalNotice = document.getElementById('auth-legal-notice');
     var isModal = document.getElementById('auth-screen').classList.contains('modal-mode');
 
     setAuthMsg('');
+    legalNotice.classList.toggle('hidden', authMode === 'recover');
 
     if(authMode === 'recover'){
       pwField.classList.add('hidden');
