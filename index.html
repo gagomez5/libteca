@@ -46,6 +46,7 @@
 
   /* ---- auth screen ---- */
   #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+  #auth-screen:focus{outline:none;}
   #auth-screen.modal-mode{position:fixed;inset:0;min-height:0;background:rgba(28,37,65,.55);z-index:80;}
   #recovery-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));}
   .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:16px;padding:28px 24px;border:1px solid var(--border);position:relative;}
@@ -244,6 +245,7 @@
   html.scroll-locked header{position:fixed;top:0;left:0;right:var(--sbw, 0px);}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+  .modal-overlay:focus{outline:none;}
   #modal-book,#modal-wish,#modal-detail{z-index:60;}
   #modal-confirm{z-index:65;}
   @media(min-width:640px){.modal-overlay{align-items:center;}}
@@ -320,8 +322,8 @@
     </div>
     <div class="guest-divider" id="oauth-divider"><span>o continúa con tu correo</span></div>
     <form id="auth-form">
-      <div class="auth-field"><label>Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
-      <div class="auth-field" id="auth-password-field"><label>Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="8" required></div>
+      <div class="auth-field"><label for="auth-email">Correo</label><input type="email" id="auth-email" required autocomplete="email"></div>
+      <div class="auth-field" id="auth-password-field"><label for="auth-password">Contraseña</label><input type="password" id="auth-password" autocomplete="current-password" minlength="8" required></div>
       <button type="submit" class="auth-submit" id="auth-submit-btn">Iniciar sesión</button>
     </form>
     <p class="auth-msg" id="auth-msg"></p>
@@ -347,8 +349,8 @@
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
     <form id="recovery-form">
-      <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="recovery-password" required minlength="8" autocomplete="new-password"></div>
-      <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="8" autocomplete="new-password"></div>
+      <div class="auth-field"><label for="recovery-password">Nueva contraseña</label><input type="password" id="recovery-password" required minlength="8" autocomplete="new-password"></div>
+      <div class="auth-field"><label for="recovery-password-confirm">Confirmar contraseña</label><input type="password" id="recovery-password-confirm" required minlength="8" autocomplete="new-password"></div>
       <button type="submit" class="auth-submit">Guardar nueva contraseña</button>
     </form>
     <p class="auth-msg" id="recovery-msg"></p>
@@ -357,7 +359,7 @@
 
 <!-- ---------- app ---------- -->
 <div id="app-root" class="hidden">
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <header>
     <div class="header-inner">
       <div class="brand-row">
@@ -405,7 +407,7 @@
       <div class="controls">
         <div class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="search-input" type="text" placeholder="Buscar por título, autor, saga o género…">
+          <input id="search-input" type="text" placeholder="Buscar por título, autor, saga o género…" aria-label="Buscar en tu biblioteca">
         </div>
         <div class="btn-row">
           <div class="view-toggle-group" role="group" aria-label="Vista">
@@ -442,10 +444,10 @@
       </div>
 
       <div class="filters-panel hidden" id="filters-panel">
-        <div class="filter-field"><label>Autor</label><select id="filter-author"></select></div>
-        <div class="filter-field"><label>Saga</label><select id="filter-saga"></select></div>
-        <div class="filter-field"><label>Género / tema</label><select id="filter-genre"></select></div>
-        <div class="filter-field"><label>Estado</label>
+        <div class="filter-field"><label for="filter-author">Autor</label><select id="filter-author"></select></div>
+        <div class="filter-field"><label for="filter-saga">Saga</label><select id="filter-saga"></select></div>
+        <div class="filter-field"><label for="filter-genre">Género / tema</label><select id="filter-genre"></select></div>
+        <div class="filter-field"><label for="filter-status">Estado</label>
           <select id="filter-status">
             <option value="">Todos</option>
             <option value="pendiente">Pendiente</option>
@@ -453,7 +455,7 @@
             <option value="leido">Leído</option>
           </select>
         </div>
-        <div class="filter-field"><label>Edición</label>
+        <div class="filter-field"><label for="filter-edicion">Edición</label>
           <select id="filter-edicion">
             <option value="">Todas</option>
             <option value="normal">Normal</option>
@@ -481,7 +483,7 @@
       <div class="controls">
         <div class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="wish-search-input" type="text" placeholder="Buscar por título o autor…">
+          <input id="wish-search-input" type="text" placeholder="Buscar por título o autor…" aria-label="Buscar en tu wishlist">
         </div>
         <div class="btn-row">
           <div class="view-toggle-group" role="group" aria-label="Vista">
@@ -518,18 +520,18 @@
       </div>
 
       <div class="filters-panel hidden" id="wish-filters-panel">
-        <div class="filter-field"><label>Autor</label><select id="wish-filter-author"></select></div>
+        <div class="filter-field"><label for="wish-filter-author">Autor</label><select id="wish-filter-author"></select></div>
         <div class="filter-field filter-field-cost">
-          <label>Costo</label>
+          <label id="wish-cost-filter-label">Costo</label>
           <div class="cost-filter-row">
-            <select id="wish-filter-costo-op">
+            <select id="wish-filter-costo-op" aria-labelledby="wish-cost-filter-label">
               <option value="gt">Mayor que</option>
               <option value="lt">Menor que</option>
             </select>
-            <input id="wish-filter-costo-val" type="number" step="0.01" min="0" placeholder="USD 0.00">
+            <input id="wish-filter-costo-val" type="number" step="0.01" min="0" placeholder="USD 0.00" aria-labelledby="wish-cost-filter-label">
           </div>
         </div>
-        <div class="filter-field"><label>Tienda</label><select id="wish-filter-tienda"></select></div>
+        <div class="filter-field"><label for="wish-filter-tienda">Tienda</label><select id="wish-filter-tienda"></select></div>
         <button type="button" class="filters-reset-btn" data-action="reset-wish-filters">Restablecer filtros</button>
       </div>
 
@@ -554,27 +556,27 @@
       <button data-action="close-book-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <form id="form-book">
-      <div class="field"><label>Título *</label><input required id="f-title" name="title"></div>
-      <div class="field"><label>Autor *</label><input required id="f-author" name="author" list="author-suggestions"></div>
+      <div class="field"><label for="f-title">Título *</label><input required id="f-title" name="title"></div>
+      <div class="field"><label for="f-author">Autor *</label><input required id="f-author" name="author" list="author-suggestions"></div>
       <div class="field field-row">
-        <div><label>Saga (opcional)</label><input id="f-saga" name="saga" list="book-saga-suggestions"></div>
-        <div><label>Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
+        <div><label for="f-saga">Saga (opcional)</label><input id="f-saga" name="saga" list="book-saga-suggestions"></div>
+        <div><label for="f-genre">Género / tema</label><input id="f-genre" name="genre" placeholder="fantasía, autoayuda…"></div>
       </div>
-      <div class="field"><label>Número en la saga (opcional)</label><input id="f-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
-      <div class="field"><label>URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
-      <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
-      <div class="field"><label>Tienda (opcional)</label><input id="f-tienda" name="tienda"></div>
+      <div class="field"><label for="f-numero-saga">Número en la saga (opcional)</label><input id="f-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
+      <div class="field"><label for="f-cover">URL de la portada (opcional)</label><input id="f-cover" name="cover" placeholder="https://…"></div>
+      <div class="field"><label for="f-costo">Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="f-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
+      <div class="field"><label for="f-tienda">Tienda (opcional)</label><input id="f-tienda" name="tienda"></div>
       <div class="field">
-        <label>Estado</label>
-        <div class="status-row">
+        <label id="book-status-label">Estado</label>
+        <div class="status-row" role="group" aria-labelledby="book-status-label">
           <button type="button" class="status-opt" id="status-pendiente" data-action="set-status" data-status="pendiente">Pendiente</button>
           <button type="button" class="status-opt" id="status-leyendo" data-action="set-status" data-status="leyendo">Leyendo</button>
           <button type="button" class="status-opt" id="status-leido" data-action="set-status" data-status="leido">Leído</button>
         </div>
       </div>
       <div class="field">
-        <label>Edición</label>
-        <div class="status-row">
+        <label id="book-edicion-label">Edición</label>
+        <div class="status-row" role="group" aria-labelledby="book-edicion-label">
           <button type="button" class="status-opt" id="edicion-normal" data-action="set-edicion" data-edicion="normal">Normal</button>
           <button type="button" class="status-opt" id="edicion-especial" data-action="set-edicion" data-edicion="especial">Especial</button>
         </div>
@@ -592,15 +594,15 @@
       <button data-action="close-wish-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <form id="form-wish">
-      <div class="field"><label>Título *</label><input required id="w-title" name="title"></div>
-      <div class="field"><label>Autor *</label><input required id="w-author" name="author" list="author-suggestions"></div>
+      <div class="field"><label for="w-title">Título *</label><input required id="w-title" name="title"></div>
+      <div class="field"><label for="w-author">Autor *</label><input required id="w-author" name="author" list="author-suggestions"></div>
       <div class="field field-row">
-        <div><label>Saga (opcional)</label><input id="w-saga" name="saga" list="wish-saga-suggestions"></div>
-        <div><label>Número en la saga (opcional)</label><input id="w-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
+        <div><label for="w-saga">Saga (opcional)</label><input id="w-saga" name="saga" list="wish-saga-suggestions"></div>
+        <div><label for="w-numero-saga">Número en la saga (opcional)</label><input id="w-numero-saga" name="numero_saga" type="number" min="1" step="1"></div>
       </div>
-      <div class="field"><label>URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
-      <div class="field"><label>Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
-      <div class="field"><label>Tienda (opcional)</label><input id="w-tienda" name="tienda"></div>
+      <div class="field"><label for="w-cover">URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
+      <div class="field"><label for="w-costo">Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
+      <div class="field"><label for="w-tienda">Tienda (opcional)</label><input id="w-tienda" name="tienda"></div>
       <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
     </form>
   </div>
@@ -708,7 +710,7 @@
       <button data-action="close-feedback-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Contanos qué te gustaría mejorar o qué problema encontraste. Solo lo ven los administradores.</p>
-    <div class="field"><textarea id="feedback-message" rows="5" placeholder="Escribe tu feedback…"></textarea></div>
+    <div class="field"><textarea id="feedback-message" rows="5" placeholder="Escribe tu feedback…" aria-label="Mensaje de feedback"></textarea></div>
     <button type="button" class="submit-btn btn-dark" id="feedback-submit-btn" data-action="submit-feedback">Enviar</button>
   </div>
 </div>
@@ -1296,12 +1298,18 @@
     document.getElementById('auth-screen').classList.add('modal-mode');
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('auth-modal-close').classList.remove('hidden');
+    document.getElementById('auth-screen').setAttribute('role', 'dialog');
+    document.getElementById('auth-screen').setAttribute('aria-modal', 'true');
+    document.getElementById('auth-screen').setAttribute('aria-labelledby', 'auth-subtitle');
     updateAuthUI();
   }
   function closeAuthModal(){
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('auth-screen').classList.remove('modal-mode');
     document.getElementById('auth-modal-close').classList.add('hidden');
+    document.getElementById('auth-screen').removeAttribute('role');
+    document.getElementById('auth-screen').removeAttribute('aria-modal');
+    document.getElementById('auth-screen').removeAttribute('aria-labelledby');
     cameFromGuest = false;
   }
   function updateAccountButton(){
@@ -1846,8 +1854,8 @@
   function bookActionsHTML(b){
     return '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
       '<button class="icon-btn'+(b.edicion==='especial' ? ' icon-btn-especial' : '')+'" data-action="toggle-edicion" data-id="'+b.id+'" title="Edición especial">'+ICONS.gem+'</button>' +
-      '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+'</button>' +
-      '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+'</button>';
+      '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'" aria-label="Editar libro">'+ICONS.edit+'</button>' +
+      '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'" aria-label="Eliminar libro">'+ICONS.trash+'</button>';
   }
 
   function emptyBooksHTML(){
@@ -1929,8 +1937,8 @@
 
   function wishActionsHTML(w){
     return '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
-      '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'">'+ICONS.edit+'</button>' +
-      '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'">'+ICONS.trash+'</button>';
+      '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'" aria-label="Editar">'+ICONS.edit+'</button>' +
+      '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'" aria-label="Eliminar de la wishlist">'+ICONS.trash+'</button>';
   }
 
   function wishMatchesFilters(w, exclude){
@@ -2162,6 +2170,7 @@
     var t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show' + (type ? ' ' + type : '');
+    t.setAttribute('role', type === 'error' ? 'alert' : 'status');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, type === 'error' ? 5000 : 3500);
   }
@@ -2441,12 +2450,95 @@
   var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
     'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
     'modal-confirm','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
-  var scrollLockObserver = new MutationObserver(syncScrollLock);
+  var scrollLockObserver = new MutationObserver(function(){ syncScrollLock(); syncModalFocus(); });
   SCROLL_LOCK_WATCH_IDS.forEach(function(elId){
     var target = document.getElementById(elId);
     if(target) scrollLockObserver.observe(target, { attributes:true, attributeFilter:['class'] });
   });
   syncScrollLock();
+  syncModalFocus();
+
+  // ================= ACCESIBILIDAD: foco y teclado en overlays =================
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay){
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    var heading = overlay.querySelector('.modal-head h2');
+    if(heading){
+      if(!heading.id) heading.id = overlay.id + '-heading';
+      overlay.setAttribute('aria-labelledby', heading.id);
+    }
+    var closeBtn = overlay.querySelector('.modal-head > button');
+    if(closeBtn && !closeBtn.hasAttribute('aria-label')) closeBtn.setAttribute('aria-label', 'Cerrar');
+  });
+
+  function getTopmostOpenOverlayEl(){
+    var best = null, bestZ = -1;
+    SCROLL_LOCK_WATCH_IDS.forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      var isOpen = id === 'auth-screen' ?
+        (el.classList.contains('modal-mode') && !el.classList.contains('hidden')) :
+        !el.classList.contains('hidden');
+      if(!isOpen) return;
+      var z = parseInt(window.getComputedStyle(el).zIndex, 10) || 0;
+      if(z >= bestZ){ bestZ = z; best = el; }
+    });
+    return best;
+  }
+
+  function closeOverlayById(id){
+    if(id === 'modal-book'){ attemptCloseBookModal(); }
+    else if(id === 'modal-wish'){ attemptCloseWishModal(); }
+    else if(id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; }
+    else if(id === 'modal-confirm'){ closeConfirmModal(); }
+    else if(id === 'auth-screen'){ closeAuthModal(); }
+    else { document.getElementById(id).classList.add('hidden'); }
+  }
+
+  function getFocusableEls(container){
+    return Array.prototype.filter.call(
+      container.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(el){ return el.offsetParent !== null; }
+    );
+  }
+
+  var a11yPrevFocus = null;
+  var a11yCurrentTarget = null;
+  function syncModalFocus(){
+    var topEl = getTopmostOpenOverlayEl();
+    if(topEl === a11yCurrentTarget) return;
+    if(topEl){
+      if(!a11yPrevFocus) a11yPrevFocus = document.activeElement;
+      if(!topEl.hasAttribute('tabindex')) topEl.setAttribute('tabindex', '-1');
+      topEl.focus();
+    } else {
+      if(a11yPrevFocus && typeof a11yPrevFocus.focus === 'function' && document.body.contains(a11yPrevFocus)) a11yPrevFocus.focus();
+      a11yPrevFocus = null;
+    }
+    a11yCurrentTarget = topEl;
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var topEl = getTopmostOpenOverlayEl();
+      if(topEl){ e.preventDefault(); closeOverlayById(topEl.id); }
+      return;
+    }
+    if(e.key === 'Tab'){
+      var topEl2 = getTopmostOpenOverlayEl();
+      if(!topEl2) return;
+      var focusable = getFocusableEls(topEl2);
+      if(focusable.length === 0){ e.preventDefault(); return; }
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      var active = document.activeElement;
+      var needsRedirect = (active === topEl2) || !topEl2.contains(active);
+      if(e.shiftKey){
+        if(needsRedirect || active === first){ e.preventDefault(); last.focus(); }
+      } else {
+        if(needsRedirect || active === last){ e.preventDefault(); first.focus(); }
+      }
+    }
+  });
 
   // ---------- eventos ----------
   document.addEventListener('click', function(e){

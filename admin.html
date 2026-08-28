@@ -43,6 +43,7 @@
   .btn-ghost{background:var(--paper);border-color:var(--border);color:var(--text);}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(28,37,65,.55);z-index:65;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);}
+  .modal-overlay:focus{outline:none;}
   @media(min-width:640px){.modal-overlay{align-items:center;}}
   .modal{width:100%;max-width:440px;background:var(--paper);border-radius:16px 16px 0 0;padding:20px;max-height:92vh;max-height:92dvh;overflow-y:auto;}
   @media(min-width:640px){.modal{border-radius:16px;}}
@@ -99,8 +100,8 @@
     </div>
     <p class="auth-sub">Iniciá sesión con tu cuenta de administrador</p>
     <form id="login-form">
-      <div class="auth-field"><label>Correo</label><input type="email" id="login-email" required autocomplete="email"></div>
-      <div class="auth-field"><label>Contraseña</label><input type="password" id="login-password" required autocomplete="current-password" minlength="6"></div>
+      <div class="auth-field"><label for="login-email">Correo</label><input type="email" id="login-email" required autocomplete="email"></div>
+      <div class="auth-field"><label for="login-password">Contraseña</label><input type="password" id="login-password" required autocomplete="current-password" minlength="6"></div>
       <button type="submit" class="auth-submit">Iniciar sesión</button>
     </form>
     <p class="msg-line" id="login-msg"></p>
@@ -149,7 +150,7 @@
 
     <section id="view-notificaciones" class="hidden">
       <div class="notif-form">
-        <label>Nueva notificación para todos los usuarios</label>
+        <label for="notif-message">Nueva notificación para todos los usuarios</label>
         <textarea id="notif-message" placeholder="Escribí el mensaje que verán todos los usuarios…"></textarea>
         <button class="btn btn-dark" id="btn-send-notif" style="margin-top:10px;">Enviar a todos</button>
         <p class="msg-line" id="notif-msg"></p>
@@ -165,11 +166,11 @@
   </main>
 </div>
 
-<div class="modal-overlay hidden" id="modal-confirm">
+<div class="modal-overlay hidden" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
   <div class="modal modal-narrow">
     <div class="modal-head">
       <h2 class="serif" id="confirm-modal-title">Confirmar</h2>
-      <button data-action="close-confirm-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <button data-action="close-confirm-modal" aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <p id="confirm-modal-message" style="font-size:14px;color:var(--text);margin:0 0 18px;"></p>
     <div class="confirm-actions">
@@ -179,7 +180,7 @@
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 (function(){
@@ -223,21 +224,35 @@
     var t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show' + (type ? ' ' + type : '');
+    t.setAttribute('role', type === 'error' ? 'alert' : 'status');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, type === 'error' ? 5000 : 3500);
   }
 
   var confirmModalCallback = null;
+  var confirmModalPrevFocus = null;
+  function getFocusableEls(container){
+    return Array.prototype.filter.call(
+      container.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+      function(el){ return el.offsetParent !== null; }
+    );
+  }
   function openConfirmModal(title, message, onConfirm, acceptLabel){
     document.getElementById('confirm-modal-title').textContent = title;
     document.getElementById('confirm-modal-message').textContent = message;
     document.getElementById('confirm-modal-accept').textContent = acceptLabel || 'Eliminar';
     confirmModalCallback = onConfirm;
-    document.getElementById('modal-confirm').classList.remove('hidden');
+    confirmModalPrevFocus = document.activeElement;
+    var modalEl = document.getElementById('modal-confirm');
+    modalEl.classList.remove('hidden');
+    if(!modalEl.hasAttribute('tabindex')) modalEl.setAttribute('tabindex', '-1');
+    modalEl.focus();
   }
   function closeConfirmModal(){
     document.getElementById('modal-confirm').classList.add('hidden');
     confirmModalCallback = null;
+    if(confirmModalPrevFocus && typeof confirmModalPrevFocus.focus === 'function' && document.body.contains(confirmModalPrevFocus)) confirmModalPrevFocus.focus();
+    confirmModalPrevFocus = null;
   }
   document.getElementById('modal-confirm').addEventListener('click', function(e){
     if(e.target.id === 'modal-confirm' || e.target.closest('[data-action="close-confirm-modal"]')) closeConfirmModal();
@@ -246,6 +261,23 @@
     var cb = confirmModalCallback;
     closeConfirmModal();
     if(cb) cb();
+  });
+  document.addEventListener('keydown', function(e){
+    var modal = document.getElementById('modal-confirm');
+    if(modal.classList.contains('hidden')) return;
+    if(e.key === 'Escape'){ e.preventDefault(); closeConfirmModal(); return; }
+    if(e.key === 'Tab'){
+      var focusable = getFocusableEls(modal);
+      if(focusable.length === 0){ e.preventDefault(); return; }
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      var active = document.activeElement;
+      var needsRedirect = (active === modal) || !modal.contains(active);
+      if(e.shiftKey){
+        if(needsRedirect || active === first){ e.preventDefault(); last.focus(); }
+      } else {
+        if(needsRedirect || active === last){ e.preventDefault(); first.focus(); }
+      }
+    }
   });
 
   function show(id){
