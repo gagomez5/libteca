@@ -2214,6 +2214,7 @@
     updateSagaSuggestions('f-author', 'book-saga-suggestions');
     initialBookSnapshot = JSON.stringify(getBookFormData());
     document.getElementById('modal-book').classList.remove('hidden');
+    document.querySelector('#modal-book .modal').scrollTop = 0;
   }
   function closeBookModal(){ document.getElementById('modal-book').classList.add('hidden'); }
   function attemptCloseBookModal(){
@@ -2255,6 +2256,7 @@
     updateSagaSuggestions('w-author', 'wish-saga-suggestions');
     initialWishSnapshot = JSON.stringify(getWishFormData());
     document.getElementById('modal-wish').classList.remove('hidden');
+    document.querySelector('#modal-wish .modal').scrollTop = 0;
   }
   function closeWishModal(){ document.getElementById('modal-wish').classList.add('hidden'); }
   function attemptCloseWishModal(){
@@ -2318,6 +2320,7 @@
     }
 
     document.getElementById('modal-detail').classList.remove('hidden');
+    document.querySelector('#modal-detail .modal').scrollTop = 0;
   }
 
   // ================= BLOQUEO DE SCROLL DE FONDO =================
