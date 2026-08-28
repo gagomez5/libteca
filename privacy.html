@@ -64,7 +64,8 @@
       <li><strong>Contenido de tu biblioteca:</strong> los libros y elementos de tu lista de deseos que cargas (título, autor, estado, notas, costo, fechas, saga, número de orden, etc.) y, si proporcionas una URL de portada, nuestro servidor la descarga y guarda una copia permanente en nuestro almacenamiento.</li>
       <li><strong>Preferencias de uso:</strong> filtros, orden y modo de agrupación que eliges, guardados en el almacenamiento local (localStorage) de tu navegador para que persistan entre visitas.</li>
       <li><strong>Feedback:</strong> los mensajes que nos envías voluntariamente desde el formulario de feedback dentro de la app.</li>
-      <li><strong>Datos técnicos básicos:</strong> los que procesa automáticamente nuestra infraestructura de hosting (Cloudflare) para servir la aplicación, como direcciones IP en los registros de acceso estándar de cualquier servidor web.</li>
+      <li><strong>Datos técnicos básicos:</strong> los que procesa automáticamente nuestra infraestructura de hosting (Cloudflare) para servir la aplicación, como direcciones IP en los registros de acceso estándar de cualquier servidor web, y estadísticas agregadas de uso (páginas vistas, país aproximado) a través de Cloudflare Web Analytics.</li>
+      <li><strong>Diagnóstico de errores:</strong> si la aplicación falla, enviamos automáticamente a nuestro servicio de monitoreo de errores (Sentry) el mensaje de error, el stack trace, la URL y el navegador donde ocurrió, y tu identificador de cuenta si iniciaste sesión (no tu correo ni contraseña), para poder detectar y corregir fallas.</li>
     </ul>
 
     <h2>2. Modo invitado</h2>
@@ -77,7 +78,8 @@
     <p>No compartimos tus datos personales con terceros para que los usen con fines propios. Sí usamos proveedores de infraestructura que procesan datos en nuestro nombre para que el Servicio funcione:</p>
     <ul>
       <li><strong>Supabase:</strong> aloja nuestra base de datos, el sistema de autenticación y el almacenamiento de portadas.</li>
-      <li><strong>Cloudflare:</strong> aloja y sirve la aplicación web y gestiona el dominio bruukion.com.</li>
+      <li><strong>Cloudflare:</strong> aloja y sirve la aplicación web, gestiona el dominio bruukion.com y nos da estadísticas agregadas de uso (Cloudflare Web Analytics).</li>
+      <li><strong>Sentry:</strong> recibe reportes automáticos cuando la aplicación falla, para que podamos diagnosticar y corregir errores.</li>
       <li><strong>Google:</strong> solo si eliges iniciar sesión con "Continuar con Google", en cuyo caso Google procesa la autenticación conforme a su propia política de privacidad.</li>
     </ul>
     <p>Estos proveedores pueden alojar datos en infraestructura ubicada fuera de Ecuador. Podemos además divulgar información si la ley lo exige o para proteger nuestros derechos o los de terceros.</p>

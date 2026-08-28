@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com https://o4511990408151040.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Biblioteca">
@@ -23,6 +23,7 @@
 <meta name="twitter:title" content="Bruukion — Tu biblioteca personal">
 <meta name="twitter:description" content="Organizá, registrá y seguí los libros que leíste, estás leyendo y querés comprar.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
+<script src="https://browser.sentry-cdn.com/10.72.0/bundle.min.js" integrity="sha384-CJFiRXW+X61SiwyHeuiHWqxTNgAMz3wwQn6/0t+i/Nvkq2VdGFNfEOu3XFmS9ogm" crossorigin="anonymous"></script>
 <style>
   :root{
     --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
@@ -743,6 +744,23 @@
 <script>
 (function(){
   "use strict";
+
+  // ======= Sentry (reporte de errores en producción) =======
+  if(window.Sentry){
+    Sentry.init({
+      dsn: 'https://ed94dc6234535bf2bf6da95bf7b8604f@o4511990408151040.ingest.us.sentry.io/4511990414311424',
+      environment: (location.hostname === 'bruukion.com') ? 'production' : 'development',
+      initialScope: { tags: { app: 'main' } }
+    });
+  }
+  function reportError(err){
+    if(!window.Sentry || !err) return;
+    Sentry.captureException(err instanceof Error ? err : new Error(err.message || String(err)));
+  }
+  function setSentryUser(id){
+    if(window.Sentry) Sentry.setUser(id ? { id: id } : null);
+  }
+  // ===========================================================
 
   // ======= CONFIGURÁ ACÁ TUS CREDENCIALES DE SUPABASE =======
   var SUPABASE_URL = 'https://fvlfyezsegbbpwkkwcvm.supabase.co';
@@ -1499,6 +1517,7 @@
     }
     if(session && session.user){
       currentUserId = session.user.id;
+      setSentryUser(currentUserId);
       isGuest = false;
       if(!authBackGuardActive){
         authBackGuardActive = true;
@@ -1518,6 +1537,7 @@
       loadData();
     } else {
       currentUserId = null;
+      setSentryUser(null);
       authBackGuardActive = false;
       localStorage.removeItem('guest_pending_migration');
       showAuthScreen();
@@ -1545,8 +1565,8 @@
       dbSelectProfile()
     ]).then(function(results){
       var bRes = results[0], wRes = results[1], pRes = results[2];
-      if(bRes.error){ alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
-      if(wRes.error){ alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
+      if(bRes.error){ reportError(bRes.error); alert('Error cargando libros: ' + bRes.error.message); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
+      if(wRes.error){ reportError(wRes.error); alert('Error cargando wishlist: ' + wRes.error.message); wishlist = []; } else { wishlist = wRes.data || []; }
       var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
       document.getElementById('app-title-text').textContent = savedTitle;
       currentUserRole = (!isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
@@ -1654,7 +1674,7 @@
     var unreadIds = notifications.filter(function(n){ return !n.read; }).map(function(n){ return n.receiptId; });
     if(unreadIds.length === 0) return;
     sb.from('notification_receipts').update({ read:true }).in('id', unreadIds).then(function(res){
-      if(res.error){ alert('Error: '+res.error.message); return; }
+      if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
       notifications = notifications.map(function(n){ return Object.assign({}, n, { read:true }); });
       updateNotifDot();
       renderNotifList();
@@ -1664,7 +1684,7 @@
     if(notifications.length === 0) return;
     var ids = notifications.map(function(n){ return n.receiptId; });
     sb.from('notification_receipts').delete().in('id', ids).then(function(res){
-      if(res.error){ alert('Error: '+res.error.message); return; }
+      if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
       notifications = [];
       updateNotifDot();
       renderNotifList();
@@ -1676,7 +1696,7 @@
     if(!clean) clean = DEFAULT_TITLE;
     document.getElementById('app-title-text').textContent = clean;
     dbSaveProfile(clean).then(function(res){
-      if(res.error){ alert('Error guardando el nombre: ' + res.error.message); }
+      if(res.error){ reportError(res.error); alert('Error guardando el nombre: ' + res.error.message); }
     });
   }
 
@@ -2664,7 +2684,7 @@
     else if(action === 'close-confirm-modal'){ closeConfirmModal(); }
     else if(action === 'delete-notification-inline'){
       deleteNotification(id).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         renderNotifList();
       });
     }
@@ -2674,14 +2694,14 @@
     }
     else if(action === 'mark-read-detail'){
       markNotificationRead(currentNotifDetailId).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
       });
     }
     else if(action === 'delete-notification-detail'){
       deleteNotification(currentNotifDetailId).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
       });
@@ -2696,7 +2716,7 @@
     else if(action === 'pick-avatar-icon'){
       var pickedIcon = el.getAttribute('data-icon');
       dbSaveAvatar(pickedIcon).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         updateUserAvatar(pickedIcon);
         document.getElementById('modal-icon-picker').classList.add('hidden');
         showToast('Ícono de perfil actualizado');
@@ -2719,7 +2739,7 @@
       feedbackBtn.disabled = true;
       sb.rpc('submit_feedback', { message: feedbackText }).then(function(res){
         feedbackBtn.disabled = false;
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         document.getElementById('modal-feedback').classList.add('hidden');
         showToast('¡Gracias por tu feedback!');
       });
@@ -2737,7 +2757,7 @@
       var book = books.find(function(b){return b.id===id;});
       var newStatus = STATUS_NEXT[book.status] || 'pendiente';
       dbUpdateBook(id, { status:newStatus }).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         books = books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
         renderAll();
       });
@@ -2746,7 +2766,7 @@
       var beBook = books.find(function(b){return b.id===id;});
       var newEdicion = beBook.edicion === 'especial' ? 'normal' : 'especial';
       dbUpdateBook(id, { edicion:newEdicion }).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         books = books.map(function(b){ return b.id===id ? Object.assign({},b,{edicion:newEdicion}) : b; });
         renderAll();
       });
@@ -2755,7 +2775,7 @@
       openConfirmModal('Eliminar libro', 'Vas a eliminar este libro de tu biblioteca. Esta acción es permanente y no se puede deshacer.', function(){
         var delBook = books.find(function(b){return b.id===id;});
         dbDeleteBook(id).then(function(res){
-          if(res.error){ alert('Error: '+res.error.message); return; }
+          if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
           books = books.filter(function(b){ return b.id!==id; });
           renderAll();
           if(delBook) deleteOwnStorageCover(delBook.cover);
@@ -2766,7 +2786,7 @@
       openConfirmModal('Eliminar de la wishlist', 'Vas a eliminar este libro de tu wishlist. Esta acción es permanente y no se puede deshacer.', function(){
         var delWish = wishlist.find(function(w){return w.id===id;});
         dbDeleteWish(id).then(function(res){
-          if(res.error){ alert('Error: '+res.error.message); return; }
+          if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
           wishlist = wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
           if(delWish) deleteOwnStorageCover(delWish.cover);
@@ -2778,9 +2798,9 @@
       var item = wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
-        if(insRes.error){ alert('Error: '+insRes.error.message); return; }
+        if(insRes.error){ reportError(insRes.error); alert('Error: '+insRes.error.message); return; }
         dbDeleteWish(id).then(function(delRes){
-          if(delRes.error){ alert('Error: '+delRes.error.message); return; }
+          if(delRes.error){ reportError(delRes.error); alert('Error: '+delRes.error.message); return; }
           var newBooks = insRes.data || [];
           books = newBooks.concat(books);
           newBooks.forEach(function(nb){ newBookIds[nb.id] = true; });
@@ -2846,13 +2866,13 @@
     ensureAuthorExists(data.author);
     if(editingBookId){
       dbUpdateBook(editingBookId, data).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         books = books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
         closeBookModal(); renderAll();
       });
     } else {
       dbInsertBook(data).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         books = (res.data || []).concat(books);
         closeBookModal(); renderAll();
       });
@@ -2875,13 +2895,13 @@
     ensureAuthorExists(data.author);
     if(editingWishId){
       dbUpdateWish(editingWishId, data).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         wishlist = wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
         closeWishModal(); renderAll();
       });
     } else {
       dbInsertWish(data).then(function(res){
-        if(res.error){ alert('Error: '+res.error.message); return; }
+        if(res.error){ reportError(res.error); alert('Error: '+res.error.message); return; }
         wishlist = (res.data || []).concat(wishlist);
         closeWishModal(); renderAll();
       });

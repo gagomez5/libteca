@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com https://o4511990408151040.ingest.us.sentry.io; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; upgrade-insecure-requests">
 <meta name="robots" content="noindex, nofollow">
 <title>Panel de administrador — Mi Biblioteca</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
+<script src="https://browser.sentry-cdn.com/10.72.0/bundle.min.js" integrity="sha384-CJFiRXW+X61SiwyHeuiHWqxTNgAMz3wwQn6/0t+i/Nvkq2VdGFNfEOu3XFmS9ogm" crossorigin="anonymous"></script>
 <style>
   :root{
     --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
@@ -154,6 +155,23 @@
 (function(){
   "use strict";
 
+  // ======= Sentry (reporte de errores en producción) =======
+  if(window.Sentry){
+    Sentry.init({
+      dsn: 'https://ed94dc6234535bf2bf6da95bf7b8604f@o4511990408151040.ingest.us.sentry.io/4511990414311424',
+      environment: (location.hostname === 'bruukion.com') ? 'production' : 'development',
+      initialScope: { tags: { app: 'admin' } }
+    });
+  }
+  function reportError(err){
+    if(!window.Sentry || !err) return;
+    Sentry.captureException(err instanceof Error ? err : new Error(err.message || String(err)));
+  }
+  function setSentryUser(id){
+    if(window.Sentry) Sentry.setUser(id ? { id: id } : null);
+  }
+  // ===========================================================
+
   var SUPABASE_URL = 'https://fvlfyezsegbbpwkkwcvm.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2bGZ5ZXpzZWdiYnB3a2t3Y3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MjgyNTMsImV4cCI6MjEwMDMwNDI1M30.Nc7zcYF5bgxPhOYPNhjGa9HHYSywVOYxXJi-96zVfT0';
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -252,7 +270,7 @@
   function deleteNotif(id){
     if(!confirm('¿Eliminar esta notificación para todos los usuarios?')) return;
     sb.rpc('admin_delete_notification', { target_id: id }).then(function(res){
-      if(res.error){ alert('Error: ' + res.error.message); return; }
+      if(res.error){ reportError(res.error); alert('Error: ' + res.error.message); return; }
       notifs = notifs.filter(function(n){ return n.id !== id; });
       renderNotifs();
     });
@@ -274,7 +292,7 @@
   function deleteFeedback(id){
     if(!confirm('¿Eliminar este feedback?')) return;
     sb.rpc('admin_delete_feedback', { target_id: id }).then(function(res){
-      if(res.error){ alert('Error: ' + res.error.message); return; }
+      if(res.error){ reportError(res.error); alert('Error: ' + res.error.message); return; }
       feedbackItems = feedbackItems.filter(function(f){ return f.id !== id; });
       renderFeedback();
     });
@@ -341,14 +359,17 @@
 
   sb.auth.onAuthStateChange(function(event, session){
     if(session && session.user){
+      setSentryUser(session.user.id);
       loadAdminData();
     } else {
+      setSentryUser(null);
       show('login-screen');
     }
   });
 
   sb.auth.getSession().then(function(res){
     if(res.data && res.data.session){
+      setSentryUser(res.data.session.user.id);
       loadAdminData();
     } else {
       show('login-screen');
