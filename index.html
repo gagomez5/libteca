@@ -676,6 +676,20 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="modal-confirm">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif" id="confirm-modal-title">Confirmar</h2>
+      <button data-action="close-confirm-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p id="confirm-modal-message" style="font-size:14px;color:var(--text);margin:0 0 18px;"></p>
+    <div class="notif-detail-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-confirm-modal">Cancelar</button>
+      <button type="button" class="btn btn-burgundy" id="confirm-modal-accept">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal feedback -->
 <div class="modal-overlay hidden" id="modal-feedback">
   <div class="modal">
@@ -2323,6 +2337,24 @@
     document.querySelector('#modal-detail .modal').scrollTop = 0;
   }
 
+  var confirmModalCallback = null;
+  function openConfirmModal(title, message, onConfirm){
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    confirmModalCallback = onConfirm;
+    document.getElementById('modal-confirm').classList.remove('hidden');
+    document.querySelector('#modal-confirm .modal').scrollTop = 0;
+  }
+  function closeConfirmModal(){
+    document.getElementById('modal-confirm').classList.add('hidden');
+    confirmModalCallback = null;
+  }
+  document.getElementById('confirm-modal-accept').addEventListener('click', function(){
+    var cb = confirmModalCallback;
+    closeConfirmModal();
+    if(cb) cb();
+  });
+
   // ================= BLOQUEO DE SCROLL DE FONDO =================
   var scrollLockY = 0;
   function syncScrollLock(){
@@ -2350,7 +2382,7 @@
 
   var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
     'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
-    'auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+    'modal-confirm','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
   var scrollLockObserver = new MutationObserver(syncScrollLock);
   SCROLL_LOCK_WATCH_IDS.forEach(function(elId){
     var target = document.getElementById(elId);
@@ -2367,6 +2399,7 @@
     if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notification-detail'){ document.getElementById('modal-notification-detail').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-confirm'){ closeConfirmModal(); return; }
     if(e.target.id === 'modal-feedback'){ document.getElementById('modal-feedback').classList.add('hidden'); return; }
     if(e.target.id === 'modal-icon-picker'){ document.getElementById('modal-icon-picker').classList.add('hidden'); return; }
     if(e.target.id === 'modal-row-actions'){ document.getElementById('modal-row-actions').classList.add('hidden'); return; }
@@ -2619,6 +2652,7 @@
     else if(action === 'close-notifications-modal'){ document.getElementById('modal-notifications').classList.add('hidden'); }
     else if(action === 'open-notification-detail'){ openNotificationDetail(id); }
     else if(action === 'close-notification-detail-modal'){ document.getElementById('modal-notification-detail').classList.add('hidden'); }
+    else if(action === 'close-confirm-modal'){ closeConfirmModal(); }
     else if(action === 'delete-notification-inline'){
       deleteNotification(id).then(function(res){
         if(res.error){ alert('Error: '+res.error.message); return; }
@@ -2709,7 +2743,7 @@
       });
     }
     else if(action === 'delete-book'){
-      if(confirm('¿Eliminar este libro de tu biblioteca?')){
+      openConfirmModal('Eliminar libro', 'Vas a eliminar este libro de tu biblioteca. Esta acción es permanente y no se puede deshacer.', function(){
         var delBook = books.find(function(b){return b.id===id;});
         dbDeleteBook(id).then(function(res){
           if(res.error){ alert('Error: '+res.error.message); return; }
@@ -2717,10 +2751,10 @@
           renderAll();
           if(delBook) deleteOwnStorageCover(delBook.cover);
         });
-      }
+      });
     }
     else if(action === 'delete-wish'){
-      if(confirm('¿Eliminar este libro de tu wishlist?')){
+      openConfirmModal('Eliminar de la wishlist', 'Vas a eliminar este libro de tu wishlist. Esta acción es permanente y no se puede deshacer.', function(){
         var delWish = wishlist.find(function(w){return w.id===id;});
         dbDeleteWish(id).then(function(res){
           if(res.error){ alert('Error: '+res.error.message); return; }
@@ -2728,7 +2762,7 @@
           renderAll();
           if(delWish) deleteOwnStorageCover(delWish.cover);
         });
-      }
+      });
     }
     else if(action === 'buy-wish'){
       if(!canAddBook()){ showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregarlo.'); return; }
