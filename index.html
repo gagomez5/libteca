@@ -2369,14 +2369,23 @@
     var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
     var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
     var wasLocked = document.documentElement.classList.contains('scroll-locked');
+    var headerEl = document.querySelector('header');
     if(anyOpen && !wasLocked){
       scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
       document.body.style.top = (-scrollLockY) + 'px';
+      var sbw = window.innerWidth - document.documentElement.clientWidth;
+      if(sbw > 0){
+        document.body.style.paddingRight = sbw + 'px';
+        var headerPad = parseFloat(getComputedStyle(headerEl).paddingRight) || 0;
+        headerEl.style.paddingRight = (headerPad + sbw) + 'px';
+      }
       document.documentElement.classList.add('scroll-locked');
       window.scrollTo(0, 0);
     } else if(!anyOpen && wasLocked){
       document.documentElement.classList.remove('scroll-locked');
       document.body.style.top = '';
+      document.body.style.paddingRight = '';
+      headerEl.style.paddingRight = '';
       window.scrollTo(0, scrollLockY);
     }
   }
