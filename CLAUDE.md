@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running / developing
 
-There is no build or dev server tooling in this repo. To work on the app, open `index.html` directly in a browser, or serve the directory with any static file server (e.g. `python3 -m http.server`) since Supabase auth redirects rely on `window.location.origin`. There are no lint or test commands — verify changes manually in the browser.
+There is no build or dev server tooling in this repo. The app's JS is loaded as native ES modules (`<script type="module">` plus `import`/`export` between files in `js/`), so **opening `index.html` directly via `file://` no longer works** — browsers block ES module fetches over the `file:` origin. Always serve the directory with a static file server (e.g. `python3 -m http.server`) and open it via `http://localhost:...`; this is also required for Supabase auth redirects, which rely on `window.location.origin`. There are no lint or test commands — verify changes manually in the browser.
 
 ## Architecture
 
