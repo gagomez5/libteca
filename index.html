@@ -487,45 +487,10 @@
 </div>
 
 <script type="module">
+import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './js/telemetry.js';
+import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './js/utils.js';
 (function(){
   "use strict";
-
-  // ======= Sentry (reporte de errores en producción) =======
-  if(window.Sentry){
-    Sentry.init({
-      dsn: 'https://ed94dc6234535bf2bf6da95bf7b8604f@o4511990408151040.ingest.us.sentry.io/4511990414311424',
-      environment: (location.hostname === 'bruukion.com') ? 'production' : 'development',
-      initialScope: { tags: { app: 'main' } }
-    });
-  }
-  function reportError(err){
-    if(!window.Sentry || !err) return;
-    Sentry.captureException(err instanceof Error ? err : new Error(err.message || String(err)));
-  }
-  function setSentryUser(id){
-    if(window.Sentry) Sentry.setUser(id ? { id: id } : null);
-  }
-  // ===========================================================
-
-  // ======= PostHog (analítica de producto: embudo Free→Premium) =======
-  if(window.posthog){
-    posthog.init('phc_qXKDnVNxgmSN4Vy4YpedqTeBczbgd4RfudrSJRhYu386', {
-      api_host: 'https://us.i.posthog.com',
-      person_profiles: 'identified_only',
-      autocapture: false,
-      capture_pageview: true,
-      disable_session_recording: true,
-      disable_external_dependency_loading: true
-    });
-  }
-  function trackEvent(name, props){
-    if(window.posthog) posthog.capture(name, props || {});
-  }
-  function setAnalyticsUser(id){
-    if(!window.posthog) return;
-    if(id) posthog.identify(id); else posthog.reset();
-  }
-  // ===========================================================
 
   // ======= CONFIGURÁ ACÁ TUS CREDENCIALES DE SUPABASE =======
   var SUPABASE_URL = 'https://fvlfyezsegbbpwkkwcvm.supabase.co';
@@ -944,12 +909,6 @@
     document.getElementById('btn-wish-columns').classList.toggle('hidden', wishViewMode !== 'listado');
   }
 
-  function esc(s){
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-
   var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
   var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'pendiente' };
 
@@ -969,16 +928,6 @@
   };
 
   // ================= COLUMNAS DE LA VISTA LISTADO =================
-  function formatShortDate(iso){
-    if(!iso) return '';
-    return new Date(iso).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
-  }
-
-  function truncatedCellHTML(text){
-    if(!text) return '<td>—</td>';
-    return '<td class="cell-truncate" title="'+esc(text)+'" data-action="show-full-title" data-title="'+esc(text)+'">'+esc(text)+'</td>';
-  }
-
   var BOOK_COLUMNS = [
     { key:'cover', label:'Portada', sortType:null,
       renderCell:function(b){ return '<td>'+coverThumbHTML(b.cover, b.title)+'</td>'; } },
@@ -1534,12 +1483,6 @@
       '<div class="stat clickable'+activeClass('pendiente')+'" data-action="filter-stat" data-status="pendiente"><b style="color:var(--burgundy-dark)">'+pendientes+'</b> <span>pendientes</span></div>';
   }
 
-  function uniqueSorted(arr){
-    var set = {};
-    arr.forEach(function(v){ if(v) set[v]=true; });
-    return Object.keys(set).sort();
-  }
-
   function bookMatchesFilters(b, exclude){
     var s = filters.search.toLowerCase();
     if(s){
@@ -1939,28 +1882,6 @@
 
   var initialBookSnapshot = null;
 
-  function parseCosto(str){
-    str = (str||'').trim();
-    if(str === '') return null;
-    var n = parseFloat(str);
-    return isNaN(n) ? null : n;
-  }
-  function formatCosto(n){
-    return '$' + Number(n).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
-  }
-  function parseSagaNumber(str){
-    str = (str||'').trim();
-    if(str === '') return null;
-    var n = parseInt(str, 10);
-    return isNaN(n) ? null : n;
-  }
-
-  // La saga es privada de cada usuario (a diferencia del autor): las sugerencias y la
-  // numeración se calculan solo sobre los propios libros/wishlist en memoria, que ya
-  // están limitados al usuario actual (por RLS o por localStorage en modo invitado).
-  function sagaKey(author, saga){
-    return (author||'').trim().toLowerCase() + '␟' + (saga||'').trim().toLowerCase();
-  }
   function getUsedSagaNumbers(author, saga, excludeType, excludeId){
     if(!(author||'').trim() || !(saga||'').trim()) return [];
     var key = sagaKey(author, saga);
