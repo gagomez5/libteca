@@ -489,6 +489,7 @@
 <script type="module">
 import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './js/telemetry.js';
 import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './js/utils.js';
+import { state, LIBRARY_CAP, WISHLIST_CAP, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddBook, canAddWish } from './js/state.js';
 (function(){
   "use strict";
 
@@ -499,22 +500,8 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var books = [];
-  var wishlist = [];
-  var allAuthors = [];
-  var LIBRARY_CAP = 10;
-  var WISHLIST_CAP = 10;
-  function canAddBook(){ return isPremiumUser() || books.length < LIBRARY_CAP; }
-  function canAddWish(){ return isPremiumUser() || wishlist.length < WISHLIST_CAP; }
-  var bookNumeroTouched = false;
-  var wishNumeroTouched = false;
-  var newBookIds = {};
-  var currentUserId = null;
-  var isGuest = false;
   var cameFromGuest = false;
   var migrationInProgress = false;
-  var notifications = [];
-  var currentNotifDetailId = null;
 
   // ================= MODO INVITADO (almacenamiento local) =================
   function guestGet(key, fallback){
@@ -545,7 +532,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     });
   }
   function dbSelectBooks(){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_books', []);
       arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
       return Promise.resolve({ data: arr, error: null });
@@ -553,7 +540,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return withClockSkewRetry(function(){ return sb.from('books').select('*').order('created_at', { ascending:false }); });
   }
   function dbSelectWishlist(){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_wishlist', []);
       arr.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
       return Promise.resolve({ data: arr, error: null });
@@ -567,14 +554,14 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('authors').select('name').order('name');
   }
   function dbSelectProfile(){
-    if(isGuest){
+    if(state.isGuest){
       var name = localStorage.getItem('guest_library_name');
       return Promise.resolve({ data: name ? { library_name:name } : null, error:null });
     }
     return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, role, avatar_url').maybeSingle(); });
   }
   function dbInsertBook(data){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_books', []);
       var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
       row.fecha_leido = (data.status === 'leido') ? new Date().toISOString() : null;
@@ -585,7 +572,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('books').insert([data]).select();
   }
   function dbUpdateBook(id, data){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_books', []);
       var updated = null;
       arr = arr.map(function(b){
@@ -603,7 +590,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('books').update(data).eq('id', id).select();
   }
   function dbDeleteBook(id){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_books', []).filter(function(b){ return b.id!==id; });
       guestSet('guest_books', arr);
       return Promise.resolve({ error:null });
@@ -611,7 +598,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('books').delete().eq('id', id);
   }
   function dbInsertWish(data){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_wishlist', []);
       var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
       arr.unshift(row);
@@ -621,7 +608,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('wishlist').insert([data]).select();
   }
   function dbUpdateWish(id, data){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_wishlist', []);
       var updated = null;
       arr = arr.map(function(w){ if(w.id===id){ updated = Object.assign({}, w, data); return updated; } return w; });
@@ -631,7 +618,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('wishlist').update(data).eq('id', id).select();
   }
   function dbDeleteWish(id){
-    if(isGuest){
+    if(state.isGuest){
       var arr = guestGet('guest_wishlist', []).filter(function(w){ return w.id!==id; });
       guestSet('guest_wishlist', arr);
       return Promise.resolve({ error:null });
@@ -639,14 +626,14 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     return sb.from('wishlist').delete().eq('id', id);
   }
   function dbSaveProfile(name){
-    if(isGuest){
+    if(state.isGuest){
       localStorage.setItem('guest_library_name', name);
       return Promise.resolve({ error:null });
     }
-    return sb.from('profile').upsert({ user_id: currentUserId, library_name: name });
+    return sb.from('profile').upsert({ user_id: state.currentUserId, library_name: name });
   }
   function dbSaveAvatar(url){
-    return sb.from('profile').upsert({ user_id: currentUserId, avatar_url: url });
+    return sb.from('profile').upsert({ user_id: state.currentUserId, avatar_url: url });
   }
 
   // ================= PORTADAS (descarga permanente vía Edge Function) =================
@@ -678,18 +665,18 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   function renderAuthorDatalist(){
     var el = document.getElementById('author-suggestions');
-    el.innerHTML = allAuthors.map(function(a){ return '<option value="'+esc(a)+'">'; }).join('');
+    el.innerHTML = state.allAuthors.map(function(a){ return '<option value="'+esc(a)+'">'; }).join('');
   }
   // Los invitados solo VEN la lista compartida de autores; un autor nuevo que escriban
   // no se sube a la tabla global hasta que creen una cuenta (ver migrateGuestDataToAccount).
   function ensureAuthorExists(name){
     name = (name||'').trim();
-    if(!name || isGuest) return;
+    if(!name || state.isGuest) return;
     sb.from('authors').upsert([{ name:name }], { onConflict:'name', ignoreDuplicates:true }).then(function(){
-      var exists = allAuthors.some(function(a){ return a.toLowerCase() === name.toLowerCase(); });
+      var exists = state.allAuthors.some(function(a){ return a.toLowerCase() === name.toLowerCase(); });
       if(!exists){
-        allAuthors.push(name);
-        allAuthors.sort();
+        state.allAuthors.push(name);
+        state.allAuthors.sort();
         renderAuthorDatalist();
       }
     }).catch(function(){});
@@ -744,7 +731,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, tienda:w.tienda||'', saga:w.saga||'', numero_saga:w.numero_saga||null }]));
     });
     if(gName){
-      tasks.push(sb.from('profile').upsert({ user_id: currentUserId, library_name: gName }));
+      tasks.push(sb.from('profile').upsert({ user_id: state.currentUserId, library_name: gName }));
     }
     return Promise.all(tasks).then(function(){
       localStorage.removeItem('guest_books');
@@ -760,32 +747,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   var editingBookOriginalCover = '';
   var editingWishOriginalCover = '';
   var authMode = 'login'; // 'login' | 'signup' | 'recover'
-  var currentUserRole = 'free'; // 'administrador' | 'fundador' | 'premium' | 'free'
-  function isPremiumTier(role){ return role === 'premium' || role === 'fundador' || role === 'administrador'; }
-  function isPremiumUser(){ return isPremiumTier(currentUserRole); }
-  var groupBy = ''; // '' | 'author' | 'saga' | 'genre' | 'status'
-  var currentGroups = [];
   var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
-  var filters = { search:'', author:'', saga:'', genre:'', status:'', edicion:'' };
-  var wishFilters = { search:'', author:'', tienda:'', costoOp:'gt', costoVal:null };
-  var wishGroupBy = ''; // '' | 'author'
-  var currentWishGroups = [];
-  var openGroupContext = null; // { type:'book'|'wish', label:'...' } | null
-
-  var bookViewMode = 'mosaico'; // 'mosaico' | 'listado'
-  var wishViewMode = 'mosaico'; // 'mosaico' | 'listado'
-  var bookTableSort = { key: 'title', dir: 'asc' }; // dir: 'asc' | 'desc'
-  var wishTableSort = { key: 'title', dir: 'asc' };
-  // key -> boolean. 'title' y 'actions' no están aquí: son columnas fijas siempre visibles.
-  var bookTableColumns = {
-    cover:false, author:true, saga:true, numero_saga:true,
-    genre:false, status:true, edicion:false, costo:true,
-    tienda:false, created_at:false
-  };
-  var wishTableColumns = {
-    cover:false, author:true, saga:true, numero_saga:true,
-    costo:true, tienda:true, created_at:false
-  };
 
   // ================= PERSISTENCIA DE FILTROS/AGRUPAMIENTO (por navegador) =================
   var PREF_BOOK_FILTERS = 'pref_book_filters';
@@ -802,93 +764,93 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   function savePrefs(){
     try {
-      localStorage.setItem(PREF_BOOK_FILTERS, JSON.stringify(filters));
-      localStorage.setItem(PREF_BOOK_GROUP, groupBy);
-      localStorage.setItem(PREF_WISH_FILTERS, JSON.stringify(wishFilters));
-      localStorage.setItem(PREF_WISH_GROUP, wishGroupBy);
-      localStorage.setItem(PREF_BOOK_VIEW, bookViewMode);
-      localStorage.setItem(PREF_WISH_VIEW, wishViewMode);
-      localStorage.setItem(PREF_BOOK_TABLE_SORT, JSON.stringify(bookTableSort));
-      localStorage.setItem(PREF_WISH_TABLE_SORT, JSON.stringify(wishTableSort));
-      localStorage.setItem(PREF_BOOK_TABLE_COLUMNS, JSON.stringify(bookTableColumns));
-      localStorage.setItem(PREF_WISH_TABLE_COLUMNS, JSON.stringify(wishTableColumns));
+      localStorage.setItem(PREF_BOOK_FILTERS, JSON.stringify(state.filters));
+      localStorage.setItem(PREF_BOOK_GROUP, state.groupBy);
+      localStorage.setItem(PREF_WISH_FILTERS, JSON.stringify(state.wishFilters));
+      localStorage.setItem(PREF_WISH_GROUP, state.wishGroupBy);
+      localStorage.setItem(PREF_BOOK_VIEW, state.bookViewMode);
+      localStorage.setItem(PREF_WISH_VIEW, state.wishViewMode);
+      localStorage.setItem(PREF_BOOK_TABLE_SORT, JSON.stringify(state.bookTableSort));
+      localStorage.setItem(PREF_WISH_TABLE_SORT, JSON.stringify(state.wishTableSort));
+      localStorage.setItem(PREF_BOOK_TABLE_COLUMNS, JSON.stringify(state.bookTableColumns));
+      localStorage.setItem(PREF_WISH_TABLE_COLUMNS, JSON.stringify(state.wishTableColumns));
     } catch(e){}
   }
   function loadPrefs(){
     try {
       var bf = localStorage.getItem(PREF_BOOK_FILTERS);
-      if(bf){ var parsedBf = JSON.parse(bf); filters.search = parsedBf.search||''; filters.author = parsedBf.author||''; filters.saga = parsedBf.saga||''; filters.genre = parsedBf.genre||''; filters.status = parsedBf.status||''; filters.edicion = parsedBf.edicion||''; }
+      if(bf){ var parsedBf = JSON.parse(bf); state.filters.search = parsedBf.search||''; state.filters.author = parsedBf.author||''; state.filters.saga = parsedBf.saga||''; state.filters.genre = parsedBf.genre||''; state.filters.status = parsedBf.status||''; state.filters.edicion = parsedBf.edicion||''; }
       var bg = localStorage.getItem(PREF_BOOK_GROUP);
-      if(bg !== null) groupBy = bg;
+      if(bg !== null) state.groupBy = bg;
       var wf = localStorage.getItem(PREF_WISH_FILTERS);
-      if(wf){ var parsedWf = JSON.parse(wf); wishFilters.search = parsedWf.search||''; wishFilters.author = parsedWf.author||''; wishFilters.tienda = parsedWf.tienda||''; wishFilters.costoOp = parsedWf.costoOp||'gt'; wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
+      if(wf){ var parsedWf = JSON.parse(wf); state.wishFilters.search = parsedWf.search||''; state.wishFilters.author = parsedWf.author||''; state.wishFilters.tienda = parsedWf.tienda||''; state.wishFilters.costoOp = parsedWf.costoOp||'gt'; state.wishFilters.costoVal = (parsedWf.costoVal!=null && parsedWf.costoVal!=='') ? Number(parsedWf.costoVal) : null; }
       var wg = localStorage.getItem(PREF_WISH_GROUP);
-      if(wg !== null) wishGroupBy = wg;
+      if(wg !== null) state.wishGroupBy = wg;
       var nb = localStorage.getItem(PREF_NEW_BOOK_IDS);
-      if(nb){ JSON.parse(nb).forEach(function(bid){ newBookIds[bid] = true; }); }
+      if(nb){ JSON.parse(nb).forEach(function(bid){ state.newBookIds[bid] = true; }); }
       var bv = localStorage.getItem(PREF_BOOK_VIEW);
-      if(bv === 'mosaico' || bv === 'listado') bookViewMode = bv;
+      if(bv === 'mosaico' || bv === 'listado') state.bookViewMode = bv;
       var wv = localStorage.getItem(PREF_WISH_VIEW);
-      if(wv === 'mosaico' || wv === 'listado') wishViewMode = wv;
+      if(wv === 'mosaico' || wv === 'listado') state.wishViewMode = wv;
       var bts = localStorage.getItem(PREF_BOOK_TABLE_SORT);
       if(bts){ try{ var pbts = JSON.parse(bts);
-        if(pbts && typeof pbts.key==='string') bookTableSort.key = pbts.key;
-        if(pbts && (pbts.dir==='asc'||pbts.dir==='desc')) bookTableSort.dir = pbts.dir;
+        if(pbts && typeof pbts.key==='string') state.bookTableSort.key = pbts.key;
+        if(pbts && (pbts.dir==='asc'||pbts.dir==='desc')) state.bookTableSort.dir = pbts.dir;
       } catch(e2){} }
       var wts = localStorage.getItem(PREF_WISH_TABLE_SORT);
       if(wts){ try{ var pwts = JSON.parse(wts);
-        if(pwts && typeof pwts.key==='string') wishTableSort.key = pwts.key;
-        if(pwts && (pwts.dir==='asc'||pwts.dir==='desc')) wishTableSort.dir = pwts.dir;
+        if(pwts && typeof pwts.key==='string') state.wishTableSort.key = pwts.key;
+        if(pwts && (pwts.dir==='asc'||pwts.dir==='desc')) state.wishTableSort.dir = pwts.dir;
       } catch(e3){} }
       var btc = localStorage.getItem(PREF_BOOK_TABLE_COLUMNS);
       if(btc){ try{ var pbtc = JSON.parse(btc);
-        Object.keys(bookTableColumns).forEach(function(k){ if(typeof pbtc[k]==='boolean') bookTableColumns[k]=pbtc[k]; });
+        Object.keys(state.bookTableColumns).forEach(function(k){ if(typeof pbtc[k]==='boolean') state.bookTableColumns[k]=pbtc[k]; });
       } catch(e4){} }
       var wtc = localStorage.getItem(PREF_WISH_TABLE_COLUMNS);
       if(wtc){ try{ var pwtc = JSON.parse(wtc);
-        Object.keys(wishTableColumns).forEach(function(k){ if(typeof pwtc[k]==='boolean') wishTableColumns[k]=pwtc[k]; });
+        Object.keys(state.wishTableColumns).forEach(function(k){ if(typeof pwtc[k]==='boolean') state.wishTableColumns[k]=pwtc[k]; });
       } catch(e5){} }
     } catch(e){}
   }
   loadPrefs();
   function saveNewBookIds(){
-    try { localStorage.setItem(PREF_NEW_BOOK_IDS, JSON.stringify(Object.keys(newBookIds))); } catch(e){}
+    try { localStorage.setItem(PREF_NEW_BOOK_IDS, JSON.stringify(Object.keys(state.newBookIds))); } catch(e){}
   }
 
   function syncControlsUI(){
-    document.getElementById('search-input').value = filters.search;
-    document.getElementById('wish-search-input').value = wishFilters.search;
+    document.getElementById('search-input').value = state.filters.search;
+    document.getElementById('wish-search-input').value = state.wishFilters.search;
 
     document.querySelectorAll('#group-panel .group-opt').forEach(function(btn){
-      btn.classList.toggle('selected', btn.getAttribute('data-group') === groupBy);
+      btn.classList.toggle('selected', btn.getAttribute('data-group') === state.groupBy);
     });
-    document.getElementById('btn-toggle-group').classList.toggle('active', !!groupBy);
+    document.getElementById('btn-toggle-group').classList.toggle('active', !!state.groupBy);
 
     document.querySelectorAll('#wish-group-panel .group-opt').forEach(function(btn){
-      btn.classList.toggle('selected', btn.getAttribute('data-group') === wishGroupBy);
+      btn.classList.toggle('selected', btn.getAttribute('data-group') === state.wishGroupBy);
     });
-    document.getElementById('btn-toggle-wish-group').classList.toggle('active', !!wishGroupBy);
+    document.getElementById('btn-toggle-wish-group').classList.toggle('active', !!state.wishGroupBy);
 
-    var bookFilterCount = ['author','saga','genre','status','edicion'].filter(function(k){ return !!filters[k]; }).length;
+    var bookFilterCount = ['author','saga','genre','status','edicion'].filter(function(k){ return !!state.filters[k]; }).length;
     document.getElementById('btn-toggle-filters').classList.toggle('active', bookFilterCount > 0);
     document.getElementById('filters-label').textContent = bookFilterCount > 0 ? 'Filtros ('+bookFilterCount+')' : 'Filtros';
 
-    document.getElementById('wish-filter-costo-op').value = wishFilters.costoOp;
+    document.getElementById('wish-filter-costo-op').value = state.wishFilters.costoOp;
     var costoValInput = document.getElementById('wish-filter-costo-val');
     if(document.activeElement !== costoValInput){
-      costoValInput.value = wishFilters.costoVal != null ? wishFilters.costoVal : '';
+      costoValInput.value = state.wishFilters.costoVal != null ? state.wishFilters.costoVal : '';
     }
 
-    var wishFilterActive = !!wishFilters.author || !!wishFilters.tienda || (isPremiumUser() && !!wishFilters.costoOp && wishFilters.costoVal != null);
+    var wishFilterActive = !!state.wishFilters.author || !!state.wishFilters.tienda || (isPremiumUser() && !!state.wishFilters.costoOp && state.wishFilters.costoVal != null);
     document.getElementById('btn-toggle-wish-filters').classList.toggle('active', wishFilterActive);
 
-    document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !groupBy);
-    document.getElementById('btn-clear-wish-all').classList.toggle('hidden', !wishFilterActive && !wishGroupBy);
+    document.getElementById('btn-clear-book-all').classList.toggle('hidden', bookFilterCount === 0 && !state.groupBy);
+    document.getElementById('btn-clear-wish-all').classList.toggle('hidden', !wishFilterActive && !state.wishGroupBy);
 
-    document.getElementById('btn-book-view-mosaico').classList.toggle('active', bookViewMode === 'mosaico');
-    document.getElementById('btn-book-view-listado').classList.toggle('active', bookViewMode === 'listado');
-    document.getElementById('btn-wish-view-mosaico').classList.toggle('active', wishViewMode === 'mosaico');
-    document.getElementById('btn-wish-view-listado').classList.toggle('active', wishViewMode === 'listado');
+    document.getElementById('btn-book-view-mosaico').classList.toggle('active', state.bookViewMode === 'mosaico');
+    document.getElementById('btn-book-view-listado').classList.toggle('active', state.bookViewMode === 'listado');
+    document.getElementById('btn-wish-view-mosaico').classList.toggle('active', state.wishViewMode === 'mosaico');
+    document.getElementById('btn-wish-view-listado').classList.toggle('active', state.wishViewMode === 'listado');
 
     var lockListado = !isPremiumUser();
     ['btn-book-view-listado','btn-wish-view-listado'].forEach(function(idLk){
@@ -902,30 +864,12 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     document.getElementById('wish-filter-costo-op').closest('.filter-field-cost').classList.toggle('locked', lockCostoFilter);
     document.getElementById('wish-filter-costo-op').closest('.filter-field-cost').title = lockCostoFilter ? 'Función de Lector Premium' : '';
 
-    document.getElementById('btn-toggle-group').disabled = (bookViewMode === 'listado');
-    document.getElementById('btn-toggle-wish-group').disabled = (wishViewMode === 'listado');
+    document.getElementById('btn-toggle-group').disabled = (state.bookViewMode === 'listado');
+    document.getElementById('btn-toggle-wish-group').disabled = (state.wishViewMode === 'listado');
 
-    document.getElementById('btn-book-columns').classList.toggle('hidden', bookViewMode !== 'listado');
-    document.getElementById('btn-wish-columns').classList.toggle('hidden', wishViewMode !== 'listado');
+    document.getElementById('btn-book-columns').classList.toggle('hidden', state.bookViewMode !== 'listado');
+    document.getElementById('btn-wish-columns').classList.toggle('hidden', state.wishViewMode !== 'listado');
   }
-
-  var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
-  var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'pendiente' };
-
-  var ICONS = {
-    check:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
-    edit:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
-    trash:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
-    cart:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.4a2 2 0 002 1.6h9a2 2 0 002-1.8L21 7H6"/></svg>',
-    heart:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B3A3A" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>',
-    gem:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>',
-    book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
-    sortAsc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
-    sortDesc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
-    sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
-    eye:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-    eyeOff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.27 21.27 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.27 21.27 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>'
-  };
 
   // ================= COLUMNAS DE LA VISTA LISTADO =================
   var BOOK_COLUMNS = [
@@ -974,11 +918,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     document.getElementById('auth-modal-close').classList.add('hidden');
     document.getElementById('recovery-screen').classList.add('hidden');
     document.getElementById('app-root').classList.add('hidden');
-    currentUserRole = 'free';
+    state.currentUserRole = 'free';
     updateAdminLink();
   }
   function updateAdminLink(){
-    document.getElementById('btn-admin-link').classList.toggle('hidden', isGuest || currentUserRole !== 'administrador');
+    document.getElementById('btn-admin-link').classList.toggle('hidden', state.isGuest || state.currentUserRole !== 'administrador');
   }
   function openAuthModal(){
     authMode = 'login';
@@ -1001,10 +945,10 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     cameFromGuest = false;
   }
   function updateAccountButton(){
-    document.getElementById('btn-logout').textContent = isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
-    document.getElementById('btn-logout').classList.toggle('hidden', !isGuest);
-    document.getElementById('user-menu-wrap').classList.toggle('hidden', isGuest);
-    if(isGuest){ updateUserAvatar(null); }
+    document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
+    document.getElementById('btn-logout').classList.toggle('hidden', !state.isGuest);
+    document.getElementById('user-menu-wrap').classList.toggle('hidden', state.isGuest);
+    if(state.isGuest){ updateUserAvatar(null); }
   }
   var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
   var currentAvatarIcon = null;
@@ -1166,7 +1110,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
         authMode = 'login';
         sb.auth.getSession().then(function(r){
           if(r.data && r.data.session && r.data.session.user){
-            currentUserId = r.data.session.user.id;
+            state.currentUserId = r.data.session.user.id;
             showApp();
             loadData();
           } else {
@@ -1178,7 +1122,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   });
 
   document.getElementById('btn-logout').addEventListener('click', function(){
-    if(isGuest){
+    if(state.isGuest){
       openAuthModal();
     } else {
       sb.auth.signOut();
@@ -1190,8 +1134,8 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   });
 
   document.getElementById('guest-link').addEventListener('click', function(){
-    isGuest = true;
-    currentUserId = null;
+    state.isGuest = true;
+    state.currentUserId = null;
     trackEvent('guest_mode_started');
     showApp();
     loadData();
@@ -1202,15 +1146,15 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   window.addEventListener('popstate', function(e){
     if(e.state && e.state.guestEntry){
-      isGuest = true;
-      currentUserId = null;
+      state.isGuest = true;
+      state.currentUserId = null;
       showApp();
       loadData();
     } else if(authBackGuardActive){
       history.pushState({ authApp: true }, '', location.href);
-    } else if(isGuest){
-      isGuest = false;
-      currentUserId = null;
+    } else if(state.isGuest){
+      state.isGuest = false;
+      state.currentUserId = null;
       showAuthScreen();
     }
   });
@@ -1237,10 +1181,10 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       return;
     }
     if(session && session.user){
-      currentUserId = session.user.id;
-      setSentryUser(currentUserId);
-      setAnalyticsUser(currentUserId);
-      isGuest = false;
+      state.currentUserId = session.user.id;
+      setSentryUser(state.currentUserId);
+      setAnalyticsUser(state.currentUserId);
+      state.isGuest = false;
       if(!authBackGuardActive){
         authBackGuardActive = true;
         history.pushState({ authApp: true }, '', location.href);
@@ -1259,7 +1203,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       showApp();
       loadData();
     } else {
-      currentUserId = null;
+      state.currentUserId = null;
       setSentryUser(null);
       setAnalyticsUser(null);
       authBackGuardActive = false;
@@ -1269,17 +1213,16 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   });
 
   // ================= DATOS =================
-  var DEFAULT_TITLE = 'Mi Biblioteca';
   var MAX_TITLE_CHARS = 20;
 
   function backfillGuestFechaLeido(){
     var today = new Date().toISOString();
     var changed = false;
-    books = books.map(function(b){
+    state.books = state.books.map(function(b){
       if(b.status === 'leido' && !b.fecha_leido){ changed = true; return Object.assign({}, b, { fecha_leido: today }); }
       return b;
     });
-    if(changed) guestSet('guest_books', books);
+    if(changed) guestSet('guest_books', state.books);
   }
 
   function loadData(){
@@ -1289,24 +1232,24 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       dbSelectProfile()
     ]).then(function(results){
       var bRes = results[0], wRes = results[1], pRes = results[2];
-      if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); books = []; } else { books = bRes.data || []; if(isGuest) backfillGuestFechaLeido(); }
-      if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); wishlist = []; } else { wishlist = wRes.data || []; }
+      if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); state.books = []; } else { state.books = bRes.data || []; if(state.isGuest) backfillGuestFechaLeido(); }
+      if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); state.wishlist = []; } else { state.wishlist = wRes.data || []; }
       var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
       document.getElementById('app-title-text').textContent = savedTitle;
-      currentUserRole = (!isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
-      if(!isPremiumUser()){ bookViewMode = 'mosaico'; wishViewMode = 'mosaico'; }
+      state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
+      if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }
       updateAdminLink();
-      updateUserAvatar(!isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
+      updateUserAvatar(!state.isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
       renderAll();
     });
     dbSelectAuthors().then(function(res){
       if(res.error) return;
-      allAuthors = uniqueSorted((res.data || []).map(function(a){ return a.name; }));
+      state.allAuthors = uniqueSorted((res.data || []).map(function(a){ return a.name; }));
       renderAuthorDatalist();
     }).catch(function(){});
-    document.getElementById('btn-notifications').classList.toggle('hidden', isGuest);
-    if(isGuest){
-      notifications = [];
+    document.getElementById('btn-notifications').classList.toggle('hidden', state.isGuest);
+    if(state.isGuest){
+      state.notifications = [];
       updateNotifDot();
     } else {
       loadNotifications();
@@ -1325,9 +1268,9 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }).then(function(res){
       if(res.error){
         console.error(res.error);
-        notifications = [];
+        state.notifications = [];
       } else {
-        notifications = (res.data || [])
+        state.notifications = (res.data || [])
           .filter(function(r){ return r.notifications; })
           .map(function(r){
             return {
@@ -1342,7 +1285,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     });
   }
   function updateNotifDot(){
-    var hasUnread = notifications.some(function(n){ return !n.read; });
+    var hasUnread = state.notifications.some(function(n){ return !n.read; });
     document.getElementById('notif-dot').classList.toggle('hidden', !hasUnread);
     document.getElementById('btn-notifications').classList.toggle('has-unread', hasUnread);
   }
@@ -1353,11 +1296,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   }
   function renderNotifList(){
     var container = document.getElementById('notif-list');
-    if(notifications.length === 0){
+    if(state.notifications.length === 0){
       container.innerHTML = '<div class="notif-empty">No tienes notificaciones todavía.</div>';
       return;
     }
-    container.innerHTML = notifications.map(function(n){
+    container.innerHTML = state.notifications.map(function(n){
       return '<div class="notif-row'+(n.read?' read':'')+'" data-action="open-notification-detail" data-id="'+n.receiptId+'">' +
         '<div class="notif-unread-dot"></div>' +
         '<div class="notif-content">' +
@@ -1369,9 +1312,9 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }).join('');
   }
   function openNotificationDetail(receiptId){
-    var n = notifications.find(function(x){ return x.receiptId===receiptId; });
+    var n = state.notifications.find(function(x){ return x.receiptId===receiptId; });
     if(!n) return;
-    currentNotifDetailId = receiptId;
+    state.currentNotifDetailId = receiptId;
     document.getElementById('notif-detail-date').textContent = formatNotifDate(n.created_at);
     document.getElementById('notif-detail-message').textContent = n.message;
     document.getElementById('modal-notification-detail').classList.remove('hidden');
@@ -1379,7 +1322,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   function markNotificationRead(receiptId){
     return sb.from('notification_receipts').update({ read:true }).eq('id', receiptId).then(function(res){
       if(!res.error){
-        notifications = notifications.map(function(n){ return n.receiptId===receiptId ? Object.assign({}, n, { read:true }) : n; });
+        state.notifications = state.notifications.map(function(n){ return n.receiptId===receiptId ? Object.assign({}, n, { read:true }) : n; });
         updateNotifDot();
       }
       return res;
@@ -1388,28 +1331,28 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   function deleteNotification(receiptId){
     return sb.from('notification_receipts').delete().eq('id', receiptId).then(function(res){
       if(!res.error){
-        notifications = notifications.filter(function(n){ return n.receiptId!==receiptId; });
+        state.notifications = state.notifications.filter(function(n){ return n.receiptId!==receiptId; });
         updateNotifDot();
       }
       return res;
     });
   }
   function markAllNotificationsRead(){
-    var unreadIds = notifications.filter(function(n){ return !n.read; }).map(function(n){ return n.receiptId; });
+    var unreadIds = state.notifications.filter(function(n){ return !n.read; }).map(function(n){ return n.receiptId; });
     if(unreadIds.length === 0) return;
     sb.from('notification_receipts').update({ read:true }).in('id', unreadIds).then(function(res){
       if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-      notifications = notifications.map(function(n){ return Object.assign({}, n, { read:true }); });
+      state.notifications = state.notifications.map(function(n){ return Object.assign({}, n, { read:true }); });
       updateNotifDot();
       renderNotifList();
     });
   }
   function deleteAllNotifications(){
-    if(notifications.length === 0) return;
-    var ids = notifications.map(function(n){ return n.receiptId; });
+    if(state.notifications.length === 0) return;
+    var ids = state.notifications.map(function(n){ return n.receiptId; });
     sb.from('notification_receipts').delete().in('id', ids).then(function(res){
       if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-      notifications = [];
+      state.notifications = [];
       updateNotifDot();
       renderNotifList();
     });
@@ -1471,11 +1414,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   }
 
   function renderStats(){
-    var total = books.length;
-    var leidos = books.filter(function(b){ return b.status === 'leido'; }).length;
-    var leyendo = books.filter(function(b){ return b.status === 'leyendo'; }).length;
+    var total = state.books.length;
+    var leidos = state.books.filter(function(b){ return b.status === 'leido'; }).length;
+    var leyendo = state.books.filter(function(b){ return b.status === 'leyendo'; }).length;
     var pendientes = total - leidos - leyendo;
-    function activeClass(val){ return filters.status === val ? ' stat-active' : ''; }
+    function activeClass(val){ return state.filters.status === val ? ' stat-active' : ''; }
     document.getElementById('stats').innerHTML =
       '<div class="stat clickable'+activeClass('')+'" data-action="filter-stat" data-status=""><b>'+total+'</b> <span>libros</span></div>' +
       '<div class="stat clickable'+activeClass('leyendo')+'" data-action="filter-stat" data-status="leyendo"><b style="color:#8A5F2C">'+leyendo+'</b> <span>leyendo</span></div>' +
@@ -1484,23 +1427,23 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   }
 
   function bookMatchesFilters(b, exclude){
-    var s = filters.search.toLowerCase();
+    var s = state.filters.search.toLowerCase();
     if(s){
       var hay = (b.title+' '+b.author+' '+(b.genre||'')+' '+(b.saga||'')).toLowerCase();
       if(hay.indexOf(s) === -1) return false;
     }
-    if(exclude !== 'author' && filters.author && b.author !== filters.author) return false;
-    if(exclude !== 'saga' && filters.saga && b.saga !== filters.saga) return false;
-    if(exclude !== 'genre' && filters.genre && b.genre !== filters.genre) return false;
-    if(exclude !== 'status' && filters.status && b.status !== filters.status) return false;
-    if(exclude !== 'edicion' && filters.edicion && (b.edicion||'normal') !== filters.edicion) return false;
+    if(exclude !== 'author' && state.filters.author && b.author !== state.filters.author) return false;
+    if(exclude !== 'saga' && state.filters.saga && b.saga !== state.filters.saga) return false;
+    if(exclude !== 'genre' && state.filters.genre && b.genre !== state.filters.genre) return false;
+    if(exclude !== 'status' && state.filters.status && b.status !== state.filters.status) return false;
+    if(exclude !== 'edicion' && state.filters.edicion && (b.edicion||'normal') !== state.filters.edicion) return false;
     return true;
   }
 
   function renderFilterOptions(){
-    fillSelect('filter-author', uniqueSorted(books.filter(function(b){return bookMatchesFilters(b,'author');}).map(function(b){return b.author;})), filters.author);
-    fillSelect('filter-saga', uniqueSorted(books.filter(function(b){return bookMatchesFilters(b,'saga');}).map(function(b){return b.saga;})), filters.saga);
-    fillSelect('filter-genre', uniqueSorted(books.filter(function(b){return bookMatchesFilters(b,'genre');}).map(function(b){return b.genre;})), filters.genre);
+    fillSelect('filter-author', uniqueSorted(state.books.filter(function(b){return bookMatchesFilters(b,'author');}).map(function(b){return b.author;})), state.filters.author);
+    fillSelect('filter-saga', uniqueSorted(state.books.filter(function(b){return bookMatchesFilters(b,'saga');}).map(function(b){return b.saga;})), state.filters.saga);
+    fillSelect('filter-genre', uniqueSorted(state.books.filter(function(b){return bookMatchesFilters(b,'genre');}).map(function(b){return b.genre;})), state.filters.genre);
   }
   function fillSelect(id, options, selected){
     var el = document.getElementById(id);
@@ -1510,7 +1453,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   }
 
   function filteredBooks(){
-    return books.filter(function(b){ return bookMatchesFilters(b, null); });
+    return state.books.filter(function(b){ return bookMatchesFilters(b, null); });
   }
 
   function bookCardHTML(b){
@@ -1519,7 +1462,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     var stampHtml = '';
     if(b.status==='leido') stampHtml = '<div class="stamp stamp-leido">LEÍDO</div>';
     else if(b.status==='leyendo') stampHtml = '<div class="stamp stamp-leyendo">LEYENDO</div>';
-    var newHtml = newBookIds[b.id] ? '<div class="new-badge">NUEVO</div>' : '';
+    var newHtml = state.newBookIds[b.id] ? '<div class="new-badge">NUEVO</div>' : '';
     return '<div class="card'+(b.edicion==='especial' ? ' card-especial' : '')+'">' +
       '<div class="cover-click" data-action="view-book" data-id="'+b.id+'" style="position:relative">' + coverHTML(b.cover, b.title) +
         stampHtml + newHtml +
@@ -1542,20 +1485,20 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   function emptyBooksHTML(){
     return '<div class="empty" style="grid-column:1/-1">' + ICONS.book +
-      '<p class="title">'+(books.length===0 ? 'Tu biblioteca está vacía' : 'Ningún libro coincide con los filtros')+'</p>' +
-      '<p class="subtitle">'+(books.length===0 ? 'Añade el primer libro físico de tu colección.' : 'Prueba a ajustar la búsqueda o los filtros.')+'</p></div>';
+      '<p class="title">'+(state.books.length===0 ? 'Tu biblioteca está vacía' : 'Ningún libro coincide con los filtros')+'</p>' +
+      '<p class="subtitle">'+(state.books.length===0 ? 'Añade el primer libro físico de tu colección.' : 'Prueba a ajustar la búsqueda o los filtros.')+'</p></div>';
   }
 
   function renderGroupedBooksGrid(list){
     var grid = document.getElementById('grid-books');
     var map = {};
     list.forEach(function(b){
-      var raw = groupBy === 'status' ? b.status : (b[groupBy] || '');
-      var label = groupBy === 'status' ? STATUS_LABELS[raw] : (raw || GROUP_EMPTY_LABEL[groupBy]);
+      var raw = state.groupBy === 'status' ? b.status : (b[state.groupBy] || '');
+      var label = state.groupBy === 'status' ? STATUS_LABELS[raw] : (raw || GROUP_EMPTY_LABEL[state.groupBy]);
       if(!map[raw]) map[raw] = { label: label, items: [] };
       map[raw].items.push(b);
     });
-    if(groupBy === 'saga'){
+    if(state.groupBy === 'saga'){
       Object.keys(map).forEach(function(k){
         map[k].items.sort(function(a,b){
           if(a.numero_saga == null) return b.numero_saga == null ? 0 : 1;
@@ -1564,11 +1507,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
         });
       });
     }
-    currentGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
+    state.currentGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
       return a.label.localeCompare(b.label, 'es');
     });
     grid.className = 'grid';
-    grid.innerHTML = currentGroups.map(function(g, i){
+    grid.innerHTML = state.currentGroups.map(function(g, i){
       return '<div class="card group-card" data-action="open-group" data-index="'+i+'">' +
         '<div class="group-card-inner">' +
           '<div class="group-card-count">'+g.items.length+'</div>' +
@@ -1583,7 +1526,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     var list = filteredBooks();
     var grid = document.getElementById('grid-books');
     var table = document.getElementById('table-books');
-    if(bookViewMode === 'listado'){
+    if(state.bookViewMode === 'listado'){
       grid.className = 'hidden';
       grid.innerHTML = '';
       table.classList.remove('hidden');
@@ -1596,7 +1539,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       grid.innerHTML = emptyBooksHTML();
       return;
     }
-    if(groupBy){
+    if(state.groupBy){
       renderGroupedBooksGrid(list);
       return;
     }
@@ -1624,34 +1567,34 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   }
 
   function wishMatchesFilters(w, exclude){
-    var s = wishFilters.search.toLowerCase();
+    var s = state.wishFilters.search.toLowerCase();
     if(s){
       var hay = (w.title+' '+w.author).toLowerCase();
       if(hay.indexOf(s) === -1) return false;
     }
-    if(exclude !== 'author' && wishFilters.author && w.author !== wishFilters.author) return false;
-    if(exclude !== 'tienda' && wishFilters.tienda && (w.tienda||'') !== wishFilters.tienda) return false;
-    if(isPremiumUser() && wishFilters.costoOp && wishFilters.costoVal != null){
+    if(exclude !== 'author' && state.wishFilters.author && w.author !== state.wishFilters.author) return false;
+    if(exclude !== 'tienda' && state.wishFilters.tienda && (w.tienda||'') !== state.wishFilters.tienda) return false;
+    if(isPremiumUser() && state.wishFilters.costoOp && state.wishFilters.costoVal != null){
       if(w.costo == null) return false;
-      if(wishFilters.costoOp === 'gt' && !(Number(w.costo) > wishFilters.costoVal)) return false;
-      if(wishFilters.costoOp === 'lt' && !(Number(w.costo) < wishFilters.costoVal)) return false;
+      if(state.wishFilters.costoOp === 'gt' && !(Number(w.costo) > state.wishFilters.costoVal)) return false;
+      if(state.wishFilters.costoOp === 'lt' && !(Number(w.costo) < state.wishFilters.costoVal)) return false;
     }
     return true;
   }
 
   function filteredWishlist(){
-    return wishlist.filter(function(w){ return wishMatchesFilters(w, null); });
+    return state.wishlist.filter(function(w){ return wishMatchesFilters(w, null); });
   }
 
   function renderWishFilterOptions(){
-    fillSelect('wish-filter-author', uniqueSorted(wishlist.filter(function(w){return wishMatchesFilters(w,'author');}).map(function(w){return w.author;})), wishFilters.author);
-    fillSelect('wish-filter-tienda', uniqueSorted(wishlist.filter(function(w){return wishMatchesFilters(w,'tienda');}).map(function(w){return w.tienda;})), wishFilters.tienda);
+    fillSelect('wish-filter-author', uniqueSorted(state.wishlist.filter(function(w){return wishMatchesFilters(w,'author');}).map(function(w){return w.author;})), state.wishFilters.author);
+    fillSelect('wish-filter-tienda', uniqueSorted(state.wishlist.filter(function(w){return wishMatchesFilters(w,'tienda');}).map(function(w){return w.tienda;})), state.wishFilters.tienda);
   }
 
   function emptyWishHTML(){
     return '<div class="empty" style="grid-column:1/-1">' + ICONS.heart +
-      '<p class="title">'+(wishlist.length===0 ? 'Tu wishlist está vacía' : 'Ningún libro coincide con la búsqueda')+'</p>' +
-      '<p class="subtitle">'+(wishlist.length===0 ? 'Guarda aquí los libros que quieres comprar más adelante.' : 'Prueba a ajustar la búsqueda o el filtro.')+'</p></div>';
+      '<p class="title">'+(state.wishlist.length===0 ? 'Tu wishlist está vacía' : 'Ningún libro coincide con la búsqueda')+'</p>' +
+      '<p class="subtitle">'+(state.wishlist.length===0 ? 'Guarda aquí los libros que quieres comprar más adelante.' : 'Prueba a ajustar la búsqueda o el filtro.')+'</p></div>';
   }
 
   function renderGroupedWishGrid(list){
@@ -1663,11 +1606,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       if(!map[raw]) map[raw] = { label: label, items: [] };
       map[raw].items.push(w);
     });
-    currentWishGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
+    state.currentWishGroups = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){
       return a.label.localeCompare(b.label, 'es');
     });
     grid.className = 'grid';
-    grid.innerHTML = currentWishGroups.map(function(g, i){
+    grid.innerHTML = state.currentWishGroups.map(function(g, i){
       return '<div class="card group-card" data-action="open-wish-group" data-index="'+i+'">' +
         '<div class="group-card-inner">' +
           '<div class="group-card-count">'+g.items.length+'</div>' +
@@ -1683,7 +1626,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
         '<span class="wish-stats-locked" title="Función de Lector Premium">Total y promedio disponibles en Lector Premium</span>';
       return;
     }
-    var withCosto = wishlist.filter(function(w){ return w.costo != null; });
+    var withCosto = state.wishlist.filter(function(w){ return w.costo != null; });
     var total = withCosto.reduce(function(sum, w){ return sum + Number(w.costo); }, 0);
     var promedio = withCosto.length ? total / withCosto.length : 0;
     document.getElementById('wish-stats').innerHTML =
@@ -1696,10 +1639,10 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     var grid = document.getElementById('grid-wishlist');
     var table = document.getElementById('table-wishlist');
     renderWishStats();
-    document.getElementById('wish-badge').textContent = wishlist.length;
-    document.getElementById('wish-badge').classList.toggle('hidden', wishlist.length===0);
+    document.getElementById('wish-badge').textContent = state.wishlist.length;
+    document.getElementById('wish-badge').classList.toggle('hidden', state.wishlist.length===0);
     var list = filteredWishlist();
-    if(wishViewMode === 'listado'){
+    if(state.wishViewMode === 'listado'){
       grid.className = 'hidden';
       grid.innerHTML = '';
       table.classList.remove('hidden');
@@ -1712,7 +1655,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       grid.innerHTML = emptyWishHTML();
       return;
     }
-    if(wishGroupBy){
+    if(state.wishGroupBy){
       renderGroupedWishGrid(list);
       return;
     }
@@ -1722,17 +1665,17 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   function syncGroupModal(){
     if(document.getElementById('modal-group').classList.contains('hidden')) return;
-    if(!openGroupContext) return;
-    if(openGroupContext.type === 'book'){
+    if(!state.openGroupContext) return;
+    if(state.openGroupContext.type === 'book'){
       renderGroupedBooksGrid(filteredBooks());
-      var g = currentGroups.find(function(x){ return x.label === openGroupContext.label; });
-      if(!g){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+      var g = state.currentGroups.find(function(x){ return x.label === state.openGroupContext.label; });
+      if(!g){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
       document.getElementById('group-modal-title').textContent = g.label + ' · ' + g.items.length + (g.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = g.items.map(bookCardHTML).join('');
     } else {
       renderGroupedWishGrid(filteredWishlist());
-      var wg = currentWishGroups.find(function(x){ return x.label === openGroupContext.label; });
-      if(!wg){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+      var wg = state.currentWishGroups.find(function(x){ return x.label === state.openGroupContext.label; });
+      if(!wg){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
       document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
     }
@@ -1812,7 +1755,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
 
   function renderColumnConfigPanel(scope){
     var colDefs = scope === 'book' ? BOOK_COLUMNS : WISH_COLUMNS;
-    var visibilityMap = scope === 'book' ? bookTableColumns : wishTableColumns;
+    var visibilityMap = scope === 'book' ? state.bookTableColumns : state.wishTableColumns;
     var panel = document.getElementById(scope === 'book' ? 'book-columns-panel' : 'wish-columns-panel');
     var ordered = colDefs.slice().sort(function(a, b){
       var av = visibilityMap[a.key] ? 0 : 1;
@@ -1832,19 +1775,19 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   function renderBooksTable(list){
     var wrap = document.getElementById('table-books');
     if(list.length === 0){ wrap.innerHTML = emptyBooksHTML(); return; }
-    var sorted = sortItems(list, bookTableSort.key, bookTableSort.dir, BOOK_COLUMNS);
+    var sorted = sortItems(list, state.bookTableSort.key, state.bookTableSort.dir, BOOK_COLUMNS);
     wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
-      tableHeaderHTML(BOOK_COLUMNS, bookTableColumns, bookTableSort, 'book') +
-      '<tbody>' + sorted.map(function(b){ return tableRowHTML(b, BOOK_COLUMNS, bookTableColumns, 'book'); }).join('') + '</tbody></table></div>';
+      tableHeaderHTML(BOOK_COLUMNS, state.bookTableColumns, state.bookTableSort, 'book') +
+      '<tbody>' + sorted.map(function(b){ return tableRowHTML(b, BOOK_COLUMNS, state.bookTableColumns, 'book'); }).join('') + '</tbody></table></div>';
   }
 
   function renderWishTable(list){
     var wrap = document.getElementById('table-wishlist');
     if(list.length === 0){ wrap.innerHTML = emptyWishHTML(); return; }
-    var sorted = sortItems(list, wishTableSort.key, wishTableSort.dir, WISH_COLUMNS);
+    var sorted = sortItems(list, state.wishTableSort.key, state.wishTableSort.dir, WISH_COLUMNS);
     wrap.innerHTML = '<div class="table-scroll"><table class="data-table">' +
-      tableHeaderHTML(WISH_COLUMNS, wishTableColumns, wishTableSort, 'wish') +
-      '<tbody>' + sorted.map(function(w){ return tableRowHTML(w, WISH_COLUMNS, wishTableColumns, 'wish'); }).join('') + '</tbody></table></div>';
+      tableHeaderHTML(WISH_COLUMNS, state.wishTableColumns, state.wishTableSort, 'wish') +
+      '<tbody>' + sorted.map(function(w){ return tableRowHTML(w, WISH_COLUMNS, state.wishTableColumns, 'wish'); }).join('') + '</tbody></table></div>';
   }
 
   var toastTimer = null;
@@ -1886,11 +1829,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     if(!(author||'').trim() || !(saga||'').trim()) return [];
     var key = sagaKey(author, saga);
     var used = [];
-    books.forEach(function(b){
+    state.books.forEach(function(b){
       if(excludeType==='book' && b.id===excludeId) return;
       if(b.numero_saga != null && sagaKey(b.author, b.saga) === key) used.push(Number(b.numero_saga));
     });
-    wishlist.forEach(function(w){
+    state.wishlist.forEach(function(w){
       if(excludeType==='wish' && w.id===excludeId) return;
       if(w.numero_saga != null && sagaKey(w.author, w.saga) === key) used.push(Number(w.numero_saga));
     });
@@ -1903,7 +1846,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   function updateSagaSuggestions(authorInputId, sagaDatalistId){
     var author = document.getElementById(authorInputId).value.trim();
     var sagas = uniqueSorted(
-      books.concat(wishlist)
+      state.books.concat(state.wishlist)
         .filter(function(x){ return x.author && x.author.trim().toLowerCase() === author.toLowerCase(); })
         .map(function(x){ return x.saga; })
     );
@@ -1948,7 +1891,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     document.getElementById('f-tienda').value = book ? (book.tienda||'') : '';
     setStatusUI(book ? book.status : 'pendiente');
     setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
-    bookNumeroTouched = false;
+    state.bookNumeroTouched = false;
     updateSagaSuggestions('f-author', 'book-saga-suggestions');
     initialBookSnapshot = JSON.stringify(getBookFormData());
     document.getElementById('modal-book').classList.remove('hidden');
@@ -1990,7 +1933,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     document.getElementById('w-cover').value = item ? (item.cover||'') : '';
     document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
     document.getElementById('w-tienda').value = item ? (item.tienda||'') : '';
-    wishNumeroTouched = false;
+    state.wishNumeroTouched = false;
     updateSagaSuggestions('w-author', 'wish-saga-suggestions');
     initialWishSnapshot = JSON.stringify(getWishFormData());
     document.getElementById('modal-wish').classList.remove('hidden');
@@ -2010,20 +1953,20 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   document.getElementById('w-author').addEventListener('blur', function(e){ ensureAuthorExists(e.target.value); });
   document.getElementById('f-author').addEventListener('input', function(){
     updateSagaSuggestions('f-author', 'book-saga-suggestions');
-    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', bookNumeroTouched, 'book', editingBookId);
+    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', state.bookNumeroTouched, 'book', editingBookId);
   });
   document.getElementById('f-saga').addEventListener('input', function(){
-    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', bookNumeroTouched, 'book', editingBookId);
+    maybeSuggestNumeroSaga('f-author', 'f-saga', 'f-numero-saga', state.bookNumeroTouched, 'book', editingBookId);
   });
-  document.getElementById('f-numero-saga').addEventListener('input', function(){ bookNumeroTouched = true; });
+  document.getElementById('f-numero-saga').addEventListener('input', function(){ state.bookNumeroTouched = true; });
   document.getElementById('w-author').addEventListener('input', function(){
     updateSagaSuggestions('w-author', 'wish-saga-suggestions');
-    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', wishNumeroTouched, 'wish', editingWishId);
+    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', state.wishNumeroTouched, 'wish', editingWishId);
   });
   document.getElementById('w-saga').addEventListener('input', function(){
-    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', wishNumeroTouched, 'wish', editingWishId);
+    maybeSuggestNumeroSaga('w-author', 'w-saga', 'w-numero-saga', state.wishNumeroTouched, 'wish', editingWishId);
   });
-  document.getElementById('w-numero-saga').addEventListener('input', function(){ wishNumeroTouched = true; });
+  document.getElementById('w-numero-saga').addEventListener('input', function(){ state.wishNumeroTouched = true; });
 
   function openDetailModal(item, type){
     document.getElementById('detail-cover').innerHTML = coverHTML(item.cover, item.title);
@@ -2149,7 +2092,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   function closeOverlayById(id){
     if(id === 'modal-book'){ attemptCloseBookModal(); }
     else if(id === 'modal-wish'){ attemptCloseWishModal(); }
-    else if(id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; }
+    else if(id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; }
     else if(id === 'modal-confirm'){ closeConfirmModal(); }
     else if(id === 'auth-screen'){ closeAuthModal(); }
     else { document.getElementById(id).classList.add('hidden'); }
@@ -2211,7 +2154,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     if(e.target.id === 'auth-screen' && e.target.classList.contains('modal-mode')){ closeAuthModal(); return; }
     if(e.target.id === 'modal-book'){ attemptCloseBookModal(); return; }
     if(e.target.id === 'modal-wish'){ attemptCloseWishModal(); return; }
-    if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; return; }
+    if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
     if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notification-detail'){ document.getElementById('modal-notification-detail').classList.add('hidden'); return; }
@@ -2240,8 +2183,8 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       document.getElementById('modal-row-actions').classList.add('hidden');
     }
 
-    if(id && newBookIds[id]){
-      delete newBookIds[id];
+    if(id && state.newBookIds[id]){
+      delete state.newBookIds[id];
       saveNewBookIds();
       renderBooksGrid();
     }
@@ -2261,7 +2204,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       if(willShow){ document.getElementById('group-panel').classList.add('hidden'); document.getElementById('book-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'toggle-group'){
-      if(bookViewMode === 'listado') return;
+      if(state.bookViewMode === 'listado') return;
       var gpanel = document.getElementById('group-panel');
       var gWillShow = gpanel.classList.contains('hidden');
       gpanel.classList.toggle('hidden');
@@ -2269,21 +2212,21 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }
     else if(action === 'set-group'){
       var chosen = el.getAttribute('data-group');
-      groupBy = (groupBy === chosen) ? '' : chosen;
+      state.groupBy = (state.groupBy === chosen) ? '' : chosen;
       document.getElementById('group-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
       renderBooksGrid();
     }
     else if(action === 'open-group'){
       var gi = parseInt(el.getAttribute('data-index'), 10);
-      var g = currentGroups[gi];
+      var g = state.currentGroups[gi];
       if(!g) return;
-      openGroupContext = { type:'book', label: g.label };
+      state.openGroupContext = { type:'book', label: g.label };
       document.getElementById('group-modal-title').textContent = g.label + ' · ' + g.items.length + (g.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = g.items.map(bookCardHTML).join('');
       document.getElementById('modal-group').classList.remove('hidden');
     }
-    else if(action === 'close-group-modal'){ document.getElementById('modal-group').classList.add('hidden'); openGroupContext = null; }
+    else if(action === 'close-group-modal'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; }
     else if(action === 'toggle-wish-filters'){
       var wfPanel = document.getElementById('wish-filters-panel');
       var wfWillShow = wfPanel.classList.contains('hidden');
@@ -2291,7 +2234,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       if(wfWillShow){ document.getElementById('wish-group-panel').classList.add('hidden'); document.getElementById('wish-columns-panel').classList.add('hidden'); }
     }
     else if(action === 'toggle-wish-group'){
-      if(wishViewMode === 'listado') return;
+      if(state.wishViewMode === 'listado') return;
       var wgPanel = document.getElementById('wish-group-panel');
       var wgWillShow = wgPanel.classList.contains('hidden');
       wgPanel.classList.toggle('hidden');
@@ -2299,16 +2242,16 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }
     else if(action === 'set-wish-group'){
       var wChosen = el.getAttribute('data-group');
-      wishGroupBy = (wishGroupBy === wChosen) ? '' : wChosen;
+      state.wishGroupBy = (state.wishGroupBy === wChosen) ? '' : wChosen;
       document.getElementById('wish-group-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
       renderWishGrid();
     }
     else if(action === 'open-wish-group'){
       var wgi = parseInt(el.getAttribute('data-index'), 10);
-      var wg = currentWishGroups[wgi];
+      var wg = state.currentWishGroups[wgi];
       if(!wg) return;
-      openGroupContext = { type:'wish', label: wg.label };
+      state.openGroupContext = { type:'wish', label: wg.label };
       document.getElementById('group-modal-title').textContent = wg.label + ' · ' + wg.items.length + (wg.items.length===1?' libro':' libros');
       document.getElementById('grid-group-books').innerHTML = wg.items.map(wishCardHTML).join('');
       document.getElementById('modal-group').classList.remove('hidden');
@@ -2316,9 +2259,9 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     else if(action === 'set-book-view'){
       var newBookView = el.getAttribute('data-view');
       if(newBookView === 'listado' && !isPremiumUser()){ trackEvent('paywall_shown', { context: 'listado_view_book' }); showToast('La vista Listado es una función de Lector Premium.'); return; }
-      if(newBookView === bookViewMode) return;
-      bookViewMode = newBookView;
-      if(bookViewMode === 'listado'){ document.getElementById('group-panel').classList.add('hidden'); }
+      if(newBookView === state.bookViewMode) return;
+      state.bookViewMode = newBookView;
+      if(state.bookViewMode === 'listado'){ document.getElementById('group-panel').classList.add('hidden'); }
       document.getElementById('book-columns-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
       renderBooksGrid();
@@ -2326,9 +2269,9 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     else if(action === 'set-wish-view'){
       var newWishView = el.getAttribute('data-view');
       if(newWishView === 'listado' && !isPremiumUser()){ trackEvent('paywall_shown', { context: 'listado_view_wish' }); showToast('La vista Listado es una función de Lector Premium.'); return; }
-      if(newWishView === wishViewMode) return;
-      wishViewMode = newWishView;
-      if(wishViewMode === 'listado'){ document.getElementById('wish-group-panel').classList.add('hidden'); }
+      if(newWishView === state.wishViewMode) return;
+      state.wishViewMode = newWishView;
+      if(state.wishViewMode === 'listado'){ document.getElementById('wish-group-panel').classList.add('hidden'); }
       document.getElementById('wish-columns-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
       renderWishGrid();
@@ -2352,7 +2295,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     else if(action === 'toggle-column'){
       var tcScope = el.getAttribute('data-scope');
       var tcCol = el.getAttribute('data-column');
-      var tcMap = tcScope === 'book' ? bookTableColumns : wishTableColumns;
+      var tcMap = tcScope === 'book' ? state.bookTableColumns : state.wishTableColumns;
       tcMap[tcCol] = !tcMap[tcCol];
       savePrefs();
       if(tcScope === 'book') renderBooksGrid(); else renderWishGrid();
@@ -2361,7 +2304,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       var scScope = el.getAttribute('data-scope');
       var scCol = el.getAttribute('data-column');
       var scColDefs = scScope === 'book' ? BOOK_COLUMNS : WISH_COLUMNS;
-      var scState = scScope === 'book' ? bookTableSort : wishTableSort;
+      var scState = scScope === 'book' ? state.bookTableSort : state.wishTableSort;
       if(scCol !== 'title'){
         var scDef = scColDefs.filter(function(c){ return c.key === scCol; })[0];
         if(!scDef || !scDef.sortType) return;
@@ -2376,7 +2319,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }
     else if(action === 'open-row-actions'){
       var oraScope = el.getAttribute('data-scope');
-      var oraItem = oraScope === 'book' ? books.find(function(b){return b.id===id;}) : wishlist.find(function(w){return w.id===id;});
+      var oraItem = oraScope === 'book' ? state.books.find(function(b){return b.id===id;}) : state.wishlist.find(function(w){return w.id===id;});
       if(!oraItem) return;
       document.getElementById('row-actions-title').textContent = oraItem.title;
       document.getElementById('row-actions-body').innerHTML = oraScope === 'book' ? bookRowActionsSheetHTML(oraItem) : wishRowActionsSheetHTML(oraItem);
@@ -2385,15 +2328,15 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     else if(action === 'close-row-actions-modal'){ document.getElementById('modal-row-actions').classList.add('hidden'); }
     else if(action === 'filter-stat'){
       var clickedStatus = el.getAttribute('data-status');
-      filters.status = (clickedStatus === '' ? '' : (filters.status === clickedStatus ? '' : clickedStatus));
-      document.getElementById('filter-status').value = filters.status;
+      state.filters.status = (clickedStatus === '' ? '' : (state.filters.status === clickedStatus ? '' : clickedStatus));
+      document.getElementById('filter-status').value = state.filters.status;
       savePrefs(); syncControlsUI();
       renderStats();
       renderFilterOptions();
       renderBooksGrid();
     }
     else if(action === 'reset-book-filters'){
-      filters = { search: filters.search, author:'', saga:'', genre:'', status:'', edicion:'' };
+      state.filters = { search: state.filters.search, author:'', saga:'', genre:'', status:'', edicion:'' };
       document.getElementById('filter-author').value = '';
       document.getElementById('filter-saga').value = '';
       document.getElementById('filter-genre').value = '';
@@ -2405,10 +2348,10 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       renderBooksGrid();
     }
     else if(action === 'reset-wish-filters'){
-      wishFilters.author = '';
-      wishFilters.tienda = '';
-      wishFilters.costoOp = 'gt';
-      wishFilters.costoVal = null;
+      state.wishFilters.author = '';
+      state.wishFilters.tienda = '';
+      state.wishFilters.costoOp = 'gt';
+      state.wishFilters.costoVal = null;
       document.getElementById('wish-filter-author').value = '';
       document.getElementById('wish-filter-tienda').value = '';
       document.getElementById('wish-filter-costo-op').value = 'gt';
@@ -2418,8 +2361,8 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       renderWishGrid();
     }
     else if(action === 'clear-book-all'){
-      filters = { search: filters.search, author:'', saga:'', genre:'', status:'' };
-      groupBy = '';
+      state.filters = { search: state.filters.search, author:'', saga:'', genre:'', status:'' };
+      state.groupBy = '';
       document.getElementById('filter-author').value = '';
       document.getElementById('filter-saga').value = '';
       document.getElementById('filter-genre').value = '';
@@ -2432,11 +2375,11 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       renderBooksGrid();
     }
     else if(action === 'clear-wish-all'){
-      wishFilters.author = '';
-      wishFilters.tienda = '';
-      wishFilters.costoOp = 'gt';
-      wishFilters.costoVal = null;
-      wishGroupBy = '';
+      state.wishFilters.author = '';
+      state.wishFilters.tienda = '';
+      state.wishFilters.costoOp = 'gt';
+      state.wishFilters.costoVal = null;
+      state.wishGroupBy = '';
       document.getElementById('wish-filter-author').value = '';
       document.getElementById('wish-filter-tienda').value = '';
       document.getElementById('wish-filter-costo-op').value = 'gt';
@@ -2451,13 +2394,13 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       if(!canAddBook()){ trackEvent('paywall_shown', { context: 'add_book_cap' }); showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregar más.'); return; }
       openBookModal(null);
     }
-    else if(action === 'edit-book'){ openBookModal(books.find(function(b){return b.id===id;})); }
+    else if(action === 'edit-book'){ openBookModal(state.books.find(function(b){return b.id===id;})); }
     else if(action === 'view-book'){
-      var vb = books.find(function(x){return x.id===id;});
+      var vb = state.books.find(function(x){return x.id===id;});
       if(vb) openDetailModal(vb, 'book');
     }
     else if(action === 'view-wish'){
-      var vw = wishlist.find(function(x){return x.id===id;});
+      var vw = state.wishlist.find(function(x){return x.id===id;});
       if(vw) openDetailModal(vw, 'wish');
     }
     else if(action === 'close-detail-modal'){ document.getElementById('modal-detail').classList.add('hidden'); }
@@ -2480,14 +2423,14 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       openConfirmModal('Eliminar notificaciones', '¿Eliminar todas las notificaciones? Esta acción no se puede deshacer.', function(){ deleteAllNotifications(); });
     }
     else if(action === 'mark-read-detail'){
-      markNotificationRead(currentNotifDetailId).then(function(res){
+      markNotificationRead(state.currentNotifDetailId).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
       });
     }
     else if(action === 'delete-notification-detail'){
-      deleteNotification(currentNotifDetailId).then(function(res){
+      deleteNotification(state.currentNotifDetailId).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         document.getElementById('modal-notification-detail').classList.add('hidden');
         renderNotifList();
@@ -2537,33 +2480,33 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
       if(!canAddWish()){ trackEvent('paywall_shown', { context: 'add_wish_cap' }); showToast('Alcanzaste el límite de 10 libros en tu wishlist. Actualiza a Lector Premium para agregar más.'); return; }
       openWishModal(null);
     }
-    else if(action === 'edit-wish'){ openWishModal(wishlist.find(function(w){return w.id===id;})); }
+    else if(action === 'edit-wish'){ openWishModal(state.wishlist.find(function(w){return w.id===id;})); }
     else if(action === 'set-status'){ setStatusUI(el.getAttribute('data-status')); }
     else if(action === 'set-edicion'){ setEdicionUI(el.getAttribute('data-edicion')); }
     else if(action === 'toggle-status'){
-      var book = books.find(function(b){return b.id===id;});
+      var book = state.books.find(function(b){return b.id===id;});
       var newStatus = STATUS_NEXT[book.status] || 'pendiente';
       dbUpdateBook(id, { status:newStatus }).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        books = books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
+        state.books = state.books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
         renderAll();
       });
     }
     else if(action === 'toggle-edicion'){
-      var beBook = books.find(function(b){return b.id===id;});
+      var beBook = state.books.find(function(b){return b.id===id;});
       var newEdicion = beBook.edicion === 'especial' ? 'normal' : 'especial';
       dbUpdateBook(id, { edicion:newEdicion }).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        books = books.map(function(b){ return b.id===id ? Object.assign({},b,{edicion:newEdicion}) : b; });
+        state.books = state.books.map(function(b){ return b.id===id ? Object.assign({},b,{edicion:newEdicion}) : b; });
         renderAll();
       });
     }
     else if(action === 'delete-book'){
       openConfirmModal('Eliminar libro', 'Vas a eliminar este libro de tu biblioteca. Esta acción es permanente y no se puede deshacer.', function(){
-        var delBook = books.find(function(b){return b.id===id;});
+        var delBook = state.books.find(function(b){return b.id===id;});
         dbDeleteBook(id).then(function(res){
           if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-          books = books.filter(function(b){ return b.id!==id; });
+          state.books = state.books.filter(function(b){ return b.id!==id; });
           renderAll();
           if(delBook) deleteOwnStorageCover(delBook.cover);
         });
@@ -2571,10 +2514,10 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }
     else if(action === 'delete-wish'){
       openConfirmModal('Eliminar de la wishlist', 'Vas a eliminar este libro de tu wishlist. Esta acción es permanente y no se puede deshacer.', function(){
-        var delWish = wishlist.find(function(w){return w.id===id;});
+        var delWish = state.wishlist.find(function(w){return w.id===id;});
         dbDeleteWish(id).then(function(res){
           if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-          wishlist = wishlist.filter(function(w){ return w.id!==id; });
+          state.wishlist = state.wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
           if(delWish) deleteOwnStorageCover(delWish.cover);
         });
@@ -2582,17 +2525,17 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     }
     else if(action === 'buy-wish'){
       if(!canAddBook()){ trackEvent('paywall_shown', { context: 'buy_wish_cap' }); showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregarlo.'); return; }
-      var item = wishlist.find(function(w){return w.id===id;});
+      var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
         if(insRes.error){ reportError(insRes.error); showToast('Error: '+insRes.error.message, 'error'); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ reportError(delRes.error); showToast('Error: '+delRes.error.message, 'error'); return; }
           var newBooks = insRes.data || [];
-          books = newBooks.concat(books);
-          newBooks.forEach(function(nb){ newBookIds[nb.id] = true; });
+          state.books = newBooks.concat(state.books);
+          newBooks.forEach(function(nb){ state.newBookIds[nb.id] = true; });
           saveNewBookIds();
-          wishlist = wishlist.filter(function(w){ return w.id!==id; });
+          state.wishlist = state.wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
           var libName = document.getElementById('app-title-text').textContent;
           showToast('Libro agregado a tu biblioteca "'+libName+'"');
@@ -2602,7 +2545,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   });
 
   document.getElementById('search-input').addEventListener('input', function(e){
-    filters.search = e.target.value;
+    state.filters.search = e.target.value;
     savePrefs();
     renderFilterOptions();
     renderBooksGrid();
@@ -2610,7 +2553,7 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   ['filter-author','filter-saga','filter-genre','filter-status','filter-edicion'].forEach(function(id){
     document.getElementById(id).addEventListener('change', function(e){
       var key = id.replace('filter-','');
-      filters[key] = e.target.value;
+      state.filters[key] = e.target.value;
       savePrefs(); syncControlsUI();
       renderStats();
       renderFilterOptions();
@@ -2619,31 +2562,31 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
   });
 
   document.getElementById('wish-search-input').addEventListener('input', function(e){
-    wishFilters.search = e.target.value;
+    state.wishFilters.search = e.target.value;
     savePrefs();
     renderWishFilterOptions();
     renderWishGrid();
   });
   document.getElementById('wish-filter-author').addEventListener('change', function(e){
-    wishFilters.author = e.target.value;
+    state.wishFilters.author = e.target.value;
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
   });
   document.getElementById('wish-filter-tienda').addEventListener('change', function(e){
-    wishFilters.tienda = e.target.value;
+    state.wishFilters.tienda = e.target.value;
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
   });
   document.getElementById('wish-filter-costo-op').addEventListener('change', function(e){
-    wishFilters.costoOp = e.target.value;
+    state.wishFilters.costoOp = e.target.value;
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
   });
   document.getElementById('wish-filter-costo-val').addEventListener('input', function(e){
-    wishFilters.costoVal = parseCosto(e.target.value);
+    state.wishFilters.costoVal = parseCosto(e.target.value);
     savePrefs(); syncControlsUI();
     renderWishFilterOptions();
     renderWishGrid();
@@ -2654,13 +2597,13 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     if(editingBookId){
       dbUpdateBook(editingBookId, data).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        books = books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
+        state.books = state.books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
         closeBookModal(); renderAll();
       });
     } else {
       dbInsertBook(data).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        books = (res.data || []).concat(books);
+        state.books = (res.data || []).concat(state.books);
         closeBookModal(); renderAll();
       });
     }
@@ -2683,13 +2626,13 @@ import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, form
     if(editingWishId){
       dbUpdateWish(editingWishId, data).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        wishlist = wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
+        state.wishlist = state.wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
         closeWishModal(); renderAll();
       });
     } else {
       dbInsertWish(data).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        wishlist = (res.data || []).concat(wishlist);
+        state.wishlist = (res.data || []).concat(state.wishlist);
         closeWishModal(); renderAll();
       });
     }
