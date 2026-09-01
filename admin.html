@@ -141,7 +141,7 @@
     <section id="view-usuarios">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Correo</th><th>Alta</th><th>Rol</th><th>Plan</th></tr></thead>
+          <thead><tr><th>Correo</th><th>Alta</th><th>Rol</th><th>Plan</th><th>Renovación</th></tr></thead>
           <tbody id="users-tbody"></tbody>
         </table>
       </div>
@@ -216,6 +216,10 @@
     var label = PLAN_LABELS[u.plan] || u.plan;
     var statusSuffix = SUB_STATUS_LABELS[u.sub_status];
     return statusSuffix ? label + ' (' + statusSuffix + ')' : label;
+  }
+  function renewalCellText(u){
+    if(!u.renews_at) return '—';
+    return new Date(u.renews_at).toLocaleDateString('es-AR');
   }
   var users = [];
   var notifs = [];
@@ -334,6 +338,7 @@
         '<td>' + date + '</td>' +
         '<td><select class="role-select" data-action="change-role">' + options + '</select><span class="role-status"></span></td>' +
         '<td>' + esc(planCellText(u)) + '</td>' +
+        '<td>' + esc(renewalCellText(u)) + '</td>' +
       '</tr>';
     }).join('');
   }
