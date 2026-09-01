@@ -148,7 +148,7 @@ export function bookActionsHTML(b){
 }
 
 export function bookRowActionsSheetHTML(b){
-  return '<button type="button" class="row-action-item" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' Marcar como '+STATUS_LABELS[STATUS_NEXT[b.status]]+'</button>' +
+  return (b.status==='leido' ? '' : '<button type="button" class="row-action-item" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' Marcar como '+STATUS_LABELS[STATUS_NEXT[b.status]]+'</button>') +
     '<button type="button" class="row-action-item" data-action="toggle-edicion" data-id="'+b.id+'">'+ICONS.gem+' '+(b.edicion==='especial' ? 'Quitar edición especial' : 'Marcar edición especial')+'</button>' +
     '<button type="button" class="row-action-item" data-action="edit-book" data-id="'+b.id+'">'+ICONS.edit+' Editar</button>' +
     '<button type="button" class="row-action-item row-action-danger" data-action="delete-book" data-id="'+b.id+'">'+ICONS.trash+' Eliminar</button>';

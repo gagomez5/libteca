@@ -54,7 +54,7 @@ export var LIBRARY_CAP = 10;
 export var WISHLIST_CAP = 10;
 export var DEFAULT_TITLE = 'Mi Biblioteca';
 export var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
-export var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'pendiente' };
+export var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'leido' };
 export var ICONS = {
   check:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
   edit:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',

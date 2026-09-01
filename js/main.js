@@ -616,6 +616,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     else if(action === 'toggle-status'){
       var book = state.books.find(function(b){return b.id===id;});
       var newStatus = STATUS_NEXT[book.status] || 'pendiente';
+      if(newStatus === book.status){ return; }
       dbUpdateBook(id, { status:newStatus }).then(function(res){
         if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
         state.books = state.books.map(function(b){ return b.id===id ? Object.assign({},b,{status:newStatus}) : b; });
