@@ -495,18 +495,14 @@ import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumn
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './js/render.js';
 import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, showToast, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './js/ui.js';
 import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrateGuestDataToAccount, getUsedSagaNumbers, suggestNextSagaNumber, updateSagaSuggestions, maybeSuggestNumeroSaga } from './js/forms-shared.js';
+import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './js/books.js';
+import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './js/wishlist.js';
 (function(){
   "use strict";
 
   var cameFromGuest = false;
   var migrationInProgress = false;
 
-  var currentStatus = 'pendiente';
-  var currentEdicion = 'normal';
-  var editingBookId = null;
-  var editingWishId = null;
-  var editingBookOriginalCover = '';
-  var editingWishOriginalCover = '';
   var authMode = 'login'; // 'login' | 'signup' | 'recover'
 
   loadPrefs();
@@ -791,8 +787,6 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
   });
 
   // ================= DATOS =================
-  var MAX_TITLE_CHARS = 20;
-
   function backfillGuestFechaLeido(){
     var today = new Date().toISOString();
     var changed = false;
@@ -960,109 +954,6 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
   // ---------- render helpers ----------
 
   // ================= VISTA LISTADO (TABLA) =================
-
-  // ---------- modal helpers ----------
-  function setStatusUI(status){
-    currentStatus = status;
-    document.getElementById('status-pendiente').className = 'status-opt' + (status==='pendiente' ? ' selected-pendiente' : '');
-    document.getElementById('status-leyendo').className = 'status-opt' + (status==='leyendo' ? ' selected-leyendo' : '');
-    document.getElementById('status-leido').className = 'status-opt' + (status==='leido' ? ' selected-leido' : '');
-  }
-  function setEdicionUI(edicion){
-    currentEdicion = edicion;
-    document.getElementById('edicion-normal').className = 'status-opt' + (edicion==='normal' ? ' selected-normal' : '');
-    document.getElementById('edicion-especial').className = 'status-opt' + (edicion==='especial' ? ' selected-especial' : '');
-  }
-
-  var initialBookSnapshot = null;
-
-  function getBookFormData(){
-    return {
-      title: document.getElementById('f-title').value.trim(),
-      author: document.getElementById('f-author').value.trim(),
-      saga: document.getElementById('f-saga').value.trim(),
-      numero_saga: parseSagaNumber(document.getElementById('f-numero-saga').value),
-      genre: document.getElementById('f-genre').value.trim(),
-      cover: document.getElementById('f-cover').value.trim(),
-      costo: parseCosto(document.getElementById('f-costo').value),
-      tienda: document.getElementById('f-tienda').value.trim(),
-      status: currentStatus,
-      edicion: currentEdicion
-    };
-  }
-
-  function openBookModal(book){
-    editingBookId = book ? book.id : null;
-    editingBookOriginalCover = book ? (book.cover||'') : '';
-    document.getElementById('book-modal-title').textContent = book ? 'Editar libro' : 'Añadir libro';
-    document.getElementById('book-submit-btn').textContent = book ? 'Guardar cambios' : 'Añadir a mi biblioteca';
-    document.getElementById('f-title').value = book ? book.title : '';
-    document.getElementById('f-author').value = book ? book.author : '';
-    document.getElementById('f-saga').value = book ? (book.saga||'') : '';
-    document.getElementById('f-numero-saga').value = (book && book.numero_saga != null) ? book.numero_saga : '';
-    document.getElementById('f-genre').value = book ? (book.genre||'') : '';
-    document.getElementById('f-cover').value = book ? (book.cover||'') : '';
-    document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
-    document.getElementById('f-tienda').value = book ? (book.tienda||'') : '';
-    setStatusUI(book ? book.status : 'pendiente');
-    setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
-    state.bookNumeroTouched = false;
-    updateSagaSuggestions('f-author', 'book-saga-suggestions');
-    initialBookSnapshot = JSON.stringify(getBookFormData());
-    document.getElementById('modal-book').classList.remove('hidden');
-    document.querySelector('#modal-book .modal').scrollTop = 0;
-  }
-  function closeBookModal(){ document.getElementById('modal-book').classList.add('hidden'); }
-  function attemptCloseBookModal(){
-    var changed = JSON.stringify(getBookFormData()) !== initialBookSnapshot;
-    if(changed){
-      openConfirmModal('Cambios sin guardar', 'Tienes cambios sin guardar. ¿Salir sin guardarlos?', function(){ closeBookModal(); }, 'Salir sin guardar');
-    } else {
-      closeBookModal();
-    }
-  }
-
-  var initialWishSnapshot = null;
-
-  function getWishFormData(){
-    return {
-      title: document.getElementById('w-title').value.trim(),
-      author: document.getElementById('w-author').value.trim(),
-      saga: document.getElementById('w-saga').value.trim(),
-      numero_saga: parseSagaNumber(document.getElementById('w-numero-saga').value),
-      cover: document.getElementById('w-cover').value.trim(),
-      costo: parseCosto(document.getElementById('w-costo').value),
-      tienda: document.getElementById('w-tienda').value.trim()
-    };
-  }
-
-  function openWishModal(item){
-    editingWishId = item ? item.id : null;
-    editingWishOriginalCover = item ? (item.cover||'') : '';
-    document.getElementById('wish-modal-title').textContent = item ? 'Editar deseo' : 'Añadir a wishlist';
-    document.getElementById('wish-submit-btn').textContent = item ? 'Guardar cambios' : 'Añadir a wishlist';
-    document.getElementById('w-title').value = item ? item.title : '';
-    document.getElementById('w-author').value = item ? item.author : '';
-    document.getElementById('w-saga').value = item ? (item.saga||'') : '';
-    document.getElementById('w-numero-saga').value = (item && item.numero_saga != null) ? item.numero_saga : '';
-    document.getElementById('w-cover').value = item ? (item.cover||'') : '';
-    document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
-    document.getElementById('w-tienda').value = item ? (item.tienda||'') : '';
-    state.wishNumeroTouched = false;
-    updateSagaSuggestions('w-author', 'wish-saga-suggestions');
-    initialWishSnapshot = JSON.stringify(getWishFormData());
-    document.getElementById('modal-wish').classList.remove('hidden');
-    document.querySelector('#modal-wish .modal').scrollTop = 0;
-  }
-  function closeWishModal(){ document.getElementById('modal-wish').classList.add('hidden'); }
-  function attemptCloseWishModal(){
-    var changed = JSON.stringify(getWishFormData()) !== initialWishSnapshot;
-    if(changed){
-      openConfirmModal('Cambios sin guardar', 'Tienes cambios sin guardar. ¿Salir sin guardarlos?', function(){ closeWishModal(); }, 'Salir sin guardar');
-    } else {
-      closeWishModal();
-    }
-  }
 
   document.getElementById('f-author').addEventListener('blur', function(e){ ensureAuthorExists(e.target.value); });
   document.getElementById('w-author').addEventListener('blur', function(e){ ensureAuthorExists(e.target.value); });
@@ -1586,22 +1477,6 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
     renderWishGrid();
   });
 
-  function saveBookData(data){
-    ensureAuthorExists(data.author);
-    if(editingBookId){
-      dbUpdateBook(editingBookId, data).then(function(res){
-        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        state.books = state.books.map(function(b){ return b.id===editingBookId ? res.data[0] : b; });
-        closeBookModal(); renderAll();
-      });
-    } else {
-      dbInsertBook(data).then(function(res){
-        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        state.books = (res.data || []).concat(state.books);
-        closeBookModal(); renderAll();
-      });
-    }
-  }
   document.getElementById('form-book').addEventListener('submit', function(e){
     e.preventDefault();
     var data = getBookFormData();
@@ -1615,22 +1490,6 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
     resolveCoverAndSubmit(data, editingBookOriginalCover, 'book-submit-btn', saveBookData);
   });
 
-  function saveWishData(data){
-    ensureAuthorExists(data.author);
-    if(editingWishId){
-      dbUpdateWish(editingWishId, data).then(function(res){
-        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        state.wishlist = state.wishlist.map(function(w){ return w.id===editingWishId ? res.data[0] : w; });
-        closeWishModal(); renderAll();
-      });
-    } else {
-      dbInsertWish(data).then(function(res){
-        if(res.error){ reportError(res.error); showToast('Error: '+res.error.message, 'error'); return; }
-        state.wishlist = (res.data || []).concat(state.wishlist);
-        closeWishModal(); renderAll();
-      });
-    }
-  }
   document.getElementById('form-wish').addEventListener('submit', function(e){
     e.preventDefault();
     var data = getWishFormData();
