@@ -293,6 +293,11 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     }
   });
 
+  function openUpgradeModal(context){
+    trackEvent('paywall_shown', { context: context });
+    document.getElementById('modal-upgrade').classList.remove('hidden');
+  }
+
   // ---------- eventos ----------
   document.addEventListener('click', function(e){
     if(e.target.id === 'auth-screen' && e.target.classList.contains('modal-mode')){ closeAuthModal(); return; }
@@ -403,7 +408,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     }
     else if(action === 'set-book-view'){
       var newBookView = el.getAttribute('data-view');
-      if(newBookView === 'listado' && !isPremiumUser()){ trackEvent('paywall_shown', { context: 'listado_view_book' }); showToast('La vista Listado es una función de Lector Premium.'); return; }
+      if(newBookView === 'listado' && !isPremiumUser()){ openUpgradeModal('listado_view_book'); return; }
       if(newBookView === state.bookViewMode) return;
       state.bookViewMode = newBookView;
       if(state.bookViewMode === 'listado'){ document.getElementById('group-panel').classList.add('hidden'); }
@@ -413,7 +418,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     }
     else if(action === 'set-wish-view'){
       var newWishView = el.getAttribute('data-view');
-      if(newWishView === 'listado' && !isPremiumUser()){ trackEvent('paywall_shown', { context: 'listado_view_wish' }); showToast('La vista Listado es una función de Lector Premium.'); return; }
+      if(newWishView === 'listado' && !isPremiumUser()){ openUpgradeModal('listado_view_wish'); return; }
       if(newWishView === state.wishViewMode) return;
       state.wishViewMode = newWishView;
       if(state.wishViewMode === 'listado'){ document.getElementById('wish-group-panel').classList.add('hidden'); }
@@ -536,7 +541,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
       renderWishGrid();
     }
     else if(action === 'add-book'){
-      if(!canAddBook()){ trackEvent('paywall_shown', { context: 'add_book_cap' }); showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregar más.'); return; }
+      if(!canAddBook()){ openUpgradeModal('add_book_cap'); return; }
       openBookModal(null);
     }
     else if(action === 'edit-book'){ openBookModal(state.books.find(function(b){return b.id===id;})); }
@@ -643,7 +648,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     else if(action === 'close-book-modal'){ attemptCloseBookModal(); }
     else if(action === 'close-wish-modal'){ attemptCloseWishModal(); }
     else if(action === 'add-wish'){
-      if(!canAddWish()){ trackEvent('paywall_shown', { context: 'add_wish_cap' }); showToast('Alcanzaste el límite de 10 libros en tu wishlist. Actualiza a Lector Premium para agregar más.'); return; }
+      if(!canAddWish()){ openUpgradeModal('add_wish_cap'); return; }
       openWishModal(null);
     }
     else if(action === 'edit-wish'){ openWishModal(state.wishlist.find(function(w){return w.id===id;})); }
@@ -691,7 +696,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
       });
     }
     else if(action === 'buy-wish'){
-      if(!canAddBook()){ trackEvent('paywall_shown', { context: 'buy_wish_cap' }); showToast('Alcanzaste el límite de 10 libros. Actualiza a Lector Premium para agregarlo.'); return; }
+      if(!canAddBook()){ openUpgradeModal('buy_wish_cap'); return; }
       var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
