@@ -226,7 +226,8 @@ export function renderBooksGrid(){
 
 export function wishCardHTML(w){
   var sagaTag = w.saga ? (w.saga + (w.numero_saga != null ? ' #'+w.numero_saga : '')) : '';
-  return '<div class="card">' + '<div class="cover-click" data-action="view-wish" data-id="'+w.id+'">' + coverHTML(w.cover, w.title) + '</div>' +
+  var stampHtml = w.costo ? '<div class="stamp stamp-costo">'+esc(formatCosto(w.costo))+'</div>' : '';
+  return '<div class="card">' + '<div class="cover-click" data-action="view-wish" data-id="'+w.id+'" style="position:relative">' + coverHTML(w.cover, w.title) + stampHtml + '</div>' +
     '<div class="card-body">' +
       '<div class="card-title">'+esc(w.title)+'</div>' +
       '<div class="card-author">'+esc(w.author)+'</div>' +
