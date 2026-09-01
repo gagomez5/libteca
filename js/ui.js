@@ -1,8 +1,9 @@
 "use strict";
 
 import { reportError } from './telemetry.js';
-import { DEFAULT_TITLE } from './state.js';
+import { state, DEFAULT_TITLE, ROLE_LABELS, ICONS } from './state.js';
 import { dbSaveProfile } from './db.js';
+import { esc } from './utils.js';
 
 export var MAX_TITLE_CHARS = 20;
 export var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
@@ -24,6 +25,20 @@ export function updateUserAvatar(icon){
     iconEl.textContent = '';
     def.classList.remove('hidden');
   }
+}
+export function renderUserRoleBadge(){
+  var el = document.getElementById('user-role-badge');
+  if(!el) return;
+  var role = state.currentUserRole;
+  var label = ROLE_LABELS[role] || ROLE_LABELS.free;
+  var iconHTML = '';
+  if(role === 'premium' || role === 'fundador'){
+    iconHTML = '<span class="user-role-icon">'+ICONS.bookOpen+'</span>';
+  } else if(role === 'administrador'){
+    iconHTML = '<span class="user-role-icon user-role-icon-emoji">🐉</span>';
+  }
+  el.className = 'user-role-badge role-' + role;
+  el.innerHTML = iconHTML + '<span class="user-role-label">' + esc(label) + '</span>';
 }
 export function renderIconPicker(){
   document.getElementById('icon-picker-grid').innerHTML = AVATAR_ICONS.map(function(icon){

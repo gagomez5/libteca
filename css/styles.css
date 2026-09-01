@@ -68,6 +68,11 @@
   .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:60;}
   .user-dropdown button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:6px;font-size:13.5px;color:var(--text);}
   .user-dropdown button:hover{background:var(--bg);}
+  .user-role-badge{display:flex;align-items:center;gap:8px;padding:9px 12px 11px;margin-bottom:4px;border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;color:var(--text);}
+  .user-role-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
+  .user-role-icon-emoji{font-size:15px;line-height:1;filter:grayscale(1) brightness(0);}
+  .user-role-badge.role-premium,.user-role-badge.role-fundador{color:var(--emerald-dark);}
+  .user-role-badge.role-administrador{color:#111;}
   .icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
   .icon-picker-opt{aspect-ratio:1;border-radius:50%;background:var(--bg);border:1px solid var(--border);font-size:22px;display:flex;align-items:center;justify-content:center;}
   .icon-picker-opt:hover{background:var(--border);}

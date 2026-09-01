@@ -4,7 +4,7 @@ import { uniqueSorted } from './utils.js';
 import { state, DEFAULT_TITLE, isPremiumUser } from './state.js';
 import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors } from './db.js';
 import { reportError } from './telemetry.js';
-import { showToast, updateUserAvatar } from './ui.js';
+import { showToast, updateUserAvatar, renderUserRoleBadge } from './ui.js';
 import { renderAll } from './render.js';
 import { renderAuthorDatalist } from './forms-shared.js';
 import { loadNotifications, updateNotifDot } from './notifications.js';
@@ -182,6 +182,7 @@ export function loadData(){
     state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
     if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }
     updateAdminLink();
+    renderUserRoleBadge();
     updateUserAvatar(!state.isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
     renderAll();
   });

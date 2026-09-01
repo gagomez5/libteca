@@ -54,6 +54,7 @@ export var LIBRARY_CAP = 10;
 export var WISHLIST_CAP = 10;
 export var DEFAULT_TITLE = 'Mi Biblioteca';
 export var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
+export var ROLE_LABELS = { administrador:'Administrador', fundador:'Lector Fundador', premium:'Lector Premium', free:'Lector' };
 export var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'leido' };
 export var ICONS = {
   check:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
@@ -63,6 +64,7 @@ export var ICONS = {
   heart:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B3A3A" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>',
   gem:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>',
   book:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+  bookOpen:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c3 0 7 .5 9 2v13c-2-1.5-6-2-9-2z"/><path d="M22 5c-3 0-7 .5-9 2v13c2-1.5 6-2 9-2z"/></svg>',
   sortAsc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
   sortDesc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
   sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
