@@ -9,6 +9,27 @@ import { renderAll } from './render.js';
 import { renderAuthorDatalist } from './forms-shared.js';
 import { loadNotifications, updateNotifDot } from './notifications.js';
 
+var REMEMBERED_EMAIL_KEY = 'remembered_email';
+
+export function applyRememberedEmail(){
+  var emailInput = document.getElementById('auth-email');
+  var rememberBox = document.getElementById('auth-remember-me');
+  var passwordInput = document.getElementById('auth-password');
+  var remembered = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+  if(remembered){
+    emailInput.value = remembered;
+    rememberBox.checked = true;
+  } else {
+    emailInput.value = '';
+    rememberBox.checked = false;
+  }
+  passwordInput.value = '';
+}
+export function saveRememberedEmail(email, remember){
+  if(remember){ localStorage.setItem(REMEMBERED_EMAIL_KEY, email); }
+  else { localStorage.removeItem(REMEMBERED_EMAIL_KEY); }
+}
+
 export function showAuthScreen(){
   document.getElementById('auth-screen').classList.remove('modal-mode', 'hidden');
   document.getElementById('auth-modal-close').classList.add('hidden');
@@ -16,6 +37,7 @@ export function showAuthScreen(){
   document.getElementById('app-root').classList.add('hidden');
   state.currentUserRole = 'free';
   updateAdminLink();
+  applyRememberedEmail();
 }
 export function updateAdminLink(){
   document.getElementById('btn-admin-link').classList.toggle('hidden', state.isGuest || state.currentUserRole !== 'administrador');
@@ -29,6 +51,7 @@ export function openAuthModal(){
   document.getElementById('auth-screen').setAttribute('role', 'dialog');
   document.getElementById('auth-screen').setAttribute('aria-modal', 'true');
   document.getElementById('auth-screen').setAttribute('aria-labelledby', 'auth-subtitle');
+  applyRememberedEmail();
   updateAuthUI();
 }
 export function closeAuthModal(){
@@ -86,6 +109,7 @@ export function updateAuthUI(){
   var oauthButtons = document.getElementById('oauth-buttons');
   var oauthDivider = document.getElementById('oauth-divider');
   var legalNotice = document.getElementById('auth-legal-notice');
+  var rememberField = document.getElementById('auth-remember-field');
   var isModal = document.getElementById('auth-screen').classList.contains('modal-mode');
 
   setAuthMsg('');
@@ -104,6 +128,7 @@ export function updateAuthUI(){
     guestLink.classList.add('hidden');
     oauthButtons.classList.add('hidden');
     oauthDivider.classList.add('hidden');
+    rememberField.classList.add('hidden');
   } else {
     pwField.classList.remove('hidden');
     pwInput.required = true;
@@ -118,6 +143,7 @@ export function updateAuthUI(){
     guestLink.classList.toggle('hidden', isModal);
     oauthButtons.classList.remove('hidden');
     oauthDivider.classList.remove('hidden');
+    rememberField.classList.toggle('hidden', state.authMode !== 'login');
   }
 }
 

@@ -9,7 +9,7 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
 import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './books.js';
 import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './wishlist.js';
 import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, openNotificationDetail, markNotificationRead, deleteNotification, markAllNotificationsRead, deleteAllNotifications } from './notifications.js';
-import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestFechaLeido, loadData } from './auth.js';
+import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestFechaLeido, loadData, saveRememberedEmail } from './auth.js';
 (function(){
   "use strict";
 
@@ -44,6 +44,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     setAuthMsg('Un momento…');
     if(state.authMode === 'login'){
       if(!password){ setAuthMsg('Ingresa tu contraseña.', 'error'); return; }
+      var rememberMe = document.getElementById('auth-remember-me').checked;
       sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
         if(res.error){
           setAuthMsg(res.error.message, 'error');
@@ -51,6 +52,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
           document.getElementById('forgot-password-link').textContent = '¿Olvidaste tu contraseña?';
           return;
         }
+        saveRememberedEmail(email, rememberMe);
         setAuthMsg('');
       });
     } else {
