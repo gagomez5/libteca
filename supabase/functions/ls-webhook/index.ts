@@ -10,6 +10,14 @@
 // Configurar en Lemon Squeezy (Settings -> Webhooks) para que apunte a esta URL,
 // suscripto a los eventos: order_created, subscription_created, subscription_updated,
 // subscription_cancelled, subscription_expired.
+//
+// IMPORTANTE: en el Dashboard de Supabase, esta función necesita el toggle
+// "Verify JWT" en OFF (Edge Functions -> ls-webhook -> Settings). Lemon Squeezy
+// nunca manda un JWT de Supabase, manda su propia firma en X-Signature (que sí
+// se verifica acá abajo) — con "Verify JWT" en ON, Supabase rechaza el request
+// ANTES de que este código llegue a correr, y el webhook nunca actualiza nada.
+// Ese toggle a veces se reactiva solo al re-desplegar la función: revisarlo de
+// nuevo después de cualquier edición futura.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
