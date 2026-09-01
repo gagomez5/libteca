@@ -93,6 +93,7 @@ export function updateAuthUI(){
 
   if(state.authMode === 'recover'){
     pwField.classList.add('hidden');
+    pwInput.required = false;
     pwInput.value = '';
     submitBtn.textContent = 'Enviar enlace de recuperación';
     subtitle.textContent = 'Ingresa tu correo para recuperar tu contraseña';
@@ -105,6 +106,7 @@ export function updateAuthUI(){
     oauthDivider.classList.add('hidden');
   } else {
     pwField.classList.remove('hidden');
+    pwInput.required = true;
     pwInput.autocomplete = state.authMode === 'login' ? 'current-password' : 'new-password';
     submitBtn.textContent = state.authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
     subtitle.textContent = state.authMode === 'login' ? 'Inicia sesión para ver tus libros' : 'Crea tu cuenta para empezar tu biblioteca';
