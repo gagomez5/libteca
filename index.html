@@ -501,11 +501,6 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
 (function(){
   "use strict";
 
-  var cameFromGuest = false;
-  var migrationInProgress = false;
-
-  var authMode = 'login'; // 'login' | 'signup' | 'recover'
-
   loadPrefs();
 
   // ================= AUTENTICACIÓN =================
@@ -521,8 +516,8 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     document.getElementById('btn-admin-link').classList.toggle('hidden', state.isGuest || state.currentUserRole !== 'administrador');
   }
   function openAuthModal(){
-    authMode = 'login';
-    cameFromGuest = true;
+    state.authMode = 'login';
+    state.cameFromGuest = true;
     document.getElementById('auth-screen').classList.add('modal-mode');
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('auth-modal-close').classList.remove('hidden');
@@ -538,7 +533,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     document.getElementById('auth-screen').removeAttribute('role');
     document.getElementById('auth-screen').removeAttribute('aria-modal');
     document.getElementById('auth-screen').removeAttribute('aria-labelledby');
-    cameFromGuest = false;
+    state.cameFromGuest = false;
   }
   function updateAccountButton(){
     document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
@@ -589,9 +584,9 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     var isModal = document.getElementById('auth-screen').classList.contains('modal-mode');
 
     setAuthMsg('');
-    legalNotice.classList.toggle('hidden', authMode === 'recover');
+    legalNotice.classList.toggle('hidden', state.authMode === 'recover');
 
-    if(authMode === 'recover'){
+    if(state.authMode === 'recover'){
       pwField.classList.add('hidden');
       pwInput.value = '';
       submitBtn.textContent = 'Enviar enlace de recuperación';
@@ -605,11 +600,11 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
       oauthDivider.classList.add('hidden');
     } else {
       pwField.classList.remove('hidden');
-      pwInput.autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
-      submitBtn.textContent = authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
-      subtitle.textContent = authMode === 'login' ? 'Inicia sesión para ver tus libros' : 'Crea tu cuenta para empezar tu biblioteca';
-      toggleText.textContent = authMode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?';
-      toggleBtn.textContent = authMode === 'login' ? 'Crear una' : 'Iniciar sesión';
+      pwInput.autocomplete = state.authMode === 'login' ? 'current-password' : 'new-password';
+      submitBtn.textContent = state.authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
+      subtitle.textContent = state.authMode === 'login' ? 'Inicia sesión para ver tus libros' : 'Crea tu cuenta para empezar tu biblioteca';
+      toggleText.textContent = state.authMode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?';
+      toggleBtn.textContent = state.authMode === 'login' ? 'Crear una' : 'Iniciar sesión';
       toggleWrap.classList.remove('hidden');
       forgotWrap.classList.add('hidden');
       guestDivider.classList.toggle('hidden', isModal);
@@ -620,12 +615,12 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
   }
 
   document.getElementById('auth-toggle-btn').addEventListener('click', function(){
-    authMode = authMode === 'login' ? 'signup' : 'login';
+    state.authMode = state.authMode === 'login' ? 'signup' : 'login';
     updateAuthUI();
   });
 
   document.getElementById('forgot-password-link').addEventListener('click', function(){
-    authMode = (authMode === 'recover') ? 'login' : 'recover';
+    state.authMode = (state.authMode === 'recover') ? 'login' : 'recover';
     updateAuthUI();
   });
 
@@ -634,7 +629,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     var email = document.getElementById('auth-email').value.trim();
     var password = document.getElementById('auth-password').value;
 
-    if(authMode === 'recover'){
+    if(state.authMode === 'recover'){
       if(!email){ setAuthMsg('Ingresa tu correo.', 'error'); return; }
       setAuthMsg('Enviando…');
       sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
@@ -645,7 +640,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     }
 
     setAuthMsg('Un momento…');
-    if(authMode === 'login'){
+    if(state.authMode === 'login'){
       if(!password){ setAuthMsg('Ingresa tu contraseña.', 'error'); return; }
       sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
         if(res.error){
@@ -661,7 +656,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
       sb.auth.signUp({ email: email, password: password }).then(function(res){
         if(res.error){ setAuthMsg(res.error.message, 'error'); return; }
         trackEvent('signup_completed', { method: 'email' });
-        if(cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); cameFromGuest = false; }
+        if(state.cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); state.cameFromGuest = false; }
         if(res.data && res.data.session){
           setAuthMsg('');
         } else {
@@ -682,7 +677,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
       if(res.error){ setRecoveryMsg(res.error.message, 'error'); return; }
       setRecoveryMsg('Contraseña actualizada. Entrando…', 'ok');
       setTimeout(function(){
-        authMode = 'login';
+        state.authMode = 'login';
         sb.auth.getSession().then(function(r){
           if(r.data && r.data.session && r.data.session.user){
             state.currentUserId = r.data.session.user.id;
@@ -717,15 +712,13 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
     history.pushState({ guestEntry: true }, '', location.href);
   });
 
-  var authBackGuardActive = false;
-
   window.addEventListener('popstate', function(e){
     if(e.state && e.state.guestEntry){
       state.isGuest = true;
       state.currentUserId = null;
       showApp();
       loadData();
-    } else if(authBackGuardActive){
+    } else if(state.authBackGuardActive){
       history.pushState({ authApp: true }, '', location.href);
     } else if(state.isGuest){
       state.isGuest = false;
@@ -739,7 +732,7 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
   });
 
   function startOAuth(provider){
-    if(cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); cameFromGuest = false; }
+    if(state.cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); state.cameFromGuest = false; }
     sb.auth.signInWithOAuth({
       provider: provider,
       options: { redirectTo: window.location.origin + window.location.pathname }
@@ -760,28 +753,28 @@ import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, op
       setSentryUser(state.currentUserId);
       setAnalyticsUser(state.currentUserId);
       state.isGuest = false;
-      if(!authBackGuardActive){
-        authBackGuardActive = true;
+      if(!state.authBackGuardActive){
+        state.authBackGuardActive = true;
         history.pushState({ authApp: true }, '', location.href);
       }
       if(localStorage.getItem('guest_pending_migration') === '1'){
-        migrationInProgress = true;
+        state.migrationInProgress = true;
         migrateGuestDataToAccount().then(function(){
-          migrationInProgress = false;
+          state.migrationInProgress = false;
           trackEvent('guest_migration_completed');
           showApp();
           loadData();
         });
         return;
       }
-      if(migrationInProgress) return;
+      if(state.migrationInProgress) return;
       showApp();
       loadData();
     } else {
       state.currentUserId = null;
       setSentryUser(null);
       setAnalyticsUser(null);
-      authBackGuardActive = false;
+      state.authBackGuardActive = false;
       localStorage.removeItem('guest_pending_migration');
       showAuthScreen();
     }

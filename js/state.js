@@ -17,6 +17,11 @@ export var state = {
   notifications: [],
   currentNotifDetailId: null,
 
+  authMode: 'login', // 'login' | 'signup' | 'recover'
+  cameFromGuest: false,
+  migrationInProgress: false,
+  authBackGuardActive: false,
+
   groupBy: '', // '' | 'author' | 'saga' | 'genre' | 'status'
   currentGroups: [],
   filters: { search:'', author:'', saga:'', genre:'', status:'', edicion:'' },
