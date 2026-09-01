@@ -84,6 +84,11 @@
   .pricing-price{font-size:22px;font-weight:700;color:var(--emerald-dark);}
   .pricing-price span{font-size:12px;font-weight:600;color:var(--text-muted);}
   .pricing-note{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+  .upgrade-success-card{text-align:center;padding:28px 24px;}
+  .upgrade-success-icon{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--emerald);color:var(--paper);font-size:20px;font-weight:700;margin-bottom:12px;}
+  .upgrade-success-card h2{font-size:18px;color:var(--ink);margin:0 0 8px;}
+  .upgrade-success-card p{font-size:13.5px;color:var(--text-muted);margin:0 0 20px;}
+  .upgrade-success-card .btn{width:100%;justify-content:center;}
   .icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
   .icon-picker-opt{aspect-ratio:1;border-radius:50%;background:var(--bg);border:1px solid var(--border);font-size:22px;display:flex;align-items:center;justify-content:center;}
   .icon-picker-opt:hover{background:var(--border);}

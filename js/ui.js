@@ -9,7 +9,7 @@ export var MAX_TITLE_CHARS = 20;
 export var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
 export var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
   'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
-  'modal-confirm','modal-upgrade','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+  'modal-confirm','modal-upgrade','modal-upgrade-success','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
 
 var currentAvatarIcon = null;
 export function updateUserAvatar(icon){

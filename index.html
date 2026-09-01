@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Biblioteca">
 <meta name="theme-color" content="#1C2541">
 <title>Bruukion</title>
-<meta name="description" content="Bruukion es tu biblioteca personal: organizá, registrá y seguí los libros que leíste, estás leyendo y querés comprar.">
+<meta name="description" content="Bruukion es tu biblioteca personal: organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <link rel="canonical" href="https://bruukion.com/">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
@@ -18,12 +18,12 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bruukion">
 <meta property="og:title" content="Bruukion — Tu biblioteca personal">
-<meta property="og:description" content="Organizá, registrá y seguí los libros que leíste, estás leyendo y querés comprar.">
+<meta property="og:description" content="Organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <meta property="og:url" content="https://bruukion.com/">
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Bruukion — Tu biblioteca personal">
-<meta name="twitter:description" content="Organizá, registrá y seguí los libros que leíste, estás leyendo y querés comprar.">
+<meta name="twitter:description" content="Organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
 <script src="https://browser.sentry-cdn.com/10.72.0/bundle.min.js" integrity="sha384-CJFiRXW+X61SiwyHeuiHWqxTNgAMz3wwQn6/0t+i/Nvkq2VdGFNfEOu3XFmS9ogm" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/posthog-js@1.422.5/dist/array.js" integrity="sha384-kGqYhK8P4BDgGmlT/LRchUfy+lRgBRj6Zq7re0gQbhVlO285GFBqvNJJYFDpUGYS" crossorigin="anonymous"></script>
@@ -522,6 +522,16 @@
         <button type="button" class="btn btn-emerald" data-action="start-checkout" data-plan="lifetime">Elegir plan</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal confirmación upgrade exitoso -->
+<div class="modal-overlay hidden" id="modal-upgrade-success">
+  <div class="modal modal-narrow upgrade-success-card">
+    <span class="upgrade-success-icon">✓</span>
+    <h2 class="serif">Ya eres Lector Premium</h2>
+    <p>Tu pago se confirmó y tu cuenta ya tiene todos los beneficios de Lector Premium.</p>
+    <button type="button" class="btn btn-emerald" data-action="close-upgrade-success">Entendido</button>
   </div>
 </div>
 

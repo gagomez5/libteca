@@ -174,7 +174,11 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
         if(pendingUpgradeToast){
           pendingUpgradeToast = false;
           trackEvent('upgrade_completed');
-          showToast(isPremiumUser() ? '¡Listo! Ya sos Lector Premium.' : 'Pago recibido, estamos confirmando tu upgrade…');
+          if(isPremiumUser()){
+            document.getElementById('modal-upgrade-success').classList.remove('hidden');
+          } else {
+            showToast('Pago recibido, estamos confirmando tu upgrade…');
+          }
         }
       });
     } else {
@@ -312,6 +316,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     if(e.target.id === 'modal-icon-picker'){ document.getElementById('modal-icon-picker').classList.add('hidden'); return; }
     if(e.target.id === 'modal-row-actions'){ document.getElementById('modal-row-actions').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
     var userDropdown = document.getElementById('user-dropdown');
     if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
       userDropdown.classList.add('hidden');
@@ -618,6 +623,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
       document.getElementById('modal-upgrade').classList.remove('hidden');
     }
     else if(action === 'close-upgrade-modal'){ document.getElementById('modal-upgrade').classList.add('hidden'); }
+    else if(action === 'close-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); }
     else if(action === 'start-checkout'){
       var plan = el.getAttribute('data-plan');
       var checkoutButtons = document.querySelectorAll('[data-action="start-checkout"]');
