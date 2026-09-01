@@ -45,7 +45,8 @@ export var state = {
     costo:true, tienda:true, created_at:false
   },
 
-  currentUserRole: 'free' // 'administrador' | 'fundador' | 'premium' | 'free'
+  currentUserRole: 'free', // 'administrador' | 'fundador' | 'premium' | 'free'
+  subscription: null // { plan:'monthly'|'annual'|'lifetime', status, ls_customer_portal_url } | null
 };
 
 // Constantes: nunca se reasignan, así que no necesitan vivir dentro de `state`

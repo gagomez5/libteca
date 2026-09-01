@@ -2,9 +2,9 @@
 
 import { uniqueSorted } from './utils.js';
 import { state, DEFAULT_TITLE, isPremiumUser } from './state.js';
-import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors } from './db.js';
+import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors, dbSelectSubscription } from './db.js';
 import { reportError } from './telemetry.js';
-import { showToast, updateUserAvatar, renderUserRoleBadge } from './ui.js';
+import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems } from './ui.js';
 import { renderAll } from './render.js';
 import { renderAuthorDatalist } from './forms-shared.js';
 import { loadNotifications, updateNotifDot } from './notifications.js';
@@ -169,20 +169,23 @@ export function backfillGuestFechaLeido(){
 }
 
 export function loadData(){
-  Promise.all([
+  return Promise.all([
     dbSelectBooks(),
     dbSelectWishlist(),
-    dbSelectProfile()
+    dbSelectProfile(),
+    dbSelectSubscription()
   ]).then(function(results){
-    var bRes = results[0], wRes = results[1], pRes = results[2];
+    var bRes = results[0], wRes = results[1], pRes = results[2], sRes = results[3];
     if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); state.books = []; } else { state.books = bRes.data || []; if(state.isGuest) backfillGuestFechaLeido(); }
     if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); state.wishlist = []; } else { state.wishlist = wRes.data || []; }
     var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
     document.getElementById('app-title-text').textContent = savedTitle;
     state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
+    state.subscription = (!sRes.error && sRes.data) ? sRes.data : null;
     if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }
     updateAdminLink();
     renderUserRoleBadge();
+    renderUpgradeMenuItems();
     updateUserAvatar(!state.isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
     renderAll();
   });

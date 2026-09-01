@@ -1,7 +1,7 @@
 import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './telemetry.js';
 import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './utils.js';
 import { state, LIBRARY_CAP, WISHLIST_CAP, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddBook, canAddWish } from './state.js';
-import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
+import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
 import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, showToast, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
@@ -14,6 +14,12 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
   "use strict";
 
   loadPrefs();
+
+  var pendingUpgradeToast = false;
+  if(location.search.indexOf('upgraded=1') !== -1){
+    pendingUpgradeToast = true;
+    history.replaceState(null, '', location.pathname);
+  }
 
   // ================= AUTENTICACIÓN =================
   document.getElementById('auth-toggle-btn').addEventListener('click', function(){
@@ -164,7 +170,13 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
       }
       if(state.migrationInProgress) return;
       showApp();
-      loadData();
+      loadData().then(function(){
+        if(pendingUpgradeToast){
+          pendingUpgradeToast = false;
+          trackEvent('upgrade_completed');
+          showToast(isPremiumUser() ? '¡Listo! Ya sos Lector Premium.' : 'Pago recibido, estamos confirmando tu upgrade…');
+        }
+      });
     } else {
       state.currentUserId = null;
       setSentryUser(null);
@@ -294,6 +306,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     if(e.target.id === 'modal-feedback'){ document.getElementById('modal-feedback').classList.add('hidden'); return; }
     if(e.target.id === 'modal-icon-picker'){ document.getElementById('modal-icon-picker').classList.add('hidden'); return; }
     if(e.target.id === 'modal-row-actions'){ document.getElementById('modal-row-actions').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
     var userDropdown = document.getElementById('user-dropdown');
     if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
       userDropdown.classList.add('hidden');
@@ -594,6 +607,27 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
       document.getElementById('modal-feedback').classList.remove('hidden');
     }
     else if(action === 'close-feedback-modal'){ document.getElementById('modal-feedback').classList.add('hidden'); }
+    else if(action === 'open-upgrade'){
+      document.getElementById('user-dropdown').classList.add('hidden');
+      trackEvent('upgrade_modal_opened');
+      document.getElementById('modal-upgrade').classList.remove('hidden');
+    }
+    else if(action === 'close-upgrade-modal'){ document.getElementById('modal-upgrade').classList.add('hidden'); }
+    else if(action === 'start-checkout'){
+      var plan = el.getAttribute('data-plan');
+      var checkoutButtons = document.querySelectorAll('[data-action="start-checkout"]');
+      checkoutButtons.forEach(function(b){ b.disabled = true; });
+      el.textContent = 'Redirigiendo…';
+      trackEvent('checkout_started', { plan: plan });
+      dbStartCheckout(plan).then(function(url){
+        window.location.href = url;
+      }).catch(function(err){
+        reportError(err);
+        checkoutButtons.forEach(function(b){ b.disabled = false; });
+        el.textContent = 'Elegir plan';
+        showToast('No pudimos iniciar el pago. Intenta de nuevo en un momento.', 'error');
+      });
+    }
     else if(action === 'submit-feedback'){
       var feedbackText = document.getElementById('feedback-message').value.trim();
       if(!feedbackText){ showToast('Escribe un mensaje.'); return; }

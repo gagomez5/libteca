@@ -127,6 +127,8 @@
             </button>
             <div class="user-dropdown hidden" id="user-dropdown">
               <div class="user-role-badge" id="user-role-badge"></div>
+              <button type="button" class="upgrade-menu-btn hidden" id="btn-open-upgrade" data-action="open-upgrade">✨ Actualizar a Premium</button>
+              <a class="hidden" id="link-manage-subscription" href="#" target="_blank" rel="noopener">Gestionar suscripción</a>
               <button type="button" data-action="open-icon-picker">Cambiar ícono de perfil</button>
               <button type="button" data-action="open-feedback">Feedback</button>
               <button type="button" data-action="do-logout">Cerrar sesión</button>
@@ -485,6 +487,41 @@
       <button data-action="close-row-actions-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div id="row-actions-body" class="row-actions-list"></div>
+  </div>
+</div>
+
+<!-- Modal upgrade a Premium -->
+<div class="modal-overlay hidden" id="modal-upgrade">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2 class="serif">Actualizar a Lector Premium</h2>
+      <button data-action="close-upgrade-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <ul class="upgrade-benefits">
+      <li>Sin límite de 10 libros ni 10 en tu wishlist</li>
+      <li>Vista Listado (tabla) para libros y wishlist</li>
+      <li>Filtro y estadísticas de costo en tu wishlist</li>
+    </ul>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Mensual</div>
+        <div class="pricing-price">US$1.99<span>/mes</span></div>
+        <div class="pricing-note">Se renueva cada mes</div>
+        <button type="button" class="btn btn-emerald" data-action="start-checkout" data-plan="monthly">Elegir plan</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">Anual</div>
+        <div class="pricing-price">US$19.99<span>/año</span></div>
+        <div class="pricing-note">Se renueva cada año</div>
+        <button type="button" class="btn btn-emerald" data-action="start-checkout" data-plan="annual">Elegir plan</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">De por vida</div>
+        <div class="pricing-price">US$49.99<span>/único pago</span></div>
+        <div class="pricing-note">Pago único, sin renovación</div>
+        <button type="button" class="btn btn-emerald" data-action="start-checkout" data-plan="lifetime">Elegir plan</button>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -142,6 +142,18 @@ export function dbSaveAvatar(url){
   return sb.from('profile').upsert({ user_id: state.currentUserId, avatar_url: url });
 }
 
+// ================= SUSCRIPCIÓN (upgrade a Premium vía Lemon Squeezy) =================
+export function dbSelectSubscription(){
+  if(state.isGuest) return Promise.resolve({ data:null, error:null });
+  return sb.from('subscriptions').select('plan, status, current_period_end, ls_customer_portal_url').maybeSingle();
+}
+export function dbStartCheckout(plan){
+  return sb.functions.invoke('create-checkout', { body: { plan: plan } }).then(function(res){
+    if(res.error || !res.data || !res.data.url) throw new Error('checkout_failed');
+    return res.data.url;
+  });
+}
+
 // ================= PORTADAS (descarga permanente vía Edge Function) =================
 var COVERS_PUBLIC_PREFIX = SUPABASE_URL + '/storage/v1/object/public/covers/';
 export function isOwnCoverUrl(url){
