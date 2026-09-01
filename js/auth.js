@@ -169,7 +169,7 @@ export function backfillGuestFechaLeido(){
 }
 
 export function loadData(){
-  return Promise.all([
+  var loadPromise = Promise.all([
     dbSelectBooks(),
     dbSelectWishlist(),
     dbSelectProfile(),
@@ -201,4 +201,5 @@ export function loadData(){
   } else {
     loadNotifications();
   }
+  return loadPromise;
 }
