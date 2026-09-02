@@ -60,21 +60,28 @@ export function syncControlsUI(){
   document.getElementById('btn-wish-columns').classList.toggle('hidden', state.wishViewMode !== 'listado');
 }
 
-export function coverHTML(cover, title){
-  if(cover){
-    return '<div class="cover-wrap">' +
-      '<img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
-      '<div class="cover-placeholder" style="display:none"><span>'+esc(title)+'</span></div>' +
-      '</div>';
-  }
-  return '<div class="cover-wrap"><div class="cover-placeholder" style="display:flex"><span>'+esc(title)+'</span></div></div>';
+function coverColorClass(status){
+  return status === 'leyendo' || status === 'leido' || status === 'pendiente' ? 'cover-'+status : 'cover-wish';
 }
 
-export function coverThumbHTML(cover, title){
+export function coverHTML(cover, title, status){
+  var cls = 'cover-wrap ' + coverColorClass(status);
+  var letter = esc((title || '').trim().charAt(0).toUpperCase());
   if(cover){
-    return '<div class="cover-thumb-sm"><img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\'"></div>';
+    return '<div class="'+cls+'">' +
+      '<img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+      '<div class="cover-placeholder" style="display:none"><span>'+letter+'</span></div>' +
+      '</div>';
   }
-  return '<div class="cover-thumb-sm"></div>';
+  return '<div class="'+cls+'"><div class="cover-placeholder" style="display:flex"><span>'+letter+'</span></div></div>';
+}
+
+export function coverThumbHTML(cover, title, status){
+  var cls = 'cover-thumb-sm ' + coverColorClass(status);
+  if(cover){
+    return '<div class="'+cls+'"><img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\'"></div>';
+  }
+  return '<div class="'+cls+'"></div>';
 }
 
 export function renderStats(){
@@ -83,11 +90,16 @@ export function renderStats(){
   var leyendo = state.books.filter(function(b){ return b.status === 'leyendo'; }).length;
   var pendientes = total - leidos - leyendo;
   function activeClass(val){ return state.filters.status === val ? ' stat-active' : ''; }
+  function statHTML(status, colorVar, iconPath, strokeWidth, num, label){
+    return '<div class="stat clickable'+activeClass(status)+'" data-action="filter-stat" data-status="'+status+'">' +
+      '<span class="stat-icon" style="background:'+colorVar+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--paper)" stroke-width="'+strokeWidth+'">'+iconPath+'</svg></span>' +
+      '<span class="stat-text"><span class="stat-num">'+num+'</span><span class="stat-label">'+label+'</span></span></div>';
+  }
   document.getElementById('stats').innerHTML =
-    '<div class="stat clickable'+activeClass('')+'" data-action="filter-stat" data-status=""><b>'+total+'</b> <span>libros</span></div>' +
-    '<div class="stat clickable'+activeClass('leyendo')+'" data-action="filter-stat" data-status="leyendo"><b style="color:var(--brass-dark)">'+leyendo+'</b> <span>leyendo</span></div>' +
-    '<div class="stat clickable'+activeClass('leido')+'" data-action="filter-stat" data-status="leido"><b style="color:var(--sage-dark)">'+leidos+'</b> <span>leídos</span></div>' +
-    '<div class="stat clickable'+activeClass('pendiente')+'" data-action="filter-stat" data-status="pendiente"><b style="color:var(--ink)">'+pendientes+'</b> <span>pendientes</span></div>';
+    statHTML('', 'var(--ink)', '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>', 2, total, 'libros') +
+    statHTML('leyendo', 'var(--amber)', '<path d="M2 5c3 0 7 .5 9 2v13c-2-1.5-6-2-9-2z"/><path d="M22 5c-3 0-7 .5-9 2v13c2-1.5 6-2 9-2z"/>', 1.8, leyendo, 'leyendo') +
+    statHTML('leido', 'var(--teal)', '<path d="M20 6L9 17l-5-5"/>', 2.6, leidos, 'leídos') +
+    statHTML('pendiente', 'var(--muted-plum)', '<circle cx="12" cy="12" r="8"/>', 2, pendientes, 'pendientes');
 }
 
 export function bookMatchesFilters(b, exclude){
@@ -128,7 +140,7 @@ export function bookCardHTML(b){
   else if(b.status==='leyendo') stampHtml = '<div class="stamp stamp-leyendo">LEYENDO</div>';
   var newHtml = state.newBookIds[b.id] ? '<div class="new-badge">NUEVO</div>' : '';
   return '<div class="card'+(b.edicion==='especial' ? ' card-especial' : '')+'">' +
-    '<div class="cover-click" data-action="view-book" data-id="'+b.id+'" style="position:relative">' + coverHTML(b.cover, b.title) +
+    '<div class="cover-click" data-action="view-book" data-id="'+b.id+'" style="position:relative">' + coverHTML(b.cover, b.title, b.status) +
       stampHtml + newHtml +
     '</div>' +
     '<div class="card-body">' +
@@ -388,7 +400,7 @@ export function renderAll(){
 }
 
 export function openDetailModal(item, type){
-  document.getElementById('detail-cover').innerHTML = coverHTML(item.cover, item.title);
+  document.getElementById('detail-cover').innerHTML = coverHTML(item.cover, item.title, item.status);
   document.getElementById('detail-title').textContent = item.title;
   document.getElementById('detail-author').textContent = item.author;
 

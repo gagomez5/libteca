@@ -11,7 +11,7 @@ import { coverThumbHTML } from './render.js';
 // módulos ya terminaron de cargar.
 export var BOOK_COLUMNS = [
   { key:'cover', label:'Portada', sortType:null,
-    renderCell:function(b){ return '<td>'+coverThumbHTML(b.cover, b.title)+'</td>'; } },
+    renderCell:function(b){ return '<td>'+coverThumbHTML(b.cover, b.title, b.status)+'</td>'; } },
   { key:'author', label:'Autor', sortType:'string', sortValue:function(b){ return b.author||''; },
     renderCell:function(b){ return truncatedCellHTML(b.author); } },
   { key:'saga', label:'Saga', sortType:'string', sortValue:function(b){ return b.saga||''; },

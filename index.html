@@ -8,12 +8,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Biblioteca">
-<meta name="theme-color" content="#23263A">
+<meta name="theme-color" content="#241C2E">
 <title>Bruukion</title>
 <meta name="description" content="Bruukion es tu biblioteca personal: organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <link rel="canonical" href="https://bruukion.com/">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%23241C2E'/%3E%3Crect x='39' y='80' width='34' height='70' rx='10' fill='%23E8543E'/%3E%3Crect x='83' y='56' width='34' height='94' rx='10' fill='%23F5A623'/%3E%3Crect x='127' y='68' width='34' height='82' rx='10' fill='%232FBF9F'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%23241C2E'/%3E%3Crect x='39' y='80' width='34' height='70' rx='10' fill='%23E8543E'/%3E%3Crect x='83' y='56' width='34' height='94' rx='10' fill='%23F5A623'/%3E%3Crect x='127' y='68' width='34' height='82' rx='10' fill='%232FBF9F'/%3E%3C/svg%3E">
 <link rel="manifest" href="/manifest.json">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bruukion">
@@ -27,7 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
 <script src="https://browser.sentry-cdn.com/10.72.0/bundle.min.js" integrity="sha384-CJFiRXW+X61SiwyHeuiHWqxTNgAMz3wwQn6/0t+i/Nvkq2VdGFNfEOu3XFmS9ogm" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/posthog-js@1.422.5/dist/array.js" integrity="sha384-kGqYhK8P4BDgGmlT/LRchUfy+lRgBRj6Zq7re0gQbhVlO285GFBqvNJJYFDpUGYS" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,500;0,600;1,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -39,7 +39,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <div class="auth-brand">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <svg width="26" height="26" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
       <h1>Bruukion</h1>
     </div>
     <p class="auth-sub" id="auth-subtitle">Inicia sesión para ver tus libros</p>
@@ -86,7 +86,7 @@
 <div id="recovery-screen" class="hidden">
   <div class="auth-card">
     <div class="auth-brand">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <svg width="26" height="26" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
       <h1>Bruukion</h1>
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
@@ -106,7 +106,7 @@
     <div class="header-inner">
       <div class="brand-row">
         <div class="brand">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+          <svg width="26" height="26" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
           <div class="title-display" id="title-display" data-action="edit-title">
             <h1 id="app-title-text">Mi Biblioteca</h1>
             <svg class="title-edit-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
