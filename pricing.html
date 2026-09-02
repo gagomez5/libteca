@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="theme-color" content="#1C2541">
+<title>Precios — Bruukion</title>
+<meta name="description" content="Bruukion es tu biblioteca personal de libros: un plan gratuito y un plan Premium con precios simples, mensual, anual o de por vida.">
+<link rel="canonical" href="https://bruukion.com/pricing">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
+    --brass:#B8874F; --sage:#5B7B62; --sage-dark:#3F5A45;
+    --burgundy:#8B3A3A; --burgundy-dark:#6E2C2C;
+    --text:#2A2A28; --text-muted:#6B6558;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;}
+  h1,h2,.serif{font-family:'Georgia','Times New Roman',serif;}
+  a{color:var(--brass);}
+
+  header{background:var(--ink);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top));}
+  .header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .brand h1{color:var(--paper);font-size:20px;margin:0;letter-spacing:.3px;}
+  .back-link{color:rgba(250,246,236,.75);font-size:13px;text-decoration:none;flex-shrink:0;}
+
+  main{max-width:900px;margin:0 auto;padding:32px 16px 60px;padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+  .doc-card{background:var(--paper);border:1px solid var(--border);border-radius:16px;padding:28px 24px;}
+  .doc-card h1{font-size:26px;color:var(--ink);margin:0 0 6px;}
+  .updated{font-size:12.5px;color:var(--text-muted);margin:0 0 8px;}
+  .intro{font-size:14.5px;color:var(--text);margin:0 0 26px;}
+  .doc-card h2{font-size:16px;color:var(--ink);margin:26px 0 10px;}
+  .doc-card p, .doc-card li{font-size:14.5px;color:var(--text);}
+  .doc-card ul{margin:8px 0;padding-left:20px;}
+  .doc-card li{margin-bottom:4px;}
+
+  .free-note{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:8px;}
+  .free-note strong{color:var(--ink);}
+
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0 6px;}
+  @media (max-width:640px){.pricing-grid{grid-template-columns:1fr;}}
+  .pricing-card{border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;background:var(--bg);}
+  .pricing-name{font-weight:600;color:var(--ink);font-size:14px;margin-bottom:6px;}
+  .pricing-price{font-family:'Georgia','Times New Roman',serif;font-size:24px;color:var(--ink);}
+  .pricing-price span{font-size:12.5px;color:var(--text-muted);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;}
+  .pricing-note{font-size:12px;color:var(--text-muted);margin-top:4px;}
+  .cta-row{margin-top:22px;text-align:center;}
+  .cta-btn{display:inline-block;background:var(--sage);color:var(--paper);text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14.5px;font-weight:600;}
+  .cta-btn:hover{background:var(--sage-dark);}
+
+  .legal-footer{max-width:900px;margin:18px auto 0;padding:0 16px;font-size:12.5px;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;}
+  .legal-footer a{color:var(--text-muted);text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <h1>Bruukion</h1>
+    </a>
+    <a class="back-link" href="/">‹ Volver a la app</a>
+  </div>
+</header>
+
+<main>
+  <div class="doc-card">
+    <h1>Precios</h1>
+    <p class="updated">Última actualización: 2 de septiembre de 2026</p>
+    <p class="intro">Bruukion es una aplicación web para organizar tu biblioteca personal: registra los libros que leíste, los que estás leyendo y los que quieres comprar, con filtros, estadísticas y una lista de deseos. Tiene un plan gratuito con límites de uso y un plan <strong>Lector Premium</strong> de pago sin esos límites.</p>
+
+    <h2>Plan gratuito (Lector)</h2>
+    <div class="free-note">
+      <p style="margin:0;"><strong>US$0</strong> — hasta 10 libros en tu biblioteca y 10 elementos en tu lista de deseos, con todas las funciones básicas de registro, filtros y organización.</p>
+    </div>
+
+    <h2>Plan Premium (Lector Premium)</h2>
+    <p>Un pago único o una suscripción recurrente que elimina los límites del plan gratuito y agrega funciones adicionales:</p>
+    <ul>
+      <li>Sin límite de 10 libros ni 10 elementos en tu lista de deseos</li>
+      <li>Vista Listado (tabla) para libros y lista de deseos</li>
+      <li>Filtro y estadísticas de costo en tu lista de deseos</li>
+    </ul>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Mensual</div>
+        <div class="pricing-price">US$1.99<span>/mes</span></div>
+        <div class="pricing-note">Se renueva cada mes</div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">Anual</div>
+        <div class="pricing-price">US$19.99<span>/año</span></div>
+        <div class="pricing-note">Se renueva cada año</div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">De por vida</div>
+        <div class="pricing-price">US$49.99<span>/único pago</span></div>
+        <div class="pricing-note">Pago único, sin renovación</div>
+      </div>
+    </div>
+    <p style="font-size:12.5px;color:var(--text-muted);">Precios en dólares estadounidenses (US$), impuestos incluidos donde corresponda. El pago se procesa a través de Lemon Squeezy. Puedes cancelar la renovación de un plan mensual o anual en cualquier momento; el plan de por vida es un pago único. Ver la <a href="/refund">política de reembolsos</a>.</p>
+
+    <div class="cta-row">
+      <a class="cta-btn" href="/">Crear cuenta o iniciar sesión</a>
+    </div>
+  </div>
+</main>
+
+<div class="legal-footer">
+  <a href="/">Inicio</a>
+  <a href="/refund">Reembolsos</a>
+  <a href="/terms">Términos de servicio</a>
+  <a href="/privacy">Política de privacidad</a>
+</div>
+
+</body>
+</html>
