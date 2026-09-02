@@ -85,9 +85,9 @@ export function renderStats(){
   function activeClass(val){ return state.filters.status === val ? ' stat-active' : ''; }
   document.getElementById('stats').innerHTML =
     '<div class="stat clickable'+activeClass('')+'" data-action="filter-stat" data-status=""><b>'+total+'</b> <span>libros</span></div>' +
-    '<div class="stat clickable'+activeClass('leyendo')+'" data-action="filter-stat" data-status="leyendo"><b style="color:#8A5F2C">'+leyendo+'</b> <span>leyendo</span></div>' +
+    '<div class="stat clickable'+activeClass('leyendo')+'" data-action="filter-stat" data-status="leyendo"><b style="color:var(--brass-dark)">'+leyendo+'</b> <span>leyendo</span></div>' +
     '<div class="stat clickable'+activeClass('leido')+'" data-action="filter-stat" data-status="leido"><b style="color:var(--sage-dark)">'+leidos+'</b> <span>leídos</span></div>' +
-    '<div class="stat clickable'+activeClass('pendiente')+'" data-action="filter-stat" data-status="pendiente"><b style="color:var(--burgundy-dark)">'+pendientes+'</b> <span>pendientes</span></div>';
+    '<div class="stat clickable'+activeClass('pendiente')+'" data-action="filter-stat" data-status="pendiente"><b style="color:var(--ink)">'+pendientes+'</b> <span>pendientes</span></div>';
 }
 
 export function bookMatchesFilters(b, exclude){

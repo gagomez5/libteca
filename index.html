@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://cdn.jsdelivr.net https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com https://o4511990408151040.ingest.us.sentry.io https://us.i.posthog.com https://us-assets.i.posthog.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net https://fvlfyezsegbbpwkkwcvm.supabase.co https://cloudflareinsights.com https://o4511990408151040.ingest.us.sentry.io https://us.i.posthog.com https://us-assets.i.posthog.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Biblioteca">
-<meta name="theme-color" content="#1C2541">
+<meta name="theme-color" content="#23263A">
 <title>Bruukion</title>
 <meta name="description" content="Bruukion es tu biblioteca personal: organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <link rel="canonical" href="https://bruukion.com/">
@@ -27,6 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
 <script src="https://browser.sentry-cdn.com/10.72.0/bundle.min.js" integrity="sha384-CJFiRXW+X61SiwyHeuiHWqxTNgAMz3wwQn6/0t+i/Nvkq2VdGFNfEOu3XFmS9ogm" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/posthog-js@1.422.5/dist/array.js" integrity="sha384-kGqYhK8P4BDgGmlT/LRchUfy+lRgBRj6Zq7re0gQbhVlO285GFBqvNJJYFDpUGYS" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,500;0,600;1,500&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -38,7 +39,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <div class="auth-brand">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
       <h1>Bruukion</h1>
     </div>
     <p class="auth-sub" id="auth-subtitle">Inicia sesión para ver tus libros</p>
@@ -85,7 +86,7 @@
 <div id="recovery-screen" class="hidden">
   <div class="auth-card">
     <div class="auth-brand">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
       <h1>Bruukion</h1>
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
@@ -105,7 +106,7 @@
     <div class="header-inner">
       <div class="brand-row">
         <div class="brand">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2703D" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
           <div class="title-display" id="title-display" data-action="edit-title">
             <h1 id="app-title-text">Mi Biblioteca</h1>
             <svg class="title-edit-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
@@ -138,8 +139,10 @@
         </div>
       </div>
       <nav class="tabs">
-        <button id="tab-biblioteca" class="active" data-action="tab" data-tab="biblioteca">LIBROS</button>
-        <button id="tab-wishlist" data-action="tab" data-tab="wishlist">WISHLIST <span id="wish-badge" class="badge hidden">0</span></button>
+        <div class="tabs-pill">
+          <button id="tab-biblioteca" class="active" data-action="tab" data-tab="biblioteca">LIBROS</button>
+          <button id="tab-wishlist" data-action="tab" data-tab="wishlist">WISHLIST <span id="wish-badge" class="badge hidden">0</span></button>
+        </div>
         <div class="header-wish-stats hidden" id="wish-stats"></div>
       </nav>
     </div>
@@ -256,7 +259,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
             Limpiar todo
           </button>
-          <button class="btn btn-burgundy" data-action="add-wish">
+          <button class="btn btn-dark" data-action="add-wish">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             Añadir
           </button>
@@ -347,7 +350,7 @@
       <div class="field"><label for="w-cover">URL de la portada (opcional)</label><input id="w-cover" name="cover" placeholder="https://…"></div>
       <div class="field"><label for="w-costo">Costo (opcional)</label><div class="currency-input"><span class="currency-prefix">USD</span><input id="w-costo" name="costo" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
       <div class="field"><label for="w-tienda">Tienda (opcional)</label><input id="w-tienda" name="tienda"></div>
-      <button type="submit" class="submit-btn btn-burgundy" id="wish-submit-btn">Añadir a wishlist</button>
+      <button type="submit" class="submit-btn btn-dark" id="wish-submit-btn">Añadir a wishlist</button>
     </form>
   </div>
 </div>
