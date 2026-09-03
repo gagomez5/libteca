@@ -46,7 +46,8 @@ export var state = {
   },
 
   currentUserRole: 'free', // 'administrador' | 'fundador' | 'premium' | 'free'
-  subscription: null // { plan:'monthly'|'annual'|'lifetime', status, ls_customer_portal_url } | null
+  subscription: null, // { plan:'monthly'|'annual'|'lifetime', status, current_period_end } | null
+  manageSubUI: null // { screen, preview, targetPlan, busy } | null — estado transitorio del modal "Gestionar suscripción"
 };
 
 // Constantes: nunca se reasignan, así que no necesitan vivir dentro de `state`

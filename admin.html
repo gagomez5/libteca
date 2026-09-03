@@ -210,7 +210,7 @@
   var ROLE_LABELS = { administrador:'Administrador', fundador:'Lector Fundador', premium:'Lector Premium', free:'Lector' };
   var ROLE_ORDER = ['administrador','fundador','premium','free'];
   var PLAN_LABELS = { monthly:'Mensual', annual:'Anual', lifetime:'De por vida' };
-  var SUB_STATUS_LABELS = { cancelled:'cancelada', expired:'vencida' };
+  var SUB_STATUS_LABELS = { cancelled:'cancelada', expired:'vencida', refunded:'reembolsada', downgraded:'baja voluntaria' };
   function planCellText(u){
     if(!u.plan) return '—';
     var label = PLAN_LABELS[u.plan] || u.plan;

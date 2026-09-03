@@ -130,7 +130,7 @@
             <div class="user-dropdown hidden" id="user-dropdown">
               <div class="user-role-badge" id="user-role-badge"></div>
               <button type="button" class="upgrade-menu-btn hidden" id="btn-open-upgrade" data-action="open-upgrade">✨ Actualizar a Premium</button>
-              <a class="hidden" id="link-manage-subscription" href="#" target="_blank" rel="noopener">Gestionar suscripción</a>
+              <button type="button" class="hidden" id="btn-manage-subscription" data-action="open-manage-subscription">Gestionar suscripción</button>
               <button type="button" data-action="open-icon-picker">Cambiar ícono de perfil</button>
               <button type="button" data-action="open-feedback">Feedback</button>
               <button type="button" data-action="do-logout">Cerrar sesión</button>
@@ -538,6 +538,17 @@
     <h2 class="serif">Ya eres Lector Premium</h2>
     <p>Tu pago se confirmó y tu cuenta ya tiene todos los beneficios de Lector Premium.</p>
     <button type="button" class="btn btn-emerald" data-action="close-upgrade-success">Entendido</button>
+  </div>
+</div>
+
+<!-- Modal gestionar suscripción -->
+<div class="modal-overlay hidden" id="modal-manage-subscription">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2 class="serif">Gestionar suscripción</h2>
+      <button data-action="close-manage-subscription-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="manage-sub-body"></div>
   </div>
 </div>
 

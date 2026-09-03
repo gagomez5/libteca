@@ -9,7 +9,7 @@ export var MAX_TITLE_CHARS = 20;
 export var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
 export var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
   'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
-  'modal-confirm','modal-upgrade','modal-upgrade-success','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+  'modal-confirm','modal-upgrade','modal-upgrade-success','modal-manage-subscription','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
 
 var currentAvatarIcon = null;
 export function updateUserAvatar(icon){
@@ -42,14 +42,13 @@ export function renderUserRoleBadge(){
 }
 export function renderUpgradeMenuItems(){
   var upgradeBtn = document.getElementById('btn-open-upgrade');
-  var manageLink = document.getElementById('link-manage-subscription');
-  if(!upgradeBtn || !manageLink) return;
+  var manageBtn = document.getElementById('btn-manage-subscription');
+  if(!upgradeBtn || !manageBtn) return;
   var role = state.currentUserRole;
   var sub = state.subscription;
   upgradeBtn.classList.toggle('hidden', role !== 'free');
-  var showManage = role === 'premium' && !!sub && sub.status === 'active' && sub.plan !== 'lifetime' && !!sub.ls_customer_portal_url;
-  manageLink.classList.toggle('hidden', !showManage);
-  if(showManage) manageLink.href = sub.ls_customer_portal_url;
+  var showManage = role === 'premium' && !!sub && (sub.status === 'active' || sub.status === 'cancelled');
+  manageBtn.classList.toggle('hidden', !showManage);
 }
 export function renderIconPicker(){
   document.getElementById('icon-picker-grid').innerHTML = AVATAR_ICONS.map(function(icon){

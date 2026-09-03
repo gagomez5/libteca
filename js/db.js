@@ -145,12 +145,25 @@ export function dbSaveAvatar(url){
 // ================= SUSCRIPCIÓN (upgrade a Premium vía Lemon Squeezy) =================
 export function dbSelectSubscription(){
   if(state.isGuest) return Promise.resolve({ data:null, error:null });
-  return sb.from('subscriptions').select('plan, status, current_period_end, ls_customer_portal_url').maybeSingle();
+  return sb.from('subscriptions').select('plan, status, current_period_end').maybeSingle();
 }
 export function dbStartCheckout(plan){
   return sb.functions.invoke('create-checkout', { body: { plan: plan } }).then(function(res){
     if(res.error || !res.data || !res.data.url) throw new Error('checkout_failed');
     return res.data.url;
+  });
+}
+export function dbManageSubscription(action, extra){
+  var body = Object.assign({ action: action }, extra || {});
+  return sb.functions.invoke('manage-subscription', { body: body }).then(function(res){
+    if(res.error) throw new Error('manage_subscription_failed');
+    if(!res.data || res.data.ok !== true){
+      var e = new Error((res.data && res.data.error) || 'manage_subscription_failed');
+      e.code = res.data && res.data.error;
+      e.payload = res.data;
+      throw e;
+    }
+    return res.data;
   });
 }
 

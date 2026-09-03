@@ -17,9 +17,9 @@ const CORS_HEADERS = {
 // No son secretos, se dejan hardcodeados igual que SUPABASE_URL en js/db.js.
 const STORE_ID = "465111";
 const PLAN_VARIANTS: Record<string, string> = {
-  monthly: "2081825",
-  annual: "2081831",
-  lifetime: "2081835",
+  monthly: "2088736",
+  annual: "2088737",
+  lifetime: "2088738",
 };
 
 const REDIRECT_URL = "https://bruukion.com/?upgraded=1";

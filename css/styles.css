@@ -117,6 +117,8 @@
   .notif-detail-date{font-size:12px;color:var(--text-muted);margin:0 0 12px;}
   .notif-detail-message{font-size:15px;line-height:1.55;color:var(--text);margin:0 0 22px;white-space:pre-wrap;}
   .notif-detail-actions{display:flex;gap:10px;}
+  .manage-sub-actions{display:flex;flex-direction:column;gap:10px;}
+  #manage-sub-body p{font-size:14px;line-height:1.55;color:var(--text);margin:0 0 18px;}
   nav.tabs{display:flex;align-items:center;gap:14px;margin-top:12px;}
   .tabs-pill{display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:11px;padding:3px;}
   .tabs-pill button{padding:9px 16px;font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--text-muted);border-radius:8px;display:flex;align-items:center;gap:6px;}

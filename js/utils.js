@@ -31,6 +31,9 @@ export function parseCosto(str){
 export function formatCosto(n){
   return '$' + Number(n).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
 }
+export function formatUSD(cents){
+  return 'US$' + (cents/100).toFixed(2);
+}
 export function parseSagaNumber(str){
   str = (str||'').trim();
   if(str === '') return null;

@@ -10,6 +10,7 @@ import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, get
 import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './wishlist.js';
 import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, openNotificationDetail, markNotificationRead, deleteNotification, markAllNotificationsRead, deleteAllNotifications } from './notifications.js';
 import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestFechaLeido, loadData, saveRememberedEmail } from './auth.js';
+import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoBack, manageSubPreviewCancel, manageSubConfirmCancel, manageSubReactivate, manageSubPreviewUpgrade, manageSubConfirmUpgrade, manageSubDowngradeConfirm1, manageSubDowngradeConfirm2 } from './subscription.js';
 (function(){
   "use strict";
 
@@ -271,6 +272,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     else if(id === 'modal-wish'){ attemptCloseWishModal(); }
     else if(id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; }
     else if(id === 'modal-confirm'){ closeConfirmModal(); }
+    else if(id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); }
     else if(id === 'auth-screen'){ closeAuthModal(); }
     else { document.getElementById(id).classList.add('hidden'); }
   }
@@ -317,6 +319,7 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     if(e.target.id === 'modal-row-actions'){ document.getElementById('modal-row-actions').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); return; }
     var userDropdown = document.getElementById('user-dropdown');
     if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
       userDropdown.classList.add('hidden');
@@ -624,6 +627,19 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
     }
     else if(action === 'close-upgrade-modal'){ document.getElementById('modal-upgrade').classList.add('hidden'); }
     else if(action === 'close-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); }
+    else if(action === 'open-manage-subscription'){
+      document.getElementById('user-dropdown').classList.add('hidden');
+      openManageSubscriptionModal();
+    }
+    else if(action === 'close-manage-subscription-modal'){ closeManageSubscriptionModal(); }
+    else if(action === 'manage-sub-back'){ manageSubGoBack(); }
+    else if(action === 'manage-sub-preview-cancel'){ manageSubPreviewCancel(el); }
+    else if(action === 'manage-sub-confirm-cancel'){ manageSubConfirmCancel(el); }
+    else if(action === 'manage-sub-reactivate'){ manageSubReactivate(el); }
+    else if(action === 'manage-sub-preview-upgrade'){ manageSubPreviewUpgrade(el, el.getAttribute('data-target-plan')); }
+    else if(action === 'manage-sub-confirm-upgrade'){ manageSubConfirmUpgrade(el); }
+    else if(action === 'manage-sub-downgrade-confirm-1'){ manageSubDowngradeConfirm1(); }
+    else if(action === 'manage-sub-downgrade-confirm-2'){ manageSubDowngradeConfirm2(el); }
     else if(action === 'start-checkout'){
       var plan = el.getAttribute('data-plan');
       var checkoutButtons = document.querySelectorAll('[data-action="start-checkout"]');

@@ -9,7 +9,7 @@
 //
 // Configurar en Lemon Squeezy (Settings -> Webhooks) para que apunte a esta URL,
 // suscripto a los eventos: order_created, subscription_created, subscription_updated,
-// subscription_cancelled, subscription_expired.
+// subscription_cancelled, subscription_expired, order_refunded, subscription_payment_refunded.
 //
 // IMPORTANTE: en el Dashboard de Supabase, esta función necesita el toggle
 // "Verify JWT" en OFF (Edge Functions -> ls-webhook -> Settings). Lemon Squeezy
@@ -23,9 +23,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Debe coincidir con PLAN_VARIANTS de create-checkout/index.ts (mismos variant_id).
 const VARIANT_TO_PLAN: Record<string, "monthly" | "annual" | "lifetime"> = {
-  "2081825": "monthly",
-  "2081831": "annual",
-  "2081835": "lifetime",
+  "2088736": "monthly",
+  "2088737": "annual",
+  "2088738": "lifetime",
 };
 
 function json(body: unknown, status: number): Response {
@@ -90,7 +90,13 @@ Deno.serve(async (req) => {
     await admin.from("profile").upsert({ user_id: userId, role: "premium" });
   }
 
-  async function revokeIfPremium(status: "cancelled" | "expired") {
+  // Cancelación programada: NO se revoca el acceso todavía, el usuario conserva Premium
+  // hasta que la suscripción expire de verdad (política publicada en /refund §4).
+  async function markCancelled() {
+    await admin.from("subscriptions").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("user_id", userId);
+  }
+
+  async function revokeIfPremium(status: "expired" | "refunded") {
     await admin.from("subscriptions").update({ status, updated_at: new Date().toISOString() }).eq("user_id", userId);
     const { data: prof } = await admin.from("profile").select("role").eq("user_id", userId).maybeSingle();
     // Nunca tocar fundador/administrador: solo se revierte si sigue siendo 'premium'.
@@ -98,6 +104,20 @@ Deno.serve(async (req) => {
       await admin.from("profile").upsert({ user_id: userId, role: "free" });
     }
   }
+
+  // Tras un upgrade creado por manage-subscription (ver ese archivo), custom_data trae
+  // el id de la suscripción vieja a cancelar una vez que el pago del nuevo plan aterriza.
+  async function cancelOldSubscriptionIfUpgrade(apiKey: string) {
+    const oldSubId = payload?.meta?.custom_data?.upgrade_from_subscription_id;
+    if (!oldSubId) return;
+    await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${oldSubId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/vnd.api+json", "Content-Type": "application/vnd.api+json" },
+      body: JSON.stringify({ data: { type: "subscriptions", id: oldSubId, attributes: { cancelled: true } } }),
+    }).catch((e) => console.error("cancelOldSubscriptionIfUpgrade failed", oldSubId, e));
+  }
+
+  const apiKey = Deno.env.get("LEMONSQUEEZY_API_KEY")!;
 
   if (eventName === "order_created") {
     const variantId = attrs?.first_order_item?.variant_id?.toString();
@@ -110,6 +130,7 @@ Deno.serve(async (req) => {
         current_period_end: null,
         test_mode: !!payload?.meta?.test_mode,
       });
+      await cancelOldSubscriptionIfUpgrade(apiKey);
     }
   } else if (eventName === "subscription_created" || eventName === "subscription_updated") {
     const variantId = attrs?.variant_id?.toString();
@@ -124,13 +145,22 @@ Deno.serve(async (req) => {
         current_period_end: attrs?.renews_at || null,
         test_mode: !!payload?.meta?.test_mode,
       });
-    } else if (attrs?.status === "cancelled" || attrs?.status === "expired") {
-      await revokeIfPremium(attrs.status);
+      await cancelOldSubscriptionIfUpgrade(apiKey);
+    } else if (attrs?.status === "cancelled") {
+      await markCancelled();
+    } else if (attrs?.status === "expired") {
+      await revokeIfPremium("expired");
     }
   } else if (eventName === "subscription_cancelled") {
-    await revokeIfPremium("cancelled");
+    await markCancelled();
   } else if (eventName === "subscription_expired") {
     await revokeIfPremium("expired");
+  } else if (eventName === "order_refunded") {
+    if (attrs?.refunded === true) await revokeIfPremium("refunded");
+  } else if (eventName === "subscription_payment_refunded") {
+    // No revocar en un reembolso parcial de cortesía — solo cuando la factura quedó
+    // totalmente reembolsada.
+    if (attrs?.refunded === true) await revokeIfPremium("refunded");
   }
 
   return json({ ok: true }, 200);
