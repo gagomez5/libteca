@@ -320,7 +320,7 @@ export function renderWishStats(){
   var total = withCosto.reduce(function(sum, w){ return sum + Number(w.costo); }, 0);
   var promedio = withCosto.length ? total / withCosto.length : 0;
   document.getElementById('wish-stats').innerHTML =
-    '<span>Total <b>'+formatCosto(total)+'</b></span>' +
+    '<span>Costo de mi wishlist <b>'+formatCosto(total)+'</b></span>' +
     '<span>Promedio <b>'+formatCosto(promedio)+'</b></span>';
 }
 
