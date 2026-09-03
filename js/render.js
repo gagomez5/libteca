@@ -153,7 +153,7 @@ export function bookCardHTML(b){
 }
 
 export function bookActionsHTML(b){
-  return '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' '+STATUS_LABELS[b.status]+'</button>' +
+  return '<button class="toggle-btn '+b.status+'" data-action="toggle-status" data-id="'+b.id+'">'+ICONS.check+' <span class="toggle-btn-label">'+STATUS_LABELS[b.status]+'</span></button>' +
     '<button class="icon-btn'+(b.edicion==='especial' ? ' icon-btn-especial' : '')+'" data-action="toggle-edicion" data-id="'+b.id+'" title="Edición especial">'+ICONS.gem+'</button>' +
     '<button class="icon-btn" data-action="edit-book" data-id="'+b.id+'" aria-label="Editar libro">'+ICONS.edit+'</button>' +
     '<button class="icon-btn" data-action="delete-book" data-id="'+b.id+'" aria-label="Eliminar libro">'+ICONS.trash+'</button>';
@@ -251,7 +251,7 @@ export function wishCardHTML(w){
 }
 
 export function wishActionsHTML(w){
-  return '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' Ya lo compré</button>' +
+  return '<button class="buy-btn" data-action="buy-wish" data-id="'+w.id+'">'+ICONS.cart+' <span class="toggle-btn-label">Ya lo compré</span></button>' +
     '<button class="icon-btn" data-action="edit-wish" data-id="'+w.id+'" aria-label="Editar">'+ICONS.edit+'</button>' +
     '<button class="icon-btn" data-action="delete-wish" data-id="'+w.id+'" aria-label="Eliminar de la wishlist">'+ICONS.trash+'</button>';
 }
