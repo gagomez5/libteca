@@ -158,11 +158,16 @@ export function startOAuth(provider){
 }
 
 // ================= DATOS =================
-export function backfillGuestFechaLeido(){
+export function backfillGuestAnalyticsDates(){
   var today = new Date().toISOString();
   var changed = false;
   state.books = state.books.map(function(b){
-    if(b.status === 'leido' && !b.fecha_leido){ changed = true; return Object.assign({}, b, { fecha_leido: today }); }
+    var patch = {};
+    var needsPatch = false;
+    if(b.status === 'leido' && !b.fecha_leido){ patch.fecha_leido = today; needsPatch = true; }
+    if((b.status === 'leyendo' || b.status === 'leido') && !b.fecha_inicio_lectura){ patch.fecha_inicio_lectura = today; needsPatch = true; }
+    if(!b.fecha_compra_wishlist){ patch.fecha_compra_wishlist = today; needsPatch = true; }
+    if(needsPatch){ changed = true; return Object.assign({}, b, patch); }
     return b;
   });
   if(changed) guestSet('guest_books', state.books);
@@ -176,7 +181,7 @@ export function loadData(){
     dbSelectSubscription()
   ]).then(function(results){
     var bRes = results[0], wRes = results[1], pRes = results[2], sRes = results[3];
-    if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); state.books = []; } else { state.books = bRes.data || []; if(state.isGuest) backfillGuestFechaLeido(); }
+    if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); state.books = []; } else { state.books = bRes.data || []; if(state.isGuest) backfillGuestAnalyticsDates(); }
     if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); state.wishlist = []; } else { state.wishlist = wRes.data || []; }
     var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
     document.getElementById('app-title-text').textContent = savedTitle;

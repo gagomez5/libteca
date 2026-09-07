@@ -71,6 +71,8 @@ export function dbInsertBook(data){
     var arr = guestGet('guest_books', []);
     var row = Object.assign({ id: guestUid(), created_at: new Date().toISOString() }, data);
     row.fecha_leido = (data.status === 'leido') ? new Date().toISOString() : null;
+    // Espeja el trigger de Supabase: solo analítica futura, no editable por el usuario.
+    row.fecha_inicio_lectura = (data.status === 'leyendo' || data.status === 'leido') ? new Date().toISOString() : null;
     arr.unshift(row);
     guestSet('guest_books', arr);
     return Promise.resolve({ data:[row], error:null });
@@ -84,8 +86,9 @@ export function dbUpdateBook(id, data){
     arr = arr.map(function(b){
       if(b.id===id){
         updated = Object.assign({}, b, data);
-        // fecha_leido no es editable por el usuario: solo se fija al pasar a "leido" por primera vez.
+        // fecha_leido/fecha_inicio_lectura no son editables por el usuario: solo se fijan en la transición real de estado.
         updated.fecha_leido = (data.status === 'leido' && b.status !== 'leido') ? new Date().toISOString() : (b.fecha_leido || null);
+        updated.fecha_inicio_lectura = ((data.status === 'leyendo' || data.status === 'leido') && b.status === 'pendiente') ? new Date().toISOString() : (b.fecha_inicio_lectura || null);
         return updated;
       }
       return b;

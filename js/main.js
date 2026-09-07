@@ -9,7 +9,7 @@ import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrat
 import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './books.js';
 import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './wishlist.js';
 import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, openNotificationDetail, markNotificationRead, deleteNotification, markAllNotificationsRead, deleteAllNotifications } from './notifications.js';
-import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestFechaLeido, loadData, saveRememberedEmail } from './auth.js';
+import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestAnalyticsDates, loadData, saveRememberedEmail } from './auth.js';
 import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoBack, manageSubPreviewCancel, manageSubConfirmCancel, manageSubReactivate, manageSubPreviewUpgrade, manageSubConfirmUpgrade, manageSubDowngradeConfirm1, manageSubDowngradeConfirm2 } from './subscription.js';
 (function(){
   "use strict";
@@ -721,7 +721,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       if(!canAddBook()){ openUpgradeModal('buy_wish_cap'); return; }
       var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal' }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString() }).then(function(insRes){
         if(insRes.error){ reportError(insRes.error); showToast('Error: '+insRes.error.message, 'error'); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ reportError(delRes.error); showToast('Error: '+delRes.error.message, 'error'); return; }
