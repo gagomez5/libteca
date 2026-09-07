@@ -37,8 +37,9 @@ export function formatUSD(cents){
 export function parseSagaNumber(str){
   str = (str||'').trim();
   if(str === '') return null;
-  var n = parseInt(str, 10);
-  return isNaN(n) ? null : n;
+  var n = parseFloat(str);
+  if(isNaN(n)) return null;
+  return Math.round(n * 10) / 10;
 }
 
 // La saga es privada de cada usuario (a diferencia del autor): las sugerencias y la
