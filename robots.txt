@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /admin
 Disallow: /admin.html
 
 Sitemap: https://bruukion.com/sitemap.xml
