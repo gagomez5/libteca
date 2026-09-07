@@ -3,36 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
-<meta name="theme-color" content="#1C2541">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="theme-color" content="#241C2E">
 <title>Política de privacidad — Bruukion</title>
 <meta name="description" content="Política de privacidad de Bruukion, tu biblioteca personal de libros.">
 <link rel="canonical" href="https://bruukion.com/privacy">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231C2541'/%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z' fill='none' stroke='%23B8874F' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%23241C2E'/%3E%3Crect x='39' y='80' width='34' height='70' rx='10' fill='%23E8543E'/%3E%3Crect x='83' y='56' width='34' height='94' rx='10' fill='%23F5A623'/%3E%3Crect x='127' y='68' width='34' height='82' rx='10' fill='%232FBF9F'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%23241C2E'/%3E%3Crect x='39' y='80' width='34' height='70' rx='10' fill='%23E8543E'/%3E%3Crect x='83' y='56' width='34' height='94' rx='10' fill='%23F5A623'/%3E%3Crect x='127' y='68' width='34' height='82' rx='10' fill='%232FBF9F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
 <style>
   :root{
-    --ink:#1C2541; --paper:#FAF6EC; --bg:#EDE6D3; --border:#DDD3BC;
-    --brass:#B8874F; --sage:#5B7B62; --sage-dark:#3F5A45;
-    --burgundy:#8B3A3A; --burgundy-dark:#6E2C2C;
-    --text:#2A2A28; --text-muted:#6B6558;
+    --ink:#241C2E; --paper:#FFF8EC; --bg:#FBF0D9; --border:#E8D9AE;
+    --coral:#E8543E; --coral-dark:#C23F2C;
+    --amber:#F5A623; --amber-dark:#C57F12;
+    --teal:#2FBF9F; --teal-dark:#1F9B80;
+    --text:#241C2E; --text-muted:#6B6072;
+    --font-sans:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-serif:'Bricolage Grotesque','Georgia','Times New Roman',serif;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;}
-  h1,h2,.serif{font-family:'Georgia','Times New Roman',serif;}
-  a{color:var(--brass);}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);line-height:1.6;}
+  h1,h2,.serif{font-family:var(--font-serif);}
+  a{color:var(--coral);}
 
-  header{background:var(--ink);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top));}
+  header{background:var(--paper);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top));border-bottom:1px solid var(--border);}
   .header-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;}
   .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-  .brand h1{color:var(--paper);font-size:20px;margin:0;letter-spacing:.3px;}
-  .back-link{color:rgba(250,246,236,.75);font-size:13px;text-decoration:none;flex-shrink:0;}
+  .brand h1{color:var(--ink);font-size:20px;margin:0;letter-spacing:.3px;}
+  .back-link{color:var(--text-muted);font-size:13px;text-decoration:none;flex-shrink:0;}
 
   main{max-width:760px;margin:0 auto;padding:32px 16px 60px;padding-bottom:calc(60px + env(safe-area-inset-bottom));}
   .doc-card{background:var(--paper);border:1px solid var(--border);border-radius:16px;padding:28px 24px;}
   .doc-card h1{font-size:26px;color:var(--ink);margin:0 0 6px;}
   .updated{font-size:12.5px;color:var(--text-muted);margin:0 0 24px;}
   .doc-card h2{font-size:16px;color:var(--ink);margin:26px 0 8px;}
-  .doc-card p, .doc-card li{font-size:14.5px;color:var(--text);}
+  .doc-card p, .doc-card li{font-size:14.5px;color:var(--text);text-align:justify;}
   .doc-card ul{margin:8px 0;padding-left:20px;}
   .doc-card li{margin-bottom:4px;}
   .legal-footer{max-width:760px;margin:18px auto 0;padding:0 16px;font-size:12.5px;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;}
@@ -44,7 +49,7 @@
 <header>
   <div class="header-inner">
     <a class="brand" href="/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8874F" stroke-width="2"><path d="M4 4h4v16H4z"/><path d="M10 4h4v16h-4z"/><path d="M16 5l4 1v14l-4-1z"/></svg>
+      <svg width="20" height="20" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
       <h1>Bruukion</h1>
     </a>
     <a class="back-link" href="/">‹ Volver a la app</a>
