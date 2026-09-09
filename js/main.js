@@ -18,6 +18,17 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
   document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
   updateSidebarToggleLabel(state.sidebarExpanded);
 
+  // iOS Safari a veces deja 100dvh desactualizado tras cerrar el teclado de un input
+  // enfocado (p.ej. al cerrar un modal), dejando la app-shell más corta de lo real y
+  // revelando el fondo bajo la barra inferior. visualViewport sí refleja el tamaño real.
+  if(window.visualViewport){
+    var syncAppVh = function(){
+      document.documentElement.style.setProperty('--app-vh', window.visualViewport.height + 'px');
+    };
+    window.visualViewport.addEventListener('resize', syncAppVh);
+    syncAppVh();
+  }
+
   var pendingUpgradeToast = false;
   if(location.search.indexOf('upgraded=1') !== -1){
     pendingUpgradeToast = true;
