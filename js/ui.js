@@ -165,6 +165,9 @@ export function syncModalFocus(){
   } else {
     if(a11yPrevFocus && typeof a11yPrevFocus.focus === 'function' && document.body.contains(a11yPrevFocus)) a11yPrevFocus.focus();
     a11yPrevFocus = null;
+    // Safari en iOS a veces deja el viewport visual desplazado tras cerrar el teclado
+    // de un input enfocado dentro del modal, dejando un hueco de fondo abajo.
+    setTimeout(function(){ window.scrollTo(0, 0); }, 50);
   }
   a11yCurrentTarget = topEl;
 }
