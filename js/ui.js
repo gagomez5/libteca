@@ -112,6 +112,7 @@ export function closeConfirmModal(){
 }
 
 // ================= BLOQUEO DE SCROLL DE FONDO =================
+var wasScrollLocked = false;
 export function syncScrollLock(){
   var overlayOpen = Array.prototype.some.call(document.querySelectorAll('.modal-overlay'), function(el){
     return !el.classList.contains('hidden');
@@ -123,6 +124,20 @@ export function syncScrollLock(){
   var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
   var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
   document.documentElement.classList.toggle('scroll-locked', anyOpen);
+  if(wasScrollLocked && !anyOpen){
+    // iOS Safari a veces deja el app-shell "atascado" (altura/scroll del viewport
+    // desincronizados) tras cerrar un modal donde se usó el teclado — la barra
+    // inferior queda más arriba con un hueco de fondo debajo. Forzar un reflow
+    // del contenedor completo lo corrige (equivalente a lo que ya pasa al
+    // cerrar y volver a abrir sesión, que también lo arregla).
+    var appRoot = document.getElementById('app-root');
+    if(appRoot && !appRoot.classList.contains('hidden')){
+      appRoot.style.display = 'none';
+      void appRoot.offsetHeight;
+      appRoot.style.display = '';
+    }
+  }
+  wasScrollLocked = anyOpen;
 }
 
 export function getTopmostOpenOverlayEl(){
