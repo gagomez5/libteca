@@ -65,7 +65,9 @@ export function closeAuthModal(){
   state.cameFromGuest = false;
 }
 export function updateAccountButton(){
-  document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar' : 'Cerrar sesión';
+  var label = state.isGuest ? 'Ingresar' : 'Cerrar sesión';
+  document.getElementById('btn-logout-label').textContent = label;
+  document.getElementById('btn-logout').title = state.isGuest ? 'Ingresar / Iniciar sesión' : label;
   document.querySelectorAll('.logout-btn').forEach(function(el){ el.classList.toggle('hidden', !state.isGuest); });
   document.querySelectorAll('.user-menu-wrap').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
   if(state.isGuest){ updateUserAvatar(null); }

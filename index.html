@@ -135,7 +135,10 @@
 
     <div class="sidebar-spacer"></div>
 
-    <button class="logout-btn hidden" id="btn-logout" data-action="guest-auth-or-logout">Cerrar sesión</button>
+    <button class="logout-btn hidden" id="btn-logout" data-action="guest-auth-or-logout" title="Cerrar sesión">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+      <span class="sidebar-nav-label" id="btn-logout-label">Cerrar sesión</span>
+    </button>
     <div class="user-menu-wrap hidden">
       <button class="avatar-btn" data-action="toggle-user-menu" aria-label="Cuenta">
         <span id="user-avatar-icon" class="hidden"></span>
