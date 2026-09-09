@@ -35,6 +35,7 @@ export function showAuthScreen(){
   document.getElementById('auth-modal-close').classList.add('hidden');
   document.getElementById('recovery-screen').classList.add('hidden');
   document.getElementById('app-root').classList.add('hidden');
+  document.documentElement.classList.remove('app-shell');
   state.currentUserRole = 'free';
   updateAdminLink();
   applyRememberedEmail();
@@ -64,7 +65,7 @@ export function closeAuthModal(){
   state.cameFromGuest = false;
 }
 export function updateAccountButton(){
-  document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
+  document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar' : 'Cerrar sesión';
   document.querySelectorAll('.logout-btn').forEach(function(el){ el.classList.toggle('hidden', !state.isGuest); });
   document.querySelectorAll('.user-menu-wrap').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
   if(state.isGuest){ updateUserAvatar(null); }
@@ -75,11 +76,13 @@ export function showApp(){
   document.getElementById('auth-modal-close').classList.add('hidden');
   document.getElementById('recovery-screen').classList.add('hidden');
   document.getElementById('app-root').classList.remove('hidden');
+  document.documentElement.classList.add('app-shell');
   updateAccountButton();
 }
 export function showRecoveryScreen(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-root').classList.add('hidden');
+  document.documentElement.classList.remove('app-shell');
   document.getElementById('recovery-screen').classList.remove('hidden');
 }
 
@@ -148,7 +151,9 @@ export function updateAuthUI(){
 }
 
 export function startOAuth(provider){
-  if(state.cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); state.cameFromGuest = false; }
+  // OAuth no distingue login/signup por adelantado (mismo botón sirve para ambos), así que
+  // la migración se marca "a confirmar" y onAuthStateChange decide con created_at/last_sign_in_at.
+  if(state.cameFromGuest){ localStorage.setItem('guest_pending_migration', '1'); localStorage.setItem('guest_pending_migration_oauth', '1'); state.cameFromGuest = false; }
   sb.auth.signInWithOAuth({
     provider: provider,
     options: { redirectTo: window.location.origin + window.location.pathname }

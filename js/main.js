@@ -154,14 +154,24 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         history.pushState({ authApp: true }, '', location.href);
       }
       if(localStorage.getItem('guest_pending_migration') === '1'){
-        state.migrationInProgress = true;
-        migrateGuestDataToAccount().then(function(){
-          state.migrationInProgress = false;
-          trackEvent('guest_migration_completed');
-          showApp();
-          loadData();
-        });
-        return;
+        var isKnownNewAccount = localStorage.getItem('guest_pending_migration_oauth') !== '1';
+        if(!isKnownNewAccount){
+          var createdAt = session.user.created_at ? new Date(session.user.created_at).getTime() : 0;
+          var lastSignIn = session.user.last_sign_in_at ? new Date(session.user.last_sign_in_at).getTime() : 0;
+          isKnownNewAccount = createdAt && lastSignIn && (lastSignIn - createdAt) < 60000;
+        }
+        localStorage.removeItem('guest_pending_migration_oauth');
+        if(isKnownNewAccount){
+          state.migrationInProgress = true;
+          migrateGuestDataToAccount().then(function(){
+            state.migrationInProgress = false;
+            trackEvent('guest_migration_completed');
+            showApp();
+            loadData();
+          });
+          return;
+        }
+        localStorage.removeItem('guest_pending_migration');
       }
       if(state.migrationInProgress) return;
       showApp();
@@ -182,6 +192,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       setAnalyticsUser(null);
       state.authBackGuardActive = false;
       localStorage.removeItem('guest_pending_migration');
+      localStorage.removeItem('guest_pending_migration_oauth');
       showAuthScreen();
     }
   });

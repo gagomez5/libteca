@@ -121,5 +121,6 @@ export function migrateGuestDataToAccount(){
     localStorage.removeItem('guest_library_name');
     localStorage.removeItem('guest_wishlist_name');
     localStorage.removeItem('guest_pending_migration');
+    localStorage.removeItem('guest_pending_migration_oauth');
   });
 }
