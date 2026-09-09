@@ -171,8 +171,8 @@
   @media(max-width:768px){
     #app-root{flex-direction:column;}
     .sidebar{display:none;}
-    .app-content{height:auto;}
-    .mobile-tabbar{display:flex;align-items:stretch;justify-content:space-around;flex-shrink:0;background:var(--paper);border-top:1px solid var(--border);box-shadow:0 -1px 2px rgba(36,28,46,.03);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:20;}
+    .app-content{height:auto;padding-bottom:calc(68px + env(safe-area-inset-bottom));}
+    .mobile-tabbar{display:flex;align-items:stretch;justify-content:space-around;position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--border);box-shadow:0 -1px 2px rgba(36,28,46,.03);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:20;}
     .mobile-tab-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:44px;min-height:44px;padding:2px 6px;border-radius:10px;color:var(--text-muted);font-size:10.5px;font-weight:600;position:relative;flex:1;}
     .mobile-tab-item.active{color:var(--coral);}
     .mobile-tab-item.user-menu-wrap{padding:0;}
