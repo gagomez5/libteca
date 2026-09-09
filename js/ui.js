@@ -178,7 +178,7 @@ export function syncModalFocus(){
     if(!topEl.hasAttribute('tabindex')) topEl.setAttribute('tabindex', '-1');
     getInitialFocusTarget(topEl).focus();
   } else {
-    if(a11yPrevFocus && typeof a11yPrevFocus.focus === 'function' && document.body.contains(a11yPrevFocus)) a11yPrevFocus.focus();
+    if(a11yPrevFocus && typeof a11yPrevFocus.focus === 'function' && document.body.contains(a11yPrevFocus)) a11yPrevFocus.focus({ preventScroll: true });
     a11yPrevFocus = null;
   }
   a11yCurrentTarget = topEl;
