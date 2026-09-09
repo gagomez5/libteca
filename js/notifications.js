@@ -35,8 +35,8 @@ export function loadNotifications(){
 }
 export function updateNotifDot(){
   var hasUnread = state.notifications.some(function(n){ return !n.read; });
-  document.getElementById('notif-dot').classList.toggle('hidden', !hasUnread);
-  document.getElementById('btn-notifications').classList.toggle('has-unread', hasUnread);
+  document.querySelectorAll('.notif-dot').forEach(function(el){ el.classList.toggle('hidden', !hasUnread); });
+  document.querySelectorAll('.btn-notifications').forEach(function(el){ el.classList.toggle('has-unread', hasUnread); });
 }
 export function formatNotifDate(iso){
   if(!iso) return '';

@@ -65,8 +65,8 @@ export function closeAuthModal(){
 }
 export function updateAccountButton(){
   document.getElementById('btn-logout').textContent = state.isGuest ? 'Ingresar / Crear cuenta' : 'Cerrar sesión';
-  document.getElementById('btn-logout').classList.toggle('hidden', !state.isGuest);
-  document.getElementById('user-menu-wrap').classList.toggle('hidden', state.isGuest);
+  document.querySelectorAll('.logout-btn').forEach(function(el){ el.classList.toggle('hidden', !state.isGuest); });
+  document.querySelectorAll('.user-menu-wrap').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
   if(state.isGuest){ updateUserAvatar(null); }
 }
 export function showApp(){
@@ -199,7 +199,7 @@ export function loadData(){
     state.allAuthors = uniqueSorted((res.data || []).map(function(a){ return a.name; }));
     renderAuthorDatalist();
   }).catch(function(){});
-  document.getElementById('btn-notifications').classList.toggle('hidden', state.isGuest);
+  document.querySelectorAll('.btn-notifications').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
   if(state.isGuest){
     state.notifications = [];
     updateNotifDot();

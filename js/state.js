@@ -30,6 +30,7 @@ export var state = {
   currentWishGroups: [],
   openGroupContext: null, // { type:'book'|'wish', label:'...' } | null
 
+  sidebarExpanded: false,
   bookViewMode: 'mosaico', // 'mosaico' | 'listado'
   wishViewMode: 'mosaico', // 'mosaico' | 'listado'
   bookTableSort: { key: 'title', dir: 'asc' }, // dir: 'asc' | 'desc'

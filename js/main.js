@@ -15,6 +15,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
   "use strict";
 
   loadPrefs();
+  document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
 
   var pendingUpgradeToast = false;
   if(location.search.indexOf('upgraded=1') !== -1){
@@ -100,14 +101,6 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         });
       }, 1200);
     });
-  });
-
-  document.getElementById('btn-logout').addEventListener('click', function(){
-    if(state.isGuest){
-      openAuthModal();
-    } else {
-      sb.auth.signOut();
-    }
   });
 
   document.getElementById('auth-modal-close').addEventListener('click', function(){
@@ -321,7 +314,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
     if(e.target.id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); return; }
     var userDropdown = document.getElementById('user-dropdown');
-    if(!userDropdown.classList.contains('hidden') && !e.target.closest('#user-menu-wrap')){
+    if(!userDropdown.classList.contains('hidden') && !e.target.closest('.user-menu-wrap') && !e.target.closest('#user-dropdown')){
       userDropdown.classList.add('hidden');
     }
     var bookColPanel = document.getElementById('book-columns-panel');
@@ -349,11 +342,20 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
 
     if(action === 'tab'){
       var tab = el.getAttribute('data-tab');
-      document.getElementById('tab-biblioteca').classList.toggle('active', tab==='biblioteca');
-      document.getElementById('tab-wishlist').classList.toggle('active', tab==='wishlist');
+      document.querySelectorAll('[data-action="tab"]').forEach(function(btn){
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+      });
       document.getElementById('view-biblioteca').classList.toggle('hidden', tab!=='biblioteca');
       document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
       document.getElementById('wish-stats').classList.toggle('hidden', tab!=='wishlist');
+    }
+    else if(action === 'toggle-sidebar'){
+      state.sidebarExpanded = !state.sidebarExpanded;
+      document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
+      savePrefs();
+    }
+    else if(action === 'guest-auth-or-logout'){
+      if(state.isGuest){ openAuthModal(); } else { sb.auth.signOut(); }
     }
     else if(action === 'toggle-filters'){
       var panel = document.getElementById('filters-panel');
@@ -594,7 +596,25 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         renderNotifList();
       });
     }
-    else if(action === 'toggle-user-menu'){ document.getElementById('user-dropdown').classList.toggle('hidden'); }
+    else if(action === 'toggle-user-menu'){
+      var dropdownEl = document.getElementById('user-dropdown');
+      var willShowMenu = dropdownEl.classList.contains('hidden');
+      dropdownEl.classList.toggle('hidden');
+      if(willShowMenu){
+        var triggerRect = el.getBoundingClientRect();
+        if(window.innerWidth <= 768){
+          dropdownEl.style.left = 'auto';
+          dropdownEl.style.right = '8px';
+          dropdownEl.style.top = 'auto';
+          dropdownEl.style.bottom = (window.innerHeight - triggerRect.top + 8) + 'px';
+        } else {
+          dropdownEl.style.right = 'auto';
+          dropdownEl.style.left = (triggerRect.right + 10) + 'px';
+          dropdownEl.style.top = 'auto';
+          dropdownEl.style.bottom = (window.innerHeight - triggerRect.bottom) + 'px';
+        }
+      }
+    }
     else if(action === 'open-icon-picker'){
       document.getElementById('user-dropdown').classList.add('hidden');
       renderIconPicker();

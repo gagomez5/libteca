@@ -39,6 +39,12 @@ export function renderUserRoleBadge(){
   }
   el.className = 'user-role-badge role-' + role;
   el.innerHTML = iconHTML + '<span class="user-role-label">' + esc(label) + '</span>';
+
+  var avatarBadge = document.getElementById('avatar-role-icon');
+  if(avatarBadge){
+    avatarBadge.classList.toggle('hidden', !iconHTML);
+    avatarBadge.innerHTML = iconHTML;
+  }
 }
 export function renderUpgradeMenuItems(){
   var upgradeBtn = document.getElementById('btn-open-upgrade');
@@ -97,7 +103,6 @@ export function closeConfirmModal(){
 }
 
 // ================= BLOQUEO DE SCROLL DE FONDO =================
-var scrollLockY = 0;
 export function syncScrollLock(){
   var overlayOpen = Array.prototype.some.call(document.querySelectorAll('.modal-overlay'), function(el){
     return !el.classList.contains('hidden');
@@ -108,19 +113,7 @@ export function syncScrollLock(){
   var wishColOpen = !document.getElementById('wish-columns-panel').classList.contains('hidden');
   var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
   var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
-  var wasLocked = document.documentElement.classList.contains('scroll-locked');
-  if(anyOpen && !wasLocked){
-    scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
-    document.body.style.top = (-scrollLockY) + 'px';
-    var sbw = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.setProperty('--sbw', sbw + 'px');
-    document.documentElement.classList.add('scroll-locked');
-    window.scrollTo(0, 0);
-  } else if(!anyOpen && wasLocked){
-    document.documentElement.classList.remove('scroll-locked');
-    document.body.style.top = '';
-    window.scrollTo(0, scrollLockY);
-  }
+  document.documentElement.classList.toggle('scroll-locked', anyOpen);
 }
 
 export function getTopmostOpenOverlayEl(){

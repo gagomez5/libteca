@@ -209,9 +209,11 @@ var PREF_BOOK_TABLE_SORT = 'pref_book_table_sort';
 var PREF_WISH_TABLE_SORT = 'pref_wish_table_sort';
 var PREF_BOOK_TABLE_COLUMNS = 'pref_book_table_columns';
 var PREF_WISH_TABLE_COLUMNS = 'pref_wish_table_columns';
+var PREF_SIDEBAR_EXPANDED = 'pref_sidebar_expanded';
 
 export function savePrefs(){
   try {
+    localStorage.setItem(PREF_SIDEBAR_EXPANDED, state.sidebarExpanded ? '1' : '0');
     localStorage.setItem(PREF_BOOK_FILTERS, JSON.stringify(state.filters));
     localStorage.setItem(PREF_BOOK_GROUP, state.groupBy);
     localStorage.setItem(PREF_WISH_FILTERS, JSON.stringify(state.wishFilters));
@@ -226,6 +228,7 @@ export function savePrefs(){
 }
 export function loadPrefs(){
   try {
+    state.sidebarExpanded = localStorage.getItem(PREF_SIDEBAR_EXPANDED) === '1';
     var bf = localStorage.getItem(PREF_BOOK_FILTERS);
     if(bf){ var parsedBf = JSON.parse(bf); state.filters.search = parsedBf.search||''; state.filters.author = parsedBf.author||''; state.filters.saga = parsedBf.saga||''; state.filters.genre = parsedBf.genre||''; state.filters.status = parsedBf.status||''; state.filters.edicion = parsedBf.edicion||''; }
     var bg = localStorage.getItem(PREF_BOOK_GROUP);

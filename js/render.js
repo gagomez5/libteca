@@ -329,8 +329,10 @@ export function renderWishGrid(){
   var grid = document.getElementById('grid-wishlist');
   var table = document.getElementById('table-wishlist');
   renderWishStats();
-  document.getElementById('wish-badge').textContent = state.wishlist.length;
-  document.getElementById('wish-badge').classList.toggle('hidden', state.wishlist.length===0);
+  document.querySelectorAll('.wish-badge').forEach(function(el){
+    el.textContent = state.wishlist.length;
+    el.classList.toggle('hidden', state.wishlist.length===0);
+  });
   var list = filteredWishlist();
   if(state.wishViewMode === 'listado'){
     grid.className = 'hidden';
