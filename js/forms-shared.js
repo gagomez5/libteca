@@ -98,6 +98,7 @@ export function migrateGuestDataToAccount(){
   var gBooks = guestGet('guest_books', []);
   var gWish = guestGet('guest_wishlist', []);
   var gName = localStorage.getItem('guest_library_name');
+  var gWishName = localStorage.getItem('guest_wishlist_name');
   var tasks = [];
   uniqueSorted(gBooks.concat(gWish).map(function(x){ return x.author; })).forEach(function(a){
     ensureAuthorExists(a);
@@ -108,13 +109,17 @@ export function migrateGuestDataToAccount(){
   gWish.forEach(function(w){
     tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, tienda:w.tienda||'', saga:w.saga||'', numero_saga:w.numero_saga||null }]));
   });
-  if(gName){
-    tasks.push(sb.from('profile').upsert({ user_id: state.currentUserId, library_name: gName }));
+  if(gName || gWishName){
+    var profilePayload = { user_id: state.currentUserId };
+    if(gName) profilePayload.library_name = gName;
+    if(gWishName) profilePayload.wishlist_name = gWishName;
+    tasks.push(sb.from('profile').upsert(profilePayload));
   }
   return Promise.all(tasks).then(function(){
     localStorage.removeItem('guest_books');
     localStorage.removeItem('guest_wishlist');
     localStorage.removeItem('guest_library_name');
+    localStorage.removeItem('guest_wishlist_name');
     localStorage.removeItem('guest_pending_migration');
   });
 }
