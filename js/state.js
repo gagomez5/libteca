@@ -56,6 +56,7 @@ export var state = {
 export var LIBRARY_CAP = 10;
 export var WISHLIST_CAP = 10;
 export var DEFAULT_TITLE = 'Mi Biblioteca';
+export var DEFAULT_WISHLIST_TITLE = 'Tu Wishlist';
 export var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
 export var ROLE_LABELS = { administrador:'Administrador', fundador:'Lector Fundador', premium:'Lector Premium', free:'Lector' };
 export var STATUS_NEXT = { pendiente:'leyendo', leyendo:'leido', leido:'leido' };

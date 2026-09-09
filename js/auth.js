@@ -1,7 +1,7 @@
 "use strict";
 
 import { uniqueSorted } from './utils.js';
-import { state, DEFAULT_TITLE, isPremiumUser } from './state.js';
+import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, isPremiumUser } from './state.js';
 import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors, dbSelectSubscription } from './db.js';
 import { reportError } from './telemetry.js';
 import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems } from './ui.js';
@@ -184,7 +184,9 @@ export function loadData(){
     if(bRes.error){ reportError(bRes.error); showToast('Error cargando libros: ' + bRes.error.message, 'error'); state.books = []; } else { state.books = bRes.data || []; if(state.isGuest) backfillGuestAnalyticsDates(); }
     if(wRes.error){ reportError(wRes.error); showToast('Error cargando wishlist: ' + wRes.error.message, 'error'); state.wishlist = []; } else { state.wishlist = wRes.data || []; }
     var savedTitle = (!pRes.error && pRes.data && pRes.data.library_name) ? pRes.data.library_name : DEFAULT_TITLE;
-    document.getElementById('app-title-text').textContent = savedTitle;
+    var savedWishTitle = (!pRes.error && pRes.data && pRes.data.wishlist_name) ? pRes.data.wishlist_name : DEFAULT_WISHLIST_TITLE;
+    document.querySelector('.editable-title[data-title-field="library_name"] .view-heading').textContent = savedTitle;
+    document.querySelector('.editable-title[data-title-field="wishlist_name"] .view-heading').textContent = savedWishTitle;
     state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
     state.subscription = (!sRes.error && sRes.data) ? sRes.data : null;
     if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }

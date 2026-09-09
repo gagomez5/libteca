@@ -4,7 +4,7 @@ import { state, LIBRARY_CAP, WISHLIST_CAP, DEFAULT_TITLE, STATUS_LABELS, STATUS_
 import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
-import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, showToast, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
+import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, updateSidebarToggleLabel, showToast, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
 import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrateGuestDataToAccount, getUsedSagaNumbers, suggestNextSagaNumber, updateSagaSuggestions, maybeSuggestNumeroSaga } from './forms-shared.js';
 import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './books.js';
 import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './wishlist.js';
@@ -16,6 +16,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
 
   loadPrefs();
   document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
+  updateSidebarToggleLabel(state.sidebarExpanded);
 
   var pendingUpgradeToast = false;
   if(location.search.indexOf('upgraded=1') !== -1){
@@ -187,25 +188,29 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
 
   // ================= NOTIFICACIONES =================
 
-  document.getElementById('title-display').addEventListener('click', function(){
-    var titleEl = document.getElementById('app-title-text');
-    var input = document.getElementById('title-input');
-    input.value = titleEl.textContent;
-    document.getElementById('title-display').classList.add('hidden');
-    input.classList.remove('hidden');
-    input.focus();
-    input.select();
-  });
+  document.querySelectorAll('.editable-title').forEach(function(wrap){
+    var display = wrap.querySelector('.title-display');
+    var input = wrap.querySelector('.title-input');
+    var heading = display.querySelector('.view-heading');
 
-  document.getElementById('title-input').addEventListener('input', function(e){
-    var chars = Array.from(e.target.value);
-    if(chars.length > MAX_TITLE_CHARS){ e.target.value = chars.slice(0, MAX_TITLE_CHARS).join(''); }
-  });
+    display.addEventListener('click', function(){
+      input.value = heading.textContent;
+      display.classList.add('hidden');
+      input.classList.remove('hidden');
+      input.focus();
+      input.select();
+    });
 
-  document.getElementById('title-input').addEventListener('blur', function(){ finishTitleEdit(true); });
-  document.getElementById('title-input').addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('title-input').blur(); }
-    if(e.key === 'Escape'){ e.preventDefault(); finishTitleEdit(false); }
+    input.addEventListener('input', function(e){
+      var chars = Array.from(e.target.value);
+      if(chars.length > MAX_TITLE_CHARS){ e.target.value = chars.slice(0, MAX_TITLE_CHARS).join(''); }
+    });
+
+    input.addEventListener('blur', function(){ finishTitleEdit(true, wrap); });
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); input.blur(); }
+      if(e.key === 'Escape'){ e.preventDefault(); finishTitleEdit(false, wrap); }
+    });
   });
 
   // ---------- render helpers ----------
@@ -347,11 +352,11 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       });
       document.getElementById('view-biblioteca').classList.toggle('hidden', tab!=='biblioteca');
       document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
-      document.getElementById('wish-stats').classList.toggle('hidden', tab!=='wishlist');
     }
     else if(action === 'toggle-sidebar'){
       state.sidebarExpanded = !state.sidebarExpanded;
       document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
+      updateSidebarToggleLabel(state.sidebarExpanded);
       savePrefs();
     }
     else if(action === 'guest-auth-or-logout'){
@@ -751,7 +756,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
           saveNewBookIds();
           state.wishlist = state.wishlist.filter(function(w){ return w.id!==id; });
           renderAll();
-          var libName = document.getElementById('app-title-text').textContent;
+          var libName = document.querySelector('.editable-title[data-title-field="library_name"] .view-heading').textContent;
           showToast('Libro agregado a tu biblioteca "'+libName+'"');
         });
       });

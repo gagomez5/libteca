@@ -62,9 +62,11 @@ export function dbSelectAuthors(){
 export function dbSelectProfile(){
   if(state.isGuest){
     var name = localStorage.getItem('guest_library_name');
-    return Promise.resolve({ data: name ? { library_name:name } : null, error:null });
+    var wishName = localStorage.getItem('guest_wishlist_name');
+    var data = (name || wishName) ? { library_name:name, wishlist_name:wishName } : null;
+    return Promise.resolve({ data: data, error:null });
   }
-  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, role, avatar_url').maybeSingle(); });
+  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, wishlist_name, role, avatar_url').maybeSingle(); });
 }
 export function dbInsertBook(data){
   if(state.isGuest){
@@ -134,12 +136,15 @@ export function dbDeleteWish(id){
   }
   return sb.from('wishlist').delete().eq('id', id);
 }
-export function dbSaveProfile(name){
+export function dbSaveProfile(name, field){
+  field = field || 'library_name';
   if(state.isGuest){
-    localStorage.setItem('guest_library_name', name);
+    localStorage.setItem(field === 'wishlist_name' ? 'guest_wishlist_name' : 'guest_library_name', name);
     return Promise.resolve({ error:null });
   }
-  return sb.from('profile').upsert({ user_id: state.currentUserId, library_name: name });
+  var payload = { user_id: state.currentUserId };
+  payload[field] = name;
+  return sb.from('profile').upsert(payload);
 }
 export function dbSaveAvatar(url){
   return sb.from('profile').upsert({ user_id: state.currentUserId, avatar_url: url });

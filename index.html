@@ -106,12 +106,8 @@
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-brand">
       <div class="sidebar-logo"><span></span><span></span><span></span></div>
-      <div class="title-display" id="title-display" data-action="edit-title">
-        <h1 id="app-title-text">Mi Biblioteca</h1>
-        <svg class="title-edit-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
-      </div>
+      <h1 class="sidebar-brand-name">Bruukion</h1>
     </div>
-    <input id="title-input" class="title-input hidden" maxlength="40" autocomplete="off">
 
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-nav-item active" id="tab-biblioteca" data-action="tab" data-tab="biblioteca" title="Biblioteca">
@@ -134,7 +130,7 @@
     </button>
 
     <button type="button" class="sidebar-toggle" id="btn-toggle-sidebar" data-action="toggle-sidebar" aria-label="Expandir panel" title="Expandir panel">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v11a3 3 0 0 0 6 0V7a2 2 0 0 0-4 0v7"/></svg>
     </button>
 
     <div class="sidebar-spacer"></div>
@@ -162,7 +158,13 @@
   <div class="app-content">
   <main>
     <section id="view-biblioteca">
-      <h2 class="view-heading">Tu biblioteca</h2>
+      <div class="editable-title" data-title-field="library_name">
+        <div class="title-display">
+          <h2 class="view-heading">Tu biblioteca</h2>
+          <svg class="title-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+        </div>
+        <input class="title-input hidden" maxlength="40" autocomplete="off">
+      </div>
       <div class="stats" id="stats"></div>
       <div class="controls">
         <div class="search-wrap">
@@ -240,8 +242,16 @@
     </section>
 
     <section id="view-wishlist" class="hidden">
-      <h2 class="view-heading">Tu wishlist</h2>
-      <div class="header-wish-stats hidden" id="wish-stats"></div>
+      <div class="wish-heading-row">
+        <div class="editable-title" data-title-field="wishlist_name">
+          <div class="title-display">
+            <h2 class="view-heading">Tu wishlist</h2>
+            <svg class="title-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          </div>
+          <input class="title-input hidden" maxlength="40" autocomplete="off">
+        </div>
+        <div class="stats" id="wish-stats"></div>
+      </div>
       <div class="controls">
         <div class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>

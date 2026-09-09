@@ -1,7 +1,7 @@
 "use strict";
 
 import { reportError } from './telemetry.js';
-import { state, DEFAULT_TITLE, ROLE_LABELS, ICONS } from './state.js';
+import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, ROLE_LABELS, ICONS } from './state.js';
 import { dbSaveProfile } from './db.js';
 import { esc } from './utils.js';
 
@@ -62,20 +62,29 @@ export function renderIconPicker(){
   }).join('');
 }
 
-export function saveTitle(newTitle){
+export function saveTitle(newTitle, field, headingEl){
   var clean = Array.from(newTitle.trim()).slice(0, MAX_TITLE_CHARS).join('');
-  if(!clean) clean = DEFAULT_TITLE;
-  document.getElementById('app-title-text').textContent = clean;
-  dbSaveProfile(clean).then(function(res){
+  if(!clean) clean = field === 'wishlist_name' ? DEFAULT_WISHLIST_TITLE : DEFAULT_TITLE;
+  headingEl.textContent = clean;
+  dbSaveProfile(clean, field).then(function(res){
     if(res.error){ reportError(res.error); showToast('Error guardando el nombre: ' + res.error.message, 'error'); }
   });
 }
 
-export function finishTitleEdit(save){
-  var input = document.getElementById('title-input');
+export function finishTitleEdit(save, wrap){
+  var input = wrap.querySelector('.title-input');
+  var display = wrap.querySelector('.title-display');
   input.classList.add('hidden');
-  document.getElementById('title-display').classList.remove('hidden');
-  if(save){ saveTitle(input.value); }
+  display.classList.remove('hidden');
+  if(save){ saveTitle(input.value, wrap.getAttribute('data-title-field'), display.querySelector('.view-heading')); }
+}
+
+export function updateSidebarToggleLabel(expanded){
+  var btn = document.getElementById('btn-toggle-sidebar');
+  if(!btn) return;
+  var label = expanded ? 'Contraer panel' : 'Expandir panel';
+  btn.setAttribute('title', label);
+  btn.setAttribute('aria-label', label);
 }
 
 var toastTimer = null;

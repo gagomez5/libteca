@@ -310,18 +310,26 @@ export function renderGroupedWishGrid(list){
   }).join('');
 }
 
+function wishStatHTML(colorVar, iconPath, strokeWidth, num, label){
+  return '<div class="stat">' +
+    '<span class="stat-icon" style="background:'+colorVar+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--paper)" stroke-width="'+strokeWidth+'">'+iconPath+'</svg></span>' +
+    '<span class="stat-text"><span class="stat-num">'+num+'</span><span class="stat-label">'+label+'</span></span></div>';
+}
 export function renderWishStats(){
+  var total = state.wishlist.length;
   if(!isPremiumUser()){
     document.getElementById('wish-stats').innerHTML =
-      '<span class="wish-stats-locked" title="Función de Lector Premium">Total y promedio disponibles en Lector Premium</span>';
+      wishStatHTML('var(--coral)', '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>', 1.8, total, 'en wishlist') +
+      '<div class="stat" title="Función de Lector Premium"><span class="stat-icon" style="background:var(--muted-plum)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--paper)" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span><span class="stat-text"><span class="stat-num">🔒</span><span class="stat-label">costo Premium</span></span></div>';
     return;
   }
   var withCosto = state.wishlist.filter(function(w){ return w.costo != null; });
-  var total = withCosto.reduce(function(sum, w){ return sum + Number(w.costo); }, 0);
-  var promedio = withCosto.length ? total / withCosto.length : 0;
+  var costoTotal = withCosto.reduce(function(sum, w){ return sum + Number(w.costo); }, 0);
+  var promedio = withCosto.length ? costoTotal / withCosto.length : 0;
   document.getElementById('wish-stats').innerHTML =
-    '<span>Costo de mi wishlist <b>'+formatCosto(total)+'</b></span>' +
-    '<span>Promedio <b>'+formatCosto(promedio)+'</b></span>';
+    wishStatHTML('var(--coral)', '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>', 1.8, total, 'en wishlist') +
+    wishStatHTML('var(--amber)', '<path d="M12 3v18M8 8a3 3 0 013-3h1a3 3 0 010 6h-2a3 3 0 000 6h1a3 3 0 003-3"/>', 1.8, formatCosto(costoTotal), 'costo total') +
+    wishStatHTML('var(--teal)', '<path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5" rx="1"/><rect x="12.5" y="9" width="3" height="9" rx="1"/><rect x="18" y="6" width="3" height="12" rx="1"/>', 1.6, formatCosto(promedio), 'promedio');
 }
 
 export function renderWishGrid(){
