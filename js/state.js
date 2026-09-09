@@ -53,8 +53,7 @@ export var state = {
 
 // Constantes: nunca se reasignan, así que no necesitan vivir dentro de `state`
 // (exportarlas sueltas evita el riesgo de reasignación de bindings importadas).
-export var LIBRARY_CAP = 10;
-export var WISHLIST_CAP = 10;
+export var WISHLIST_CAP = 5;
 export var DEFAULT_TITLE = 'Mi Biblioteca';
 export var DEFAULT_WISHLIST_TITLE = 'Tu Wishlist';
 export var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
@@ -78,5 +77,4 @@ export var ICONS = {
 
 export function isPremiumTier(role){ return role === 'premium' || role === 'fundador' || role === 'administrador'; }
 export function isPremiumUser(){ return isPremiumTier(state.currentUserRole); }
-export function canAddBook(){ return isPremiumUser() || state.books.length < LIBRARY_CAP; }
 export function canAddWish(){ return isPremiumUser() || state.wishlist.length < WISHLIST_CAP; }

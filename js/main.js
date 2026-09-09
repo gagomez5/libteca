@@ -1,6 +1,6 @@
 import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './telemetry.js';
 import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './utils.js';
-import { state, LIBRARY_CAP, WISHLIST_CAP, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddBook, canAddWish } from './state.js';
+import { state, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddWish } from './state.js';
 import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
@@ -567,7 +567,6 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       renderWishGrid();
     }
     else if(action === 'add-book'){
-      if(!canAddBook()){ openUpgradeModal('add_book_cap'); return; }
       openBookModal(null);
     }
     else if(action === 'edit-book'){ openBookModal(state.books.find(function(b){return b.id===id;})); }
@@ -754,7 +753,6 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       });
     }
     else if(action === 'buy-wish'){
-      if(!canAddBook()){ openUpgradeModal('buy_wish_cap'); return; }
       var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
       dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString() }).then(function(insRes){
