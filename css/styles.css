@@ -105,7 +105,7 @@
 
   .sidebar-spacer{flex-grow:1;}
 
-  .logout-btn{font-size:11px;color:var(--text-muted);border:1px solid var(--border);padding:6px 4px;border-radius:8px;flex-shrink:0;text-align:center;line-height:1.25;width:44px;}
+  .logout-btn{font-size:11px;color:var(--text-muted);border:1px solid var(--border);padding:6px 4px;border-radius:8px;flex-shrink:0;text-align:center;line-height:1.25;width:44px;overflow-wrap:break-word;word-break:break-word;}
   .sidebar.expanded .logout-btn{width:100%;font-size:12.5px;padding:9px;}
   .mobile-tabbar .logout-btn{width:auto;border:none;padding:0;}
 
