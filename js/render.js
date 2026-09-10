@@ -3,6 +3,7 @@
 import { esc, formatCosto, uniqueSorted } from './utils.js';
 import { state, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumUser } from './state.js';
 import { renderColumnConfigPanel, sortItems, tableHeaderHTML, tableRowHTML, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
+import { renderStatsDashboard } from './stats.js';
 
 var GROUP_EMPTY_LABEL = { author:'Sin autor', saga:'Sin saga', genre:'Sin género', status:'' };
 
@@ -410,6 +411,7 @@ export function renderAll(){
   syncControlsUI();
   renderBooksGrid();
   renderWishGrid();
+  renderStatsDashboard();
   syncGroupModal();
 }
 

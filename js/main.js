@@ -393,6 +393,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       });
       document.getElementById('view-biblioteca').classList.toggle('hidden', tab!=='biblioteca');
       document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
+      document.getElementById('view-stats').classList.toggle('hidden', tab!=='estadisticas');
     }
     else if(action === 'toggle-sidebar'){
       state.sidebarExpanded = !state.sidebarExpanded;

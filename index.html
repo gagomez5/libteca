@@ -119,6 +119,10 @@
         <span class="sidebar-nav-label">Wishlist</span>
         <span id="wish-badge" class="badge wish-badge hidden">0</span>
       </button>
+      <button type="button" class="sidebar-nav-item" id="tab-estadisticas" data-action="tab" data-tab="estadisticas" title="Estadísticas">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5" rx="1"/><rect x="12.5" y="9" width="3" height="9" rx="1"/><rect x="18" y="6" width="3" height="12" rx="1"/></svg>
+        <span class="sidebar-nav-label">Estadísticas</span>
+      </button>
     </nav>
 
     <div class="sidebar-divider"></div>
@@ -325,6 +329,8 @@
       <div id="grid-wishlist" class="grid"></div>
       <div id="table-wishlist" class="table-wrap hidden"></div>
     </section>
+
+    <section id="view-stats" class="hidden"></section>
   </main>
   </div>
 
@@ -337,6 +343,10 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       <span>Wishlist</span>
       <span class="badge wish-badge hidden">0</span>
+    </button>
+    <button type="button" class="mobile-tab-item" data-action="tab" data-tab="estadisticas">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5" rx="1"/><rect x="12.5" y="9" width="3" height="9" rx="1"/><rect x="18" y="6" width="3" height="12" rx="1"/></svg>
+      <span>Estadísticas</span>
     </button>
     <button type="button" class="mobile-tab-item btn-notifications hidden" data-action="open-notifications" aria-label="Notificaciones">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -632,6 +642,7 @@
       <li>Vista Listado (tabla) para libros y wishlist</li>
       <li>Filtro y estadísticas de costo en tu wishlist</li>
       <li>Compartir tu wishlist como lista de texto</li>
+      <li>Estadísticas avanzadas de lectura y gasto</li>
     </ul>
     <div class="pricing-grid">
       <div class="pricing-card">
