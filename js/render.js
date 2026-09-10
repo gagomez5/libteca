@@ -332,7 +332,7 @@ export function renderWishStats(){
   var promedio = withCosto.length ? costoTotal / withCosto.length : 0;
   document.getElementById('wish-stats').innerHTML =
     wishStatHTML('var(--coral)', '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>', 1.8, total, 'en wishlist') +
-    wishStatHTML('var(--amber)', '<path d="M12 3v18M8 8a3 3 0 013-3h1a3 3 0 010 6h-2a3 3 0 000 6h1a3 3 0 003-3"/>', 1.8, formatCosto(costoTotal), 'costo total') +
+    wishStatHTML('var(--amber)', '<line x1="12" y1="1" x2="12" y2="23" stroke-linecap="round"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round" stroke-linejoin="round"/>', 1.8, formatCosto(costoTotal), 'costo total') +
     wishStatHTML('var(--teal)', '<path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5" rx="1"/><rect x="12.5" y="9" width="3" height="9" rx="1"/><rect x="18" y="6" width="3" height="12" rx="1"/>', 1.6, formatCosto(promedio), 'promedio');
 }
 
