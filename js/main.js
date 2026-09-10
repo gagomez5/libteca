@@ -4,10 +4,10 @@ import { state, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier,
 import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
-import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, updateSidebarToggleLabel, showToast, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
+import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, updateSidebarToggleLabel, showToast, shareText, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
 import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrateGuestDataToAccount, getUsedSagaNumbers, suggestNextSagaNumber, updateSagaSuggestions, maybeSuggestNumeroSaga } from './forms-shared.js';
 import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './books.js';
-import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData } from './wishlist.js';
+import { editingWishId, editingWishOriginalCover, getWishFormData, openWishModal, closeWishModal, attemptCloseWishModal, saveWishData, buildWishlistShareText } from './wishlist.js';
 import { loadNotifications, updateNotifDot, formatNotifDate, renderNotifList, openNotificationDetail, markNotificationRead, deleteNotification, markAllNotificationsRead, deleteAllNotifications } from './notifications.js';
 import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateAccountButton, showApp, showRecoveryScreen, setAuthMsg, setRecoveryMsg, updateAuthUI, startOAuth, backfillGuestAnalyticsDates, loadData, saveRememberedEmail } from './auth.js';
 import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoBack, manageSubPreviewCancel, manageSubConfirmCancel, manageSubReactivate, manageSubPreviewUpgrade, manageSubConfirmUpgrade, manageSubDowngradeConfirm1, manageSubDowngradeConfirm2 } from './subscription.js';
@@ -313,11 +313,20 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     document.getElementById('modal-upgrade').classList.remove('hidden');
   }
 
+  var pendingShareList = [];
+  function openShareWishlistModal(list){
+    pendingShareList = list;
+    document.getElementById('share-wish-include-cost').checked = false;
+    document.getElementById('share-wish-count').textContent = list.length + (list.length === 1 ? ' libro' : ' libros');
+    document.getElementById('modal-share-wishlist').classList.remove('hidden');
+  }
+
   // ---------- eventos ----------
   document.addEventListener('click', function(e){
     if(e.target.id === 'auth-screen' && e.target.classList.contains('modal-mode')){ closeAuthModal(); return; }
     if(e.target.id === 'modal-book'){ attemptCloseBookModal(); return; }
     if(e.target.id === 'modal-wish'){ attemptCloseWishModal(); return; }
+    if(e.target.id === 'modal-share-wishlist'){ document.getElementById('modal-share-wishlist').classList.add('hidden'); return; }
     if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
     if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
@@ -451,6 +460,33 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       document.getElementById('wish-columns-panel').classList.add('hidden');
       savePrefs(); syncControlsUI();
       renderWishGrid();
+    }
+    else if(action === 'share-wishlist'){
+      if(!isPremiumUser()){ openUpgradeModal('share_wishlist'); return; }
+      var shareList = filteredWishlist();
+      if(!shareList.length){ showToast('No tienes libros en tu wishlist para compartir.'); return; }
+      var hasFilters = !!state.wishFilters.search || !!state.wishFilters.author || !!state.wishFilters.tienda ||
+        (isPremiumUser() && !!state.wishFilters.costoOp && state.wishFilters.costoVal != null);
+      if(hasFilters){
+        openConfirmModal(
+          'Filtros aplicados',
+          'Vas a compartir solo los libros que coinciden con tus filtros actuales (' + shareList.length + ' de ' + state.wishlist.length + ').',
+          function(){ openShareWishlistModal(shareList); },
+          'Continuar'
+        );
+      } else {
+        openShareWishlistModal(shareList);
+      }
+    }
+    else if(action === 'close-share-wishlist-modal'){
+      document.getElementById('modal-share-wishlist').classList.add('hidden');
+    }
+    else if(action === 'confirm-share-wishlist'){
+      var includeCost = document.getElementById('share-wish-include-cost').checked;
+      var textToShare = buildWishlistShareText(pendingShareList, includeCost);
+      document.getElementById('modal-share-wishlist').classList.add('hidden');
+      trackEvent('wishlist_shared', { item_count: pendingShareList.length, include_cost: includeCost });
+      shareText(textToShare);
     }
     else if(action === 'toggle-column-config'){
       var ccScope = el.getAttribute('data-scope');

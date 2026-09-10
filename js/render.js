@@ -53,6 +53,10 @@ export function syncControlsUI(){
   document.getElementById('wish-filter-costo-op').closest('.filter-field-cost').classList.toggle('locked', lockCostoFilter);
   document.getElementById('wish-filter-costo-op').closest('.filter-field-cost').title = lockCostoFilter ? 'Función de Lector Premium' : '';
 
+  var shareBtn = document.getElementById('btn-share-wishlist');
+  shareBtn.classList.toggle('locked', !isPremiumUser());
+  shareBtn.title = isPremiumUser() ? 'Compartir wishlist' : 'Función de Lector Premium';
+
   document.getElementById('btn-toggle-group').disabled = (state.bookViewMode === 'listado');
   document.getElementById('btn-toggle-wish-group').disabled = (state.wishViewMode === 'listado');
 

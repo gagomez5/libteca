@@ -9,7 +9,7 @@ export var MAX_TITLE_CHARS = 20;
 export var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
 export var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
   'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
-  'modal-confirm','modal-upgrade','modal-upgrade-success','modal-manage-subscription','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+  'modal-confirm','modal-upgrade','modal-upgrade-success','modal-manage-subscription','modal-share-wishlist','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
 
 var currentAvatarIcon = null;
 export function updateUserAvatar(icon){
@@ -95,6 +95,23 @@ export function showToast(msg, type){
   t.setAttribute('role', type === 'error' ? 'alert' : 'status');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ t.classList.remove('show'); }, type === 'error' ? 5000 : 3500);
+}
+
+export function shareText(text){
+  if(navigator.share){
+    navigator.share({ text: text }).catch(function(err){
+      if(err && err.name === 'AbortError') return;
+      showToast('No se pudo compartir la lista', 'error');
+    });
+  } else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      showToast('Lista copiada al portapapeles');
+    }).catch(function(){
+      showToast('No se pudo copiar la lista', 'error');
+    });
+  } else {
+    showToast('No se pudo compartir la lista', 'error');
+  }
 }
 
 export var confirmModalCallback = null;

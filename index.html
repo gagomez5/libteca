@@ -246,12 +246,17 @@
 
     <section id="view-wishlist" class="hidden">
       <div class="wish-heading-row">
-        <div class="editable-title" data-title-field="wishlist_name">
-          <div class="title-display">
-            <h2 class="view-heading">Tu wishlist</h2>
-            <svg class="title-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+        <div class="wish-title-group">
+          <div class="editable-title" data-title-field="wishlist_name">
+            <div class="title-display">
+              <h2 class="view-heading">Tu wishlist</h2>
+              <svg class="title-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+            </div>
+            <input class="title-input hidden" maxlength="40" autocomplete="off">
           </div>
-          <input class="title-input hidden" maxlength="40" autocomplete="off">
+          <button type="button" class="icon-btn" id="btn-share-wishlist" data-action="share-wishlist" title="Compartir wishlist" aria-label="Compartir wishlist">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49"/></svg>
+          </button>
         </div>
         <div class="stats" id="wish-stats"></div>
       </div>
@@ -414,6 +419,24 @@
 <datalist id="author-suggestions"></datalist>
 <datalist id="book-saga-suggestions"></datalist>
 <datalist id="wish-saga-suggestions"></datalist>
+
+<!-- Modal compartir wishlist -->
+<div class="modal-overlay hidden" id="modal-share-wishlist">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif">Compartir wishlist</h2>
+      <button data-action="close-share-wishlist-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Vas a compartir <span id="share-wish-count"></span> como una lista de texto (título y tienda). Puedes elegir si quieres incluir el costo de cada libro.</p>
+    <div class="field-checkbox">
+      <label><input type="checkbox" id="share-wish-include-cost"> Incluir el costo de cada libro</label>
+    </div>
+    <div class="notif-detail-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-share-wishlist-modal">Cancelar</button>
+      <button type="button" class="btn btn-dark" data-action="confirm-share-wishlist">Compartir</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal información (solo lectura) -->
 <div class="modal-overlay hidden" id="modal-detail">

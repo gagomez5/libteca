@@ -1,6 +1,6 @@
 "use strict";
 
-import { parseCosto, parseSagaNumber } from './utils.js';
+import { parseCosto, parseSagaNumber, formatCosto } from './utils.js';
 import { state } from './state.js';
 import { dbUpdateWish, dbInsertWish } from './db.js';
 import { reportError } from './telemetry.js';
@@ -67,4 +67,14 @@ export function saveWishData(data){
       closeWishModal(); renderAll();
     });
   }
+}
+
+export function buildWishlistShareText(list, includeCost){
+  var lines = list.map(function(w){
+    var line = '• ' + w.title;
+    if(w.tienda) line += ' — ' + w.tienda;
+    if(includeCost && w.costo != null) line += ' — ' + formatCosto(w.costo);
+    return line;
+  });
+  return 'Mi wishlist en Bruukion\n\n' + lines.join('\n') + '\n\nCreada con Bruukion';
 }
