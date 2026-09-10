@@ -469,6 +469,22 @@
   </div>
 </div>
 
+<!-- Modal aviso de posible duplicado por ISBN -->
+<div class="modal-overlay hidden" id="modal-isbn-duplicate">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif">Ya lo tenés cargado</h2>
+      <button data-action="isbn-duplicate-cancel"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;" id="isbn-duplicate-message"></p>
+    <div class="row-actions-list">
+      <button type="button" class="row-action-item" data-action="isbn-duplicate-add">Agregar el duplicado</button>
+      <button type="button" class="row-action-item" data-action="isbn-duplicate-add">Agregar el libro y editarlo</button>
+      <button type="button" class="row-action-item" data-action="isbn-duplicate-cancel">No agregar y salir</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal información (solo lectura) -->
 <div class="modal-overlay hidden" id="modal-detail">
   <div class="modal">

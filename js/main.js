@@ -314,6 +314,17 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
   }
 
   var addChoiceContext = 'book';
+  var pendingIsbnInfo = null;
+  function findIsbnDuplicate(title, author){
+    var t = (title||'').trim().toLowerCase();
+    var a = (author||'').trim().toLowerCase();
+    if(!t || !a) return null;
+    var bookMatch = state.books.find(function(b){ return b.title.trim().toLowerCase()===t && b.author.trim().toLowerCase()===a; });
+    if(bookMatch) return { item: bookMatch, where: 'biblioteca' };
+    var wishMatch = state.wishlist.find(function(w){ return w.title.trim().toLowerCase()===t && w.author.trim().toLowerCase()===a; });
+    if(wishMatch) return { item: wishMatch, where: 'wishlist' };
+    return null;
+  }
   function openAddChoiceModal(context, title){
     addChoiceContext = context;
     document.getElementById('add-choice-title').textContent = title;
@@ -336,6 +347,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-share-wishlist'){ document.getElementById('modal-share-wishlist').classList.add('hidden'); return; }
     if(e.target.id === 'modal-add-choice'){ document.getElementById('modal-add-choice').classList.add('hidden'); return; }
     if(e.target.id === 'modal-isbn-entry'){ document.getElementById('modal-isbn-entry').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-isbn-duplicate'){ document.getElementById('modal-isbn-duplicate').classList.add('hidden'); return; }
     if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
     if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
@@ -780,6 +792,15 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         isbnBtn.textContent = isbnBtnOriginal;
         document.getElementById('modal-isbn-entry').classList.add('hidden');
         var isbnInfo = (res && res.found) ? res : { isbn: isbnTyped };
+        if(res && res.found){
+          var dup = findIsbnDuplicate(res.title, res.author);
+          if(dup){
+            pendingIsbnInfo = isbnInfo;
+            document.getElementById('isbn-duplicate-message').textContent = 'Ya tenés "'+dup.item.title+'" de '+dup.item.author+' en tu '+dup.where+'.';
+            document.getElementById('modal-isbn-duplicate').classList.remove('hidden');
+            return;
+          }
+        }
         if(addChoiceContext === 'book'){ openBookModal(null, isbnInfo); } else { openWishModal(null, isbnInfo); }
         if(!res || !res.found) showToast('No se encontró ningún libro con ese ISBN. Completa los datos manualmente.');
       }).catch(function(){
@@ -787,6 +808,14 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         isbnBtn.textContent = isbnBtnOriginal;
         showToast('No se pudo buscar el ISBN. Intenta de nuevo.', 'error');
       });
+    }
+    else if(action === 'isbn-duplicate-add'){
+      document.getElementById('modal-isbn-duplicate').classList.add('hidden');
+      if(addChoiceContext === 'book'){ openBookModal(null, pendingIsbnInfo); } else { openWishModal(null, pendingIsbnInfo); }
+    }
+    else if(action === 'isbn-duplicate-cancel'){
+      document.getElementById('modal-isbn-duplicate').classList.add('hidden');
+      pendingIsbnInfo = null;
     }
     else if(action === 'edit-wish'){ openWishModal(state.wishlist.find(function(w){return w.id===id;})); }
     else if(action === 'set-status'){ setStatusUI(el.getAttribute('data-status')); }
