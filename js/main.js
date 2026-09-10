@@ -1,7 +1,7 @@
 import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './telemetry.js';
 import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './utils.js';
 import { state, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddWish } from './state.js';
-import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds } from './db.js';
+import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds, lookupIsbn } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
 import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, updateSidebarToggleLabel, showToast, shareText, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
@@ -313,6 +313,13 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     document.getElementById('modal-upgrade').classList.remove('hidden');
   }
 
+  var addChoiceContext = 'book';
+  function openAddChoiceModal(context, title){
+    addChoiceContext = context;
+    document.getElementById('add-choice-title').textContent = title;
+    document.getElementById('modal-add-choice').classList.remove('hidden');
+  }
+
   var pendingShareList = [];
   function openShareWishlistModal(list){
     pendingShareList = list;
@@ -327,6 +334,8 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-book'){ attemptCloseBookModal(); return; }
     if(e.target.id === 'modal-wish'){ attemptCloseWishModal(); return; }
     if(e.target.id === 'modal-share-wishlist'){ document.getElementById('modal-share-wishlist').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-add-choice'){ document.getElementById('modal-add-choice').classList.add('hidden'); return; }
+    if(e.target.id === 'modal-isbn-entry'){ document.getElementById('modal-isbn-entry').classList.add('hidden'); return; }
     if(e.target.id === 'modal-group'){ document.getElementById('modal-group').classList.add('hidden'); state.openGroupContext = null; return; }
     if(e.target.id === 'modal-detail'){ document.getElementById('modal-detail').classList.add('hidden'); return; }
     if(e.target.id === 'modal-notifications'){ document.getElementById('modal-notifications').classList.add('hidden'); return; }
@@ -603,7 +612,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       renderWishGrid();
     }
     else if(action === 'add-book'){
-      openBookModal(null);
+      openAddChoiceModal('book', 'Añadir libro');
     }
     else if(action === 'edit-book'){ openBookModal(state.books.find(function(b){return b.id===id;})); }
     else if(action === 'view-book'){
@@ -742,7 +751,42 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     else if(action === 'close-wish-modal'){ attemptCloseWishModal(); }
     else if(action === 'add-wish'){
       if(!canAddWish()){ openUpgradeModal('add_wish_cap'); return; }
-      openWishModal(null);
+      openAddChoiceModal('wish', 'Añadir a wishlist');
+    }
+    else if(action === 'close-add-choice-modal'){
+      document.getElementById('modal-add-choice').classList.add('hidden');
+    }
+    else if(action === 'add-choice-manual'){
+      document.getElementById('modal-add-choice').classList.add('hidden');
+      if(addChoiceContext === 'book'){ openBookModal(null); } else { openWishModal(null); }
+    }
+    else if(action === 'add-choice-isbn'){
+      document.getElementById('modal-add-choice').classList.add('hidden');
+      document.getElementById('isbn-entry-input').value = '';
+      document.getElementById('modal-isbn-entry').classList.remove('hidden');
+    }
+    else if(action === 'close-isbn-entry-modal'){
+      document.getElementById('modal-isbn-entry').classList.add('hidden');
+    }
+    else if(action === 'isbn-entry-search'){
+      var isbnTyped = document.getElementById('isbn-entry-input').value.trim();
+      if(!isbnTyped){ showToast('Escribe un ISBN para buscar.'); return; }
+      var isbnBtn = document.getElementById('isbn-entry-search-btn');
+      var isbnBtnOriginal = isbnBtn.textContent;
+      isbnBtn.disabled = true;
+      isbnBtn.textContent = 'Buscando…';
+      lookupIsbn(isbnTyped).then(function(res){
+        isbnBtn.disabled = false;
+        isbnBtn.textContent = isbnBtnOriginal;
+        document.getElementById('modal-isbn-entry').classList.add('hidden');
+        var isbnInfo = (res && res.found) ? res : { isbn: isbnTyped };
+        if(addChoiceContext === 'book'){ openBookModal(null, isbnInfo); } else { openWishModal(null, isbnInfo); }
+        if(!res || !res.found) showToast('No se encontró ningún libro con ese ISBN. Completa los datos manualmente.');
+      }).catch(function(){
+        isbnBtn.disabled = false;
+        isbnBtn.textContent = isbnBtnOriginal;
+        showToast('No se pudo buscar el ISBN. Intenta de nuevo.', 'error');
+      });
     }
     else if(action === 'edit-wish'){ openWishModal(state.wishlist.find(function(w){return w.id===id;})); }
     else if(action === 'set-status'){ setStatusUI(el.getAttribute('data-status')); }
@@ -791,7 +835,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     else if(action === 'buy-wish'){
       var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString() }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString(), isbn:item.isbn||null, isbn_data:item.isbn_data||null }).then(function(insRes){
         if(insRes.error){ reportError(insRes.error); showToast('Error: '+insRes.error.message, 'error'); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ reportError(delRes.error); showToast('Error: '+delRes.error.message, 'error'); return; }

@@ -364,6 +364,7 @@
       <button data-action="close-book-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <form id="form-book">
+      <p class="isbn-note hidden" id="book-isbn-note">ISBN: <span id="book-isbn-value"></span></p>
       <div class="field"><label for="f-title">Título *</label><input required id="f-title" name="title"></div>
       <div class="field"><label for="f-author">Autor *</label><input required id="f-author" name="author" list="author-suggestions"></div>
       <div class="field field-row">
@@ -402,6 +403,7 @@
       <button data-action="close-wish-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <form id="form-wish">
+      <p class="isbn-note hidden" id="wish-isbn-note">ISBN: <span id="wish-isbn-value"></span></p>
       <div class="field"><label for="w-title">Título *</label><input required id="w-title" name="title"></div>
       <div class="field"><label for="w-author">Autor *</label><input required id="w-author" name="author" list="author-suggestions"></div>
       <div class="field field-row">
@@ -434,6 +436,35 @@
     <div class="notif-detail-actions">
       <button type="button" class="btn btn-ghost" data-action="close-share-wishlist-modal">Cancelar</button>
       <button type="button" class="btn btn-dark" data-action="confirm-share-wishlist">Compartir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal elegir forma de añadir -->
+<div class="modal-overlay hidden" id="modal-add-choice">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif" id="add-choice-title">Añadir</h2>
+      <button data-action="close-add-choice-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="row-actions-list">
+      <button type="button" class="row-action-item" data-action="add-choice-manual">Agregar manualmente</button>
+      <button type="button" class="row-action-item" data-action="add-choice-isbn">Agregar por ISBN</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal buscar por ISBN -->
+<div class="modal-overlay hidden" id="modal-isbn-entry">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2 class="serif">Agregar por ISBN</h2>
+      <button data-action="close-isbn-entry-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="field"><label for="isbn-entry-input">ISBN</label><input id="isbn-entry-input" placeholder="978-3-16-148410-0" inputmode="numeric"></div>
+    <div class="notif-detail-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-isbn-entry-modal">Cancelar</button>
+      <button type="button" class="btn btn-dark" id="isbn-entry-search-btn" data-action="isbn-entry-search">Buscar</button>
     </div>
   </div>
 </div>

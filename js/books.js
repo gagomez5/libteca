@@ -10,6 +10,8 @@ import { ensureAuthorExists, updateSagaSuggestions } from './forms-shared.js';
 
 var currentStatus = 'pendiente';
 var currentEdicion = 'normal';
+var currentIsbn = null;
+var currentIsbnData = null;
 export var editingBookId = null;
 export var editingBookOriginalCover = '';
 var initialBookSnapshot = null;
@@ -37,26 +39,32 @@ export function getBookFormData(){
     costo: parseCosto(document.getElementById('f-costo').value),
     tienda: document.getElementById('f-tienda').value.trim(),
     status: currentStatus,
-    edicion: currentEdicion
+    edicion: currentEdicion,
+    isbn: currentIsbn,
+    isbn_data: currentIsbnData
   };
 }
 
-export function openBookModal(book){
+export function openBookModal(book, isbnInfo){
   editingBookId = book ? book.id : null;
   editingBookOriginalCover = book ? (book.cover||'') : '';
   document.getElementById('book-modal-title').textContent = book ? 'Editar libro' : 'Añadir libro';
   document.getElementById('book-submit-btn').textContent = book ? 'Guardar cambios' : 'Añadir a mi biblioteca';
-  document.getElementById('f-title').value = book ? book.title : '';
-  document.getElementById('f-author').value = book ? book.author : '';
+  document.getElementById('f-title').value = book ? book.title : (isbnInfo ? (isbnInfo.title||'') : '');
+  document.getElementById('f-author').value = book ? book.author : (isbnInfo ? (isbnInfo.author||'') : '');
   document.getElementById('f-saga').value = book ? (book.saga||'') : '';
   document.getElementById('f-numero-saga').value = (book && book.numero_saga != null) ? book.numero_saga : '';
-  document.getElementById('f-genre').value = book ? (book.genre||'') : '';
-  document.getElementById('f-cover').value = book ? (book.cover||'') : '';
+  document.getElementById('f-genre').value = book ? (book.genre||'') : (isbnInfo ? (isbnInfo.genre||'') : '');
+  document.getElementById('f-cover').value = book ? (book.cover||'') : (isbnInfo ? (isbnInfo.cover||'') : '');
   document.getElementById('f-costo').value = (book && book.costo != null) ? book.costo : '';
   document.getElementById('f-tienda').value = book ? (book.tienda||'') : '';
   setStatusUI(book ? book.status : 'pendiente');
   setEdicionUI(book ? (book.edicion || 'normal') : 'normal');
   state.bookNumeroTouched = false;
+  currentIsbn = book ? (book.isbn||null) : (isbnInfo ? (isbnInfo.isbn||null) : null);
+  currentIsbnData = book ? (book.isbn_data||null) : (isbnInfo ? (isbnInfo.extra||null) : null);
+  document.getElementById('book-isbn-note').classList.toggle('hidden', !currentIsbn);
+  document.getElementById('book-isbn-value').textContent = currentIsbn || '';
   updateSagaSuggestions('f-author', 'book-saga-suggestions');
   initialBookSnapshot = JSON.stringify(getBookFormData());
   document.getElementById('modal-book').classList.remove('hidden');

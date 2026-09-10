@@ -104,10 +104,10 @@ export function migrateGuestDataToAccount(){
     ensureAuthorExists(a);
   });
   gBooks.forEach(function(b){
-    tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal', numero_saga:b.numero_saga||null, tienda:b.tienda||'' }]));
+    tasks.push(sb.from('books').insert([{ title:b.title, author:b.author, saga:b.saga, genre:b.genre, cover:b.cover, costo:b.costo, status:b.status, edicion:b.edicion||'normal', numero_saga:b.numero_saga||null, tienda:b.tienda||'', isbn:b.isbn||null, isbn_data:b.isbn_data||null }]));
   });
   gWish.forEach(function(w){
-    tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, tienda:w.tienda||'', saga:w.saga||'', numero_saga:w.numero_saga||null }]));
+    tasks.push(sb.from('wishlist').insert([{ title:w.title, author:w.author, cover:w.cover, costo:w.costo, tienda:w.tienda||'', saga:w.saga||'', numero_saga:w.numero_saga||null, isbn:w.isbn||null, isbn_data:w.isbn_data||null }]));
   });
   if(gName || gWishName){
     var profilePayload = { user_id: state.currentUserId };

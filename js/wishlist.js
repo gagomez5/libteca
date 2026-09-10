@@ -11,6 +11,8 @@ import { ensureAuthorExists, updateSagaSuggestions } from './forms-shared.js';
 export var editingWishId = null;
 export var editingWishOriginalCover = '';
 var initialWishSnapshot = null;
+var currentIsbn = null;
+var currentIsbnData = null;
 
 export function getWishFormData(){
   return {
@@ -20,23 +22,29 @@ export function getWishFormData(){
     numero_saga: parseSagaNumber(document.getElementById('w-numero-saga').value),
     cover: document.getElementById('w-cover').value.trim(),
     costo: parseCosto(document.getElementById('w-costo').value),
-    tienda: document.getElementById('w-tienda').value.trim()
+    tienda: document.getElementById('w-tienda').value.trim(),
+    isbn: currentIsbn,
+    isbn_data: currentIsbnData
   };
 }
 
-export function openWishModal(item){
+export function openWishModal(item, isbnInfo){
   editingWishId = item ? item.id : null;
   editingWishOriginalCover = item ? (item.cover||'') : '';
   document.getElementById('wish-modal-title').textContent = item ? 'Editar deseo' : 'Añadir a wishlist';
   document.getElementById('wish-submit-btn').textContent = item ? 'Guardar cambios' : 'Añadir a wishlist';
-  document.getElementById('w-title').value = item ? item.title : '';
-  document.getElementById('w-author').value = item ? item.author : '';
+  document.getElementById('w-title').value = item ? item.title : (isbnInfo ? (isbnInfo.title||'') : '');
+  document.getElementById('w-author').value = item ? item.author : (isbnInfo ? (isbnInfo.author||'') : '');
   document.getElementById('w-saga').value = item ? (item.saga||'') : '';
   document.getElementById('w-numero-saga').value = (item && item.numero_saga != null) ? item.numero_saga : '';
-  document.getElementById('w-cover').value = item ? (item.cover||'') : '';
+  document.getElementById('w-cover').value = item ? (item.cover||'') : (isbnInfo ? (isbnInfo.cover||'') : '');
   document.getElementById('w-costo').value = (item && item.costo != null) ? item.costo : '';
   document.getElementById('w-tienda').value = item ? (item.tienda||'') : '';
   state.wishNumeroTouched = false;
+  currentIsbn = item ? (item.isbn||null) : (isbnInfo ? (isbnInfo.isbn||null) : null);
+  currentIsbnData = item ? (item.isbn_data||null) : (isbnInfo ? (isbnInfo.extra||null) : null);
+  document.getElementById('wish-isbn-note').classList.toggle('hidden', !currentIsbn);
+  document.getElementById('wish-isbn-value').textContent = currentIsbn || '';
   updateSagaSuggestions('w-author', 'wish-saga-suggestions');
   initialWishSnapshot = JSON.stringify(getWishFormData());
   document.getElementById('modal-wish').classList.remove('hidden');

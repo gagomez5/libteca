@@ -196,6 +196,12 @@ export function downloadCoverToStorage(url){
     return res.data.url;
   });
 }
+export function lookupIsbn(isbn){
+  return sb.functions.invoke('lookup-isbn', { body: { isbn: isbn } }).then(function(res){
+    if(res.error) throw new Error('lookup_isbn_failed');
+    return res.data;
+  });
+}
 export function deleteOwnStorageCover(url){
   if(!isOwnCoverUrl(url)) return;
   var path = url.slice(COVERS_PUBLIC_PREFIX.length);
