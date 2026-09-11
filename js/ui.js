@@ -14,16 +14,19 @@ export var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','mo
 var currentAvatarIcon = null;
 export function updateUserAvatar(icon){
   currentAvatarIcon = icon || null;
-  var iconEl = document.getElementById('user-avatar-icon');
-  var def = document.getElementById('user-avatar-default');
-  if(icon){
-    iconEl.textContent = icon;
-    iconEl.classList.remove('hidden');
-    def.classList.add('hidden');
-  } else {
-    iconEl.classList.add('hidden');
-    iconEl.textContent = '';
-    def.classList.remove('hidden');
+  var iconEls = document.querySelectorAll('.user-avatar-icon');
+  var defs = document.querySelectorAll('.user-avatar-default');
+  for(var i=0;i<iconEls.length;i++){
+    if(icon){
+      iconEls[i].textContent = icon;
+      iconEls[i].classList.remove('hidden');
+    } else {
+      iconEls[i].classList.add('hidden');
+      iconEls[i].textContent = '';
+    }
+  }
+  for(var j=0;j<defs.length;j++){
+    defs[j].classList.toggle('hidden', !!icon);
   }
 }
 export function renderUserRoleBadge(){
@@ -40,7 +43,7 @@ export function renderUserRoleBadge(){
   el.className = 'user-role-badge role-' + role;
   el.innerHTML = iconHTML + '<span class="user-role-label">' + esc(label) + '</span>';
 
-  var avatarBadge = document.getElementById('avatar-role-icon');
+  var avatarBadge = document.querySelector('.avatar-role-icon');
   if(avatarBadge){
     avatarBadge.classList.toggle('hidden', !iconHTML);
     avatarBadge.innerHTML = iconHTML;
