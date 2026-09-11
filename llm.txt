@@ -1,0 +1,17 @@
+# Bruukion
+
+> Bruukion es una aplicación web para organizar tu biblioteca personal de libros: registra los libros que leíste, los que estás leyendo y los que quieres comprar (wishlist), con estadísticas de lectura, seguimiento de sagas y precios de compra.
+
+Bruukion funciona en el navegador (también instalable como PWA) y soporta modo invitado (sin cuenta, datos locales) o cuenta con Supabase (sincronización en la nube, notificaciones, estadísticas avanzadas). Tiene un plan gratuito y un plan Premium con pago único o suscripción vía Lemon Squeezy.
+
+## Páginas
+
+- [Aplicación](https://bruukion.com/): biblioteca, wishlist y estadísticas de lectura.
+- [Precios](https://bruukion.com/pricing): comparación de planes Lector (gratis) y Lector Premium.
+- [Términos de servicio](https://bruukion.com/terms)
+- [Política de privacidad](https://bruukion.com/privacy)
+- [Política de reembolsos](https://bruukion.com/refund)
+
+## Contacto
+
+Correo: guillermogomez@bruukion.com
