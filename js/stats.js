@@ -333,22 +333,37 @@ function svgColumnsHTML(items, opts){
   var n = items.length;
   var gap = 4;
   var barW = (100 - gap*(n-1)) / n;
-  var rects = items.map(function(item, idx){
+  var rects = '', values = '';
+  items.forEach(function(item, idx){
     var h = maxVal > 0 ? Math.max(2, (item.value / maxVal) * 100) : 2;
     var x = idx * (barW + gap);
     var y = 100 - h;
-    return '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"/>';
-  }).join('');
-  var values = items.map(function(item){ return '<span>'+esc(formatValue(item.value))+'</span>'; }).join('');
+    rects += '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"/>';
+    if(item.value){
+      values += '<span style="left:'+x.toFixed(2)+'%;width:'+barW.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
+    }
+  });
   var labels = items.map(function(item){ return '<span>'+esc(item.label)+'</span>'; }).join('');
-  return '<div class="chart-values" style="grid-template-columns:repeat('+n+',1fr)">'+values+'</div>' +
-    '<div class="chart-columns"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'+rects+'</svg></div>' +
+  return '<div class="chart-columns"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'+rects+'</svg>' +
+      '<div class="chart-columns-values">'+values+'</div></div>' +
     '<div class="chart-labels" style="grid-template-columns:repeat('+n+',1fr)">'+labels+'</div>';
 }
 
+function sortByMissingThenComplete(groups, missingFn){
+  return groups.slice().sort(function(a, b){
+    var ma = missingFn(a), mb = missingFn(b);
+    var aDone = ma <= 0, bDone = mb <= 0;
+    if(aDone !== bDone) return aDone ? 1 : -1;
+    if(aDone && bDone) return 0;
+    return ma - mb;
+  });
+}
+
 function sagaProgressPorLeerHTML(groups){
-  var filtered = groups.filter(function(g){ return g.owned >= 2; })
-    .sort(function(a,b){ return b.owned - a.owned; });
+  var filtered = sortByMissingThenComplete(
+    groups.filter(function(g){ return g.owned >= 2; }),
+    function(g){ return g.owned - g.read; }
+  );
   if(!filtered.length) return '<p class="stats-empty-metric">Todavía no tenés sagas con más de un volumen en tu biblioteca.</p>';
   return filtered.slice(0, 8).map(function(g){
     var pct = g.owned > 0 ? (g.read / g.owned) * 100 : 0;
@@ -362,8 +377,10 @@ function sagaProgressPorLeerHTML(groups){
 }
 
 function sagaProgressPorComprarHTML(groups){
-  var filtered = groups.filter(function(g){ return g.total >= 2; })
-    .sort(function(a,b){ return b.total - a.total; });
+  var filtered = sortByMissingThenComplete(
+    groups.filter(function(g){ return g.total >= 2; }),
+    function(g){ return g.total - g.owned; }
+  );
   if(!filtered.length) return '<p class="stats-empty-metric">Todavía no tenés sagas con más de un volumen registrado.</p>';
   return filtered.slice(0, 8).map(function(g){
     var pct = g.total > 0 ? (g.owned / g.total) * 100 : 0;
