@@ -26,6 +26,7 @@ export var state = {
   currentGroups: [],
   filters: { search:'', author:'', saga:'', genre:'', status:'', edicion:'' },
   wishFilters: { search:'', author:'', tienda:'', costoOp:'gt', costoVal:null },
+  statsFilters: { year:'', month:'' }, // '' = todos; month es 0-11 como string, solo tiene sentido junto a un year
   wishGroupBy: '', // '' | 'author'
   currentWishGroups: [],
   openGroupContext: null, // { type:'book'|'wish', label:'...' } | null
