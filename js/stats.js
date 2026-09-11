@@ -313,11 +313,12 @@ function svgBarRowsHTML(items, opts){
   var maxVal = Math.max.apply(null, capped.map(function(i){ return i.value; }));
   return capped.map(function(item){
     var pct = maxVal > 0 ? Math.max(2, (item.value / maxVal) * 100) : 0;
+    var tooltip = esc(item.label) + ': ' + esc(formatValue(item.value));
     return '<div class="bar-row">' +
       '<span class="bar-row-label" title="'+esc(item.label)+'">'+esc(item.label)+'</span>' +
       '<span class="bar-row-track"><svg viewBox="0 0 100 10" preserveAspectRatio="none">' +
         '<rect width="100" height="10" rx="3" fill="var(--border)"/>' +
-        '<rect width="'+pct+'" height="10" rx="3" fill="'+colorVar+'"/></svg></span>' +
+        '<rect width="'+pct+'" height="10" rx="3" fill="'+colorVar+'"><title>'+tooltip+'</title></rect></svg></span>' +
       '<span class="bar-row-value">'+esc(formatValue(item.value))+'</span></div>';
   }).join('');
 }
@@ -338,7 +339,8 @@ function svgColumnsHTML(items, opts){
     var h = maxVal > 0 ? Math.max(2, (item.value / maxVal) * 100) : 2;
     var x = idx * (barW + gap);
     var y = 100 - h;
-    rects += '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"/>';
+    var tooltip = esc(item.label) + ': ' + esc(formatValue(item.value));
+    rects += '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"><title>'+tooltip+'</title></rect>';
     if(item.value){
       values += '<span style="left:'+x.toFixed(2)+'%;width:'+barW.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
     }
@@ -508,11 +510,11 @@ function topSagasSectionHTML(books){
   '</div>';
 }
 
-function porGeneroSectionHTML(books){
-  if(!isPremiumUser()) return lockedSectionHTML('Por género');
+function topGenerosSectionHTML(books){
+  if(!isPremiumUser()) return lockedSectionHTML('Top géneros');
   var genreDist = getGenreDistribution(books);
   return '<div class="stats-section">' +
-    '<h3 class="stats-section-title">Por género</h3>' +
+    '<h3 class="stats-section-title">Top géneros</h3>' +
     svgBarRowsHTML(genreDist, { colorVar:'var(--teal)' }) +
   '</div>';
 }
@@ -613,7 +615,7 @@ export function renderStatsDashboard(){
         topSagasSectionHTML(books) +
       '</div>' +
       '<div class="stats-section-grid">' +
-        porGeneroSectionHTML(books) +
+        topGenerosSectionHTML(books) +
         sagaProgressSectionHTML(books, wishlist) +
       '</div>' +
     '</div>';
