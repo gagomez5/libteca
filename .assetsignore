@@ -1,0 +1,5 @@
+CLAUDE.md
+supabase/
+.claude/
+.git/
+wrangler.jsonc
