@@ -28,7 +28,7 @@
   .auth-card{width:100%;max-width:360px;background:var(--paper);border-radius:20px;padding:28px 24px;border:1px solid var(--border);box-shadow:0 12px 32px rgba(36,28,46,.08);position:relative;}
   .auth-modal-close{position:absolute;top:12px;right:12px;color:var(--text-muted);padding:4px;line-height:0;}
   .auth-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
-  .auth-brand h1{font-size:20px;color:var(--ink);margin:0;}
+  .auth-brand .brand-title{font-family:var(--font-serif);font-weight:700;font-size:20px;color:var(--ink);margin:0;}
   .auth-sub{text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 20px;}
   .auth-field{margin-bottom:12px;}
   .auth-field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;}
@@ -71,7 +71,7 @@
   .sidebar.expanded .sidebar-logo span:nth-child(3){height:17px;}
 
   .sidebar:not(.expanded) .sidebar-brand-name{display:none;}
-  .sidebar-brand-name{font-size:16.5px;margin:0;letter-spacing:.2px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sidebar-brand-name{font-family:var(--font-serif);font-weight:700;font-size:16.5px;margin:0;letter-spacing:.2px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
   .editable-title{margin-bottom:14px;}
   .title-display{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 4px;margin:-2px -4px;border-radius:6px;min-width:0;overflow:hidden;}

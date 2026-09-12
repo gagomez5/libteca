@@ -21,6 +21,9 @@
 <meta property="og:description" content="Organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.">
 <meta property="og:url" content="https://bruukion.com/">
 <meta property="og:image" content="https://bruukion.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bruukion — Tu biblioteca personal">
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bruukion — Tu biblioteca personal">
@@ -31,6 +34,9 @@
 <script src="https://cdn.jsdelivr.net/npm/posthog-js@1.422.5/dist/array.js" integrity="sha384-kGqYhK8P4BDgGmlT/LRchUfy+lRgBRj6Zq7re0gQbhVlO285GFBqvNJJYFDpUGYS" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
 <link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Bruukion","url":"https://bruukion.com/","description":"Bruukion es tu biblioteca personal: organiza, registra y sigue los libros que leíste, estás leyendo y quieres comprar.","applicationCategory":"LifestyleApplication","operatingSystem":"Web","inLanguage":"es","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
 </head>
 <body>
 
@@ -42,7 +48,7 @@
     </button>
     <div class="auth-brand">
       <svg width="26" height="26" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
-      <h1>Bruukion</h1>
+      <h1 class="brand-title">Bruukion</h1>
     </div>
     <p class="auth-sub" id="auth-subtitle">Inicia sesión para ver tus libros</p>
     <div id="oauth-buttons">
@@ -89,7 +95,7 @@
   <div class="auth-card">
     <div class="auth-brand">
       <svg width="26" height="26" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
-      <h1>Bruukion</h1>
+      <p class="brand-title">Bruukion</p>
     </div>
     <p class="auth-sub">Elige tu nueva contraseña</p>
     <form id="recovery-form">
@@ -108,7 +114,7 @@
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-brand">
       <div class="sidebar-logo"><span></span><span></span><span></span></div>
-      <h1 class="sidebar-brand-name">Bruukion</h1>
+      <p class="sidebar-brand-name">Bruukion</p>
     </div>
 
     <nav class="sidebar-nav">

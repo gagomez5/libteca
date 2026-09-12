@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://static.cloudflareinsights.com 'sha256-Q2jmQU/Ek5Lv48HKDkp1zli0AdTGAl+Eo3uUSQKavRo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
 <meta name="theme-color" content="#241C2E">
 <title>Precios — Bruukion</title>
 <meta name="description" content="Bruukion es tu biblioteca personal de libros: un plan gratuito y un plan Premium con precios simples, mensual, anual o de por vida.">
@@ -14,6 +14,9 @@
 <meta property="og:description" content="Bruukion es tu biblioteca personal de libros: un plan gratuito y un plan Premium con precios simples, mensual, anual o de por vida.">
 <meta property="og:url" content="https://bruukion.com/pricing">
 <meta property="og:image" content="https://bruukion.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bruukion — Tu biblioteca personal">
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Precios — Bruukion">
@@ -34,13 +37,13 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);line-height:1.6;}
-  h1,h2,.serif{font-family:var(--font-serif);}
+  h1,h2,.serif,.brand-name{font-family:var(--font-serif);}
   a{color:var(--coral);}
 
   header{background:var(--paper);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top));border-bottom:1px solid var(--border);}
   .header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;}
   .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-  .brand h1{color:var(--ink);font-size:20px;margin:0;letter-spacing:.3px;}
+  .brand .brand-name{color:var(--ink);font-size:20px;font-weight:700;margin:0;letter-spacing:.3px;}
   .back-link{color:var(--text-muted);font-size:13px;text-decoration:none;flex-shrink:0;}
 
   main{max-width:900px;margin:0 auto;padding:32px 16px 60px;padding-bottom:calc(60px + env(safe-area-inset-bottom));}
@@ -70,6 +73,7 @@
   .legal-footer{max-width:900px;margin:18px auto 0;padding:0 16px calc(32px + env(safe-area-inset-bottom));font-size:12.5px;color:var(--text-muted);display:flex;gap:8px 14px;flex-wrap:wrap;justify-content:center;text-align:center;}
   .legal-footer a{color:var(--text-muted);text-decoration:underline;}
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Bruukion Premium","description":"Plan Premium de Bruukion: sin límite en tu lista de deseos, vista de tabla, estadísticas de costo y más.","brand":{"@type":"Brand","name":"Bruukion"},"offers":[{"@type":"Offer","name":"Mensual","price":"1.99","priceCurrency":"USD","url":"https://bruukion.com/pricing"},{"@type":"Offer","name":"Anual","price":"19.99","priceCurrency":"USD","url":"https://bruukion.com/pricing"},{"@type":"Offer","name":"De por vida","price":"49.99","priceCurrency":"USD","url":"https://bruukion.com/pricing"}]}</script>
 </head>
 <body>
 
@@ -77,7 +81,7 @@
   <div class="header-inner">
     <a class="brand" href="/">
       <svg width="20" height="20" viewBox="0 0 200 200"><rect width="200" height="200" rx="44" fill="#241C2E"/><rect x="39" y="80" width="34" height="70" rx="10" fill="#E8543E"/><rect x="83" y="56" width="34" height="94" rx="10" fill="#F5A623"/><rect x="127" y="68" width="34" height="82" rx="10" fill="#2FBF9F"/></svg>
-      <h1>Bruukion</h1>
+      <p class="brand-name">Bruukion</p>
     </a>
     <a class="back-link" href="/">‹ Volver a la app</a>
   </div>
