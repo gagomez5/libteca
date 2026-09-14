@@ -334,6 +334,13 @@
 
     <section id="view-cuenta" class="hidden">
       <h2 class="view-heading">Mi cuenta</h2>
+      <div class="friend-code-row hidden" id="friend-code-row">
+        <span class="friend-code-label">Tu ID de Bruukion</span>
+        <button type="button" class="friend-code-chip" data-action="copy-friend-code" title="Copiar ID" aria-label="Copiar tu ID">
+          <span id="friend-code-text"></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
       <div class="account-panel">
         <div class="user-role-badge" id="user-role-badge"></div>
         <a class="hidden" id="btn-admin-link" href="/admin">Panel de administrador</a>

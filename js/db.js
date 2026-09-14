@@ -66,7 +66,7 @@ export function dbSelectProfile(){
     var data = (name || wishName) ? { library_name:name, wishlist_name:wishName } : null;
     return Promise.resolve({ data: data, error:null });
   }
-  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, wishlist_name, role, avatar_url').maybeSingle(); });
+  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, wishlist_name, role, avatar_url, friend_code').maybeSingle(); });
 }
 export function dbInsertBook(data){
   if(state.isGuest){

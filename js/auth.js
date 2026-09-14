@@ -4,7 +4,7 @@ import { uniqueSorted } from './utils.js';
 import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, isPremiumUser } from './state.js';
 import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors, dbSelectSubscription } from './db.js';
 import { reportError } from './telemetry.js';
-import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems } from './ui.js';
+import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems, renderFriendCode } from './ui.js';
 import { renderAll } from './render.js';
 import { renderAuthorDatalist } from './forms-shared.js';
 import { loadNotifications, updateNotifDot } from './notifications.js';
@@ -37,6 +37,7 @@ export function showAuthScreen(){
   document.getElementById('app-root').classList.add('hidden');
   document.documentElement.classList.remove('app-shell');
   state.currentUserRole = 'free';
+  state.friendCode = null;
   updateAdminLink();
   applyRememberedEmail();
 }
@@ -195,10 +196,12 @@ export function loadData(){
     document.querySelector('.editable-title[data-title-field="library_name"] .view-heading').textContent = savedTitle;
     document.querySelector('.editable-title[data-title-field="wishlist_name"] .view-heading').textContent = savedWishTitle;
     state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
+    state.friendCode = (!state.isGuest && !pRes.error && pRes.data && pRes.data.friend_code) ? pRes.data.friend_code : null;
     state.subscription = (!sRes.error && sRes.data) ? sRes.data : null;
     if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }
     updateAdminLink();
     renderUserRoleBadge();
+    renderFriendCode();
     renderUpgradeMenuItems();
     updateUserAvatar(!state.isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
     renderAll();

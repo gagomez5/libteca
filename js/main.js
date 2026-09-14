@@ -666,6 +666,16 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         renderNotifList();
       });
     }
+    else if(action === 'copy-friend-code'){
+      if(!state.friendCode) return;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(state.friendCode).then(function(){
+          showToast('ID copiado al portapapeles');
+        }).catch(function(){ showToast('No se pudo copiar el ID', 'error'); });
+      } else {
+        showToast('No se pudo copiar el ID', 'error');
+      }
+    }
     else if(action === 'open-icon-picker'){
       renderIconPicker();
       document.getElementById('modal-icon-picker').classList.remove('hidden');

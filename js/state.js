@@ -48,6 +48,7 @@ export var state = {
   },
 
   currentUserRole: 'free', // 'administrador' | 'fundador' | 'premium' | 'free'
+  friendCode: null, // 'BRK####' — asignado por Supabase al crear la cuenta, null en modo invitado
   subscription: null, // { plan:'monthly'|'annual'|'lifetime', status, current_period_end } | null
   manageSubUI: null // { screen, preview, targetPlan, busy } | null — estado transitorio del modal "Gestionar suscripción"
 };

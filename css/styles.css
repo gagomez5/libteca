@@ -122,6 +122,11 @@
   .sidebar.expanded .avatar-role-label{display:block;}
   .avatar-role-label.role-premium,.avatar-role-label.role-fundador{color:var(--violet-dark);}
   .avatar-role-label.role-administrador{color:#111;}
+  .friend-code-row{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:420px;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .friend-code-label{font-size:13px;font-weight:600;color:var(--text-muted);}
+  .friend-code-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:7px 12px;font-family:var(--font-serif);font-weight:700;font-size:15px;letter-spacing:.5px;color:var(--ink);}
+  .friend-code-chip:hover{border-color:var(--coral);color:var(--coral-dark);}
+  .friend-code-chip svg{flex-shrink:0;color:var(--text-muted);}
   .account-panel{max-width:420px;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:6px;}
   .account-panel>button,.account-panel>a{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:8px;font-size:14px;color:var(--text);text-decoration:none;box-sizing:border-box;}
   .account-panel>button:hover,.account-panel>a:hover{background:var(--bg);}

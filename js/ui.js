@@ -54,6 +54,12 @@ export function renderUserRoleBadge(){
     avatarLabel.textContent = label;
   }
 }
+export function renderFriendCode(){
+  var row = document.getElementById('friend-code-row');
+  if(!row) return;
+  row.classList.toggle('hidden', !state.friendCode);
+  if(state.friendCode) document.getElementById('friend-code-text').textContent = state.friendCode;
+}
 export function renderUpgradeMenuItems(){
   var upgradeBtn = document.getElementById('btn-open-upgrade');
   var manageBtn = document.getElementById('btn-manage-subscription');
