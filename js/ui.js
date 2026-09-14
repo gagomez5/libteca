@@ -48,6 +48,11 @@ export function renderUserRoleBadge(){
     avatarBadge.classList.toggle('hidden', !iconHTML);
     avatarBadge.innerHTML = iconHTML;
   }
+  var avatarLabel = document.querySelector('.avatar-role-label');
+  if(avatarLabel){
+    avatarLabel.className = 'avatar-role-label role-' + role;
+    avatarLabel.textContent = label;
+  }
 }
 export function renderUpgradeMenuItems(){
   var upgradeBtn = document.getElementById('btn-open-upgrade');
