@@ -222,7 +222,9 @@
   .stat.stat-wide .stat-num{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
   .stat.stat-wide .stat-label{text-transform:none;letter-spacing:0;font-weight:600;font-size:11px;}
 
-  #view-stats > .view-heading,#view-cuenta > .view-heading{margin-bottom:14px;}
+  #view-stats > .view-heading,#view-cuenta > .view-heading,#amigos-list-view > .view-heading{margin-bottom:14px;}
+  #amigos-detail-view > .btn{margin-bottom:14px;}
+  #friend-detail-heading{margin-bottom:14px;}
   .stats-filter-row{display:flex;flex-wrap:wrap;gap:10px;max-width:340px;margin-bottom:16px;}
   .stats-filter-row .filter-field{flex:1;min-width:120px;}
   .stats-sections{display:flex;flex-direction:column;gap:16px;margin-top:4px;}
