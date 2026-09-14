@@ -359,10 +359,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
     if(e.target.id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); return; }
-    var userDropdown = document.getElementById('user-dropdown');
-    if(!userDropdown.classList.contains('hidden') && !e.target.closest('.user-menu-wrap') && !e.target.closest('#user-dropdown')){
-      userDropdown.classList.add('hidden');
-    }
+    if(e.target.id === 'user-dropdown'){ document.getElementById('user-dropdown').classList.add('hidden'); return; }
     var bookColPanel = document.getElementById('book-columns-panel');
     if(!bookColPanel.classList.contains('hidden') && !e.target.closest('#book-columns-wrap')){
       bookColPanel.classList.add('hidden');
@@ -670,24 +667,9 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       });
     }
     else if(action === 'toggle-user-menu'){
-      var dropdownEl = document.getElementById('user-dropdown');
-      var willShowMenu = dropdownEl.classList.contains('hidden');
-      dropdownEl.classList.toggle('hidden');
-      if(willShowMenu){
-        var triggerRect = el.getBoundingClientRect();
-        if(window.innerWidth <= 768){
-          dropdownEl.style.left = 'auto';
-          dropdownEl.style.right = '8px';
-          dropdownEl.style.top = 'auto';
-          dropdownEl.style.bottom = (window.innerHeight - triggerRect.top + 8) + 'px';
-        } else {
-          dropdownEl.style.right = 'auto';
-          dropdownEl.style.left = (triggerRect.right + 10) + 'px';
-          dropdownEl.style.top = 'auto';
-          dropdownEl.style.bottom = (window.innerHeight - triggerRect.bottom) + 'px';
-        }
-      }
+      document.getElementById('user-dropdown').classList.toggle('hidden');
     }
+    else if(action === 'close-user-menu'){ document.getElementById('user-dropdown').classList.add('hidden'); }
     else if(action === 'open-icon-picker'){
       document.getElementById('user-dropdown').classList.add('hidden');
       renderIconPicker();

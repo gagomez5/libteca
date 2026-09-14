@@ -160,14 +160,20 @@
     </div>
   </aside>
 
-  <div class="user-dropdown hidden" id="user-dropdown">
-    <div class="user-role-badge" id="user-role-badge"></div>
-    <a class="hidden" id="btn-admin-link" href="/admin">Panel de administrador</a>
-    <button type="button" class="upgrade-menu-btn hidden" id="btn-open-upgrade" data-action="open-upgrade">✨ Actualizar a Premium</button>
-    <button type="button" class="hidden" id="btn-manage-subscription" data-action="open-manage-subscription">Gestionar suscripción</button>
-    <button type="button" data-action="open-icon-picker">Cambiar ícono de perfil</button>
-    <button type="button" data-action="open-feedback">Feedback</button>
-    <button type="button" data-action="do-logout">Cerrar sesión</button>
+  <div class="modal-overlay hidden" id="user-dropdown">
+    <div class="modal modal-narrow">
+      <div class="modal-head">
+        <h2 class="serif">Mi cuenta</h2>
+        <button data-action="close-user-menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="user-role-badge" id="user-role-badge"></div>
+      <a class="hidden" id="btn-admin-link" href="/admin">Panel de administrador</a>
+      <button type="button" class="upgrade-menu-btn hidden" id="btn-open-upgrade" data-action="open-upgrade">✨ Actualizar a Premium</button>
+      <button type="button" class="hidden" id="btn-manage-subscription" data-action="open-manage-subscription">Gestionar suscripción</button>
+      <button type="button" data-action="open-icon-picker">Cambiar ícono de perfil</button>
+      <button type="button" data-action="open-feedback">Feedback</button>
+      <button type="button" data-action="do-logout">Cerrar sesión</button>
+    </div>
   </div>
 
   <div class="app-content">

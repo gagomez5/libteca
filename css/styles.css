@@ -117,9 +117,8 @@
   .avatar-role-icon{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--paper);border:1.5px solid var(--paper);display:flex;align-items:center;justify-content:center;color:var(--violet-dark);}
   .avatar-role-icon svg{width:10px;height:10px;}
   .sidebar.expanded .avatar-role-icon{position:static;background:none;border:none;width:auto;height:auto;margin-left:auto;}
-  .user-dropdown{position:fixed;min-width:200px;max-width:calc(100vw - 16px);background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:6px;box-shadow:0 8px 24px rgba(36,28,46,.16);z-index:60;}
-  .user-dropdown button,.user-dropdown a{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:8px;font-size:13.5px;color:var(--text);text-decoration:none;box-sizing:border-box;}
-  .user-dropdown button:hover,.user-dropdown a:hover{background:var(--bg);}
+  #user-dropdown .modal>button,#user-dropdown .modal>a{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:8px;font-size:13.5px;color:var(--text);text-decoration:none;box-sizing:border-box;}
+  #user-dropdown .modal>button:hover,#user-dropdown .modal>a:hover{background:var(--bg);}
   .user-role-badge{display:flex;align-items:center;gap:8px;padding:9px 12px 11px;margin-bottom:4px;border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;color:var(--text);}
   .user-role-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
   .user-role-icon-emoji{font-size:15px;line-height:1;filter:grayscale(1) brightness(0);}
