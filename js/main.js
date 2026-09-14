@@ -359,7 +359,6 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
     if(e.target.id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); return; }
-    if(e.target.id === 'user-dropdown'){ document.getElementById('user-dropdown').classList.add('hidden'); return; }
     var bookColPanel = document.getElementById('book-columns-panel');
     if(!bookColPanel.classList.contains('hidden') && !e.target.closest('#book-columns-wrap')){
       bookColPanel.classList.add('hidden');
@@ -391,6 +390,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       document.getElementById('view-biblioteca').classList.toggle('hidden', tab!=='biblioteca');
       document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
       document.getElementById('view-stats').classList.toggle('hidden', tab!=='estadisticas');
+      document.getElementById('view-cuenta').classList.toggle('hidden', tab!=='cuenta');
     }
     else if(action === 'toggle-sidebar'){
       state.sidebarExpanded = !state.sidebarExpanded;
@@ -666,12 +666,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
         renderNotifList();
       });
     }
-    else if(action === 'toggle-user-menu'){
-      document.getElementById('user-dropdown').classList.toggle('hidden');
-    }
-    else if(action === 'close-user-menu'){ document.getElementById('user-dropdown').classList.add('hidden'); }
     else if(action === 'open-icon-picker'){
-      document.getElementById('user-dropdown').classList.add('hidden');
       renderIconPicker();
       document.getElementById('modal-icon-picker').classList.remove('hidden');
     }
@@ -686,24 +681,20 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       });
     }
     else if(action === 'do-logout'){
-      document.getElementById('user-dropdown').classList.add('hidden');
       sb.auth.signOut();
     }
     else if(action === 'open-feedback'){
-      document.getElementById('user-dropdown').classList.add('hidden');
       document.getElementById('feedback-message').value = '';
       document.getElementById('modal-feedback').classList.remove('hidden');
     }
     else if(action === 'close-feedback-modal'){ document.getElementById('modal-feedback').classList.add('hidden'); }
     else if(action === 'open-upgrade'){
-      document.getElementById('user-dropdown').classList.add('hidden');
       trackEvent('upgrade_modal_opened');
       document.getElementById('modal-upgrade').classList.remove('hidden');
     }
     else if(action === 'close-upgrade-modal'){ document.getElementById('modal-upgrade').classList.add('hidden'); }
     else if(action === 'close-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); }
     else if(action === 'open-manage-subscription'){
-      document.getElementById('user-dropdown').classList.add('hidden');
       openManageSubscriptionModal();
     }
     else if(action === 'close-manage-subscription-modal'){ closeManageSubscriptionModal(); }

@@ -9,7 +9,7 @@ export var MAX_TITLE_CHARS = 20;
 export var AVATAR_ICONS = ['📚','🦉','🐱','🐶','🦊','🐼','🌙','⭐','🌸','☕'];
 export var SCROLL_LOCK_WATCH_IDS = ['modal-book','modal-wish','modal-detail','modal-notifications',
   'modal-notification-detail','modal-feedback','modal-icon-picker','modal-group','modal-row-actions',
-  'modal-confirm','modal-upgrade','modal-upgrade-success','modal-manage-subscription','modal-share-wishlist','modal-add-choice','modal-isbn-entry','modal-isbn-duplicate','auth-screen','book-columns-panel','wish-columns-panel','user-dropdown'];
+  'modal-confirm','modal-upgrade','modal-upgrade-success','modal-manage-subscription','modal-share-wishlist','modal-add-choice','modal-isbn-entry','modal-isbn-duplicate','auth-screen','book-columns-panel','wish-columns-panel'];
 
 var currentAvatarIcon = null;
 export function updateUserAvatar(icon){
@@ -141,8 +141,7 @@ export function syncScrollLock(){
   var authModalOpen = authScreen.classList.contains('modal-mode') && !authScreen.classList.contains('hidden');
   var bookColOpen = !document.getElementById('book-columns-panel').classList.contains('hidden');
   var wishColOpen = !document.getElementById('wish-columns-panel').classList.contains('hidden');
-  var userMenuOpen = !document.getElementById('user-dropdown').classList.contains('hidden');
-  var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen || userMenuOpen;
+  var anyOpen = overlayOpen || authModalOpen || bookColOpen || wishColOpen;
   document.documentElement.classList.toggle('scroll-locked', anyOpen);
   if(wasScrollLocked && !anyOpen){
     // iOS Safari a veces deja el app-shell "atascado" (altura/scroll del viewport
