@@ -130,6 +130,14 @@
   .account-panel{max-width:420px;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:6px;}
   .account-panel>button,.account-panel>a{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:8px;font-size:14px;color:var(--text);text-decoration:none;box-sizing:border-box;}
   .account-panel>button:hover,.account-panel>a:hover{background:var(--bg);}
+
+  .add-friend-row{display:flex;gap:8px;max-width:420px;margin-bottom:18px;}
+  .add-friend-row input{flex:1;min-width:0;height:42px;padding:0 12px;border-radius:11px;border:1px solid var(--border);background:var(--paper);outline:none;text-transform:uppercase;}
+  .friends-list{display:flex;flex-direction:column;gap:8px;max-width:420px;}
+  .friend-item{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:10px 12px;cursor:pointer;}
+  .friend-item:hover{border-color:var(--coral);}
+  .friend-avatar{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--bg);color:var(--ink);font-size:18px;flex-shrink:0;}
+  .friend-name{flex:1;min-width:0;font-weight:600;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .user-role-badge{display:flex;align-items:center;gap:8px;padding:9px 12px 11px;margin-bottom:4px;border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;color:var(--text);}
   .user-role-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0;}
   .user-role-icon-emoji{font-size:15px;line-height:1;filter:grayscale(1) brightness(0);}

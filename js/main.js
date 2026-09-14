@@ -1,9 +1,9 @@
 import { reportError, setSentryUser, trackEvent, setAnalyticsUser } from './telemetry.js';
 import { esc, formatShortDate, truncatedCellHTML, uniqueSorted, parseCosto, formatCosto, parseSagaNumber, sagaKey } from './utils.js';
-import { state, DEFAULT_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddWish } from './state.js';
-import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds, lookupIsbn } from './db.js';
+import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumTier, isPremiumUser, canAddWish } from './state.js';
+import { sb, guestGet, guestSet, guestUid, isClockSkewError, withClockSkewRetry, dbSelectBooks, dbSelectWishlist, dbSelectAuthors, dbSelectProfile, dbInsertBook, dbUpdateBook, dbDeleteBook, dbInsertWish, dbUpdateWish, dbDeleteWish, dbSaveProfile, dbSaveAvatar, isOwnCoverUrl, validateImageLoads, downloadCoverToStorage, deleteOwnStorageCover, dbStartCheckout, savePrefs, loadPrefs, saveNewBookIds, lookupIsbn, dbAddFriend, dbListFriends, dbRemoveFriend, dbGetFriendWishlist } from './db.js';
 import { compareByColumn, sortItems, tableHeaderHTML, tableRowHTML, renderColumnConfigPanel, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
-import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal } from './render.js';
+import { syncControlsUI, coverHTML, coverThumbHTML, renderStats, bookMatchesFilters, renderFilterOptions, fillSelect, filteredBooks, bookCardHTML, bookActionsHTML, bookRowActionsSheetHTML, wishRowActionsSheetHTML, emptyBooksHTML, renderGroupedBooksGrid, renderBooksGrid, wishCardHTML, wishActionsHTML, wishMatchesFilters, filteredWishlist, renderWishFilterOptions, emptyWishHTML, renderGroupedWishGrid, renderWishStats, renderWishGrid, syncGroupModal, renderBooksTable, renderWishTable, renderAll, openDetailModal, renderFriendsList, renderFriendWishGrid } from './render.js';
 import { MAX_TITLE_CHARS, AVATAR_ICONS, SCROLL_LOCK_WATCH_IDS, updateUserAvatar, renderIconPicker, saveTitle, finishTitleEdit, updateSidebarToggleLabel, showToast, shareText, confirmModalCallback, openConfirmModal, closeConfirmModal, syncScrollLock, getTopmostOpenOverlayEl, getFocusableEls, getInitialFocusTarget, syncModalFocus } from './ui.js';
 import { renderAuthorDatalist, ensureAuthorExists, resolveCoverAndSubmit, migrateGuestDataToAccount, getUsedSagaNumbers, suggestNextSagaNumber, updateSagaSuggestions, maybeSuggestNumeroSaga } from './forms-shared.js';
 import { editingBookId, editingBookOriginalCover, setStatusUI, setEdicionUI, getBookFormData, openBookModal, closeBookModal, attemptCloseBookModal, saveBookData } from './books.js';
@@ -13,6 +13,8 @@ import { showAuthScreen, updateAdminLink, openAuthModal, closeAuthModal, updateA
 import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoBack, manageSubPreviewCancel, manageSubConfirmCancel, manageSubReactivate, manageSubPreviewUpgrade, manageSubConfirmUpgrade, manageSubDowngradeConfirm1, manageSubDowngradeConfirm2 } from './subscription.js';
 (function(){
   "use strict";
+
+  var MORE_TAB_IDS = ['estadisticas', 'amigos']; // pestañas que viven bajo "Más" en la barra móvil
 
   loadPrefs();
   document.getElementById('sidebar').classList.toggle('expanded', state.sidebarExpanded);
@@ -359,6 +361,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.target.id === 'modal-upgrade'){ document.getElementById('modal-upgrade').classList.add('hidden'); return; }
     if(e.target.id === 'modal-upgrade-success'){ document.getElementById('modal-upgrade-success').classList.add('hidden'); return; }
     if(e.target.id === 'modal-manage-subscription'){ closeManageSubscriptionModal(); return; }
+    if(e.target.id === 'modal-mobile-more'){ document.getElementById('modal-mobile-more').classList.add('hidden'); return; }
     var bookColPanel = document.getElementById('book-columns-panel');
     if(!bookColPanel.classList.contains('hidden') && !e.target.closest('#book-columns-wrap')){
       bookColPanel.classList.add('hidden');
@@ -391,6 +394,20 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       document.getElementById('view-wishlist').classList.toggle('hidden', tab!=='wishlist');
       document.getElementById('view-stats').classList.toggle('hidden', tab!=='estadisticas');
       document.getElementById('view-cuenta').classList.toggle('hidden', tab!=='cuenta');
+      document.getElementById('view-amigos').classList.toggle('hidden', tab!=='amigos');
+      var moreBtn = document.getElementById('btn-mobile-more');
+      if(moreBtn) moreBtn.classList.toggle('active', MORE_TAB_IDS.indexOf(tab) !== -1);
+      document.getElementById('modal-mobile-more').classList.add('hidden');
+      if(tab === 'amigos'){
+        document.getElementById('amigos-list-view').classList.remove('hidden');
+        document.getElementById('amigos-detail-view').classList.add('hidden');
+        state.viewingFriendId = null;
+        dbListFriends().then(function(res){
+          if(res.error){ reportError(res.error); showToast('Error cargando amigos: ' + res.error.message, 'error'); return; }
+          state.friends = res.data || [];
+          renderFriendsList();
+        });
+      }
     }
     else if(action === 'toggle-sidebar'){
       state.sidebarExpanded = !state.sidebarExpanded;
@@ -639,6 +656,37 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       document.getElementById('modal-notifications').classList.remove('hidden');
     }
     else if(action === 'close-notifications-modal'){ document.getElementById('modal-notifications').classList.add('hidden'); }
+    else if(action === 'open-mobile-more'){ document.getElementById('modal-mobile-more').classList.remove('hidden'); }
+    else if(action === 'close-mobile-more'){ document.getElementById('modal-mobile-more').classList.add('hidden'); }
+    else if(action === 'view-friend-wishlist'){
+      var friend = state.friends.find(function(f){ return f.friend_id === id; });
+      if(!friend) return;
+      state.viewingFriendId = id;
+      document.getElementById('friend-detail-heading').textContent = friend.wishlist_name || DEFAULT_WISHLIST_TITLE;
+      document.getElementById('grid-friend-wishlist').innerHTML = '';
+      dbGetFriendWishlist(id).then(function(res){
+        if(res.error){ reportError(res.error); showToast('Error cargando la wishlist: ' + res.error.message, 'error'); return; }
+        state.friendWishlist = res.data || [];
+        renderFriendWishGrid();
+      });
+      document.getElementById('amigos-list-view').classList.add('hidden');
+      document.getElementById('amigos-detail-view').classList.remove('hidden');
+    }
+    else if(action === 'close-friend-detail'){
+      document.getElementById('amigos-detail-view').classList.add('hidden');
+      document.getElementById('amigos-list-view').classList.remove('hidden');
+      state.viewingFriendId = null;
+    }
+    else if(action === 'remove-friend'){
+      openConfirmModal('Eliminar amigo', '¿Eliminar a este amigo de tu lista? Podrás volver a agregarlo con su ID cuando quieras.', function(){
+        dbRemoveFriend(id).then(function(res){
+          if(res.error){ reportError(res.error); showToast('Error: ' + res.error.message, 'error'); return; }
+          state.friends = state.friends.filter(function(f){ return f.friend_id !== id; });
+          renderFriendsList();
+          showToast('Amigo eliminado');
+        });
+      }, 'Eliminar');
+    }
     else if(action === 'open-notification-detail'){ openNotificationDetail(id); }
     else if(action === 'close-notification-detail-modal'){ document.getElementById('modal-notification-detail').classList.add('hidden'); }
     else if(action === 'close-confirm-modal'){ closeConfirmModal(); }
@@ -937,6 +985,23 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
       }
     }
     resolveCoverAndSubmit(data, editingWishOriginalCover, 'wish-submit-btn', saveWishData);
+  });
+
+  document.getElementById('add-friend-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var input = document.getElementById('add-friend-input');
+    var code = input.value.trim().toUpperCase();
+    if(!code) return;
+    dbAddFriend(code).then(function(res){
+      if(res.error){ showToast(res.error.message, 'error'); return; }
+      input.value = '';
+      if(res.data && res.data.already_friend){
+        showToast('Ya tenías agregado a este amigo');
+        return;
+      }
+      if(res.data){ state.friends.unshift(res.data); renderFriendsList(); }
+      showToast('Amigo agregado');
+    });
   });
 
 })();

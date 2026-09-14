@@ -50,7 +50,11 @@ export var state = {
   currentUserRole: 'free', // 'administrador' | 'fundador' | 'premium' | 'free'
   friendCode: null, // 'BRK####' — asignado por Supabase al crear la cuenta, null en modo invitado
   subscription: null, // { plan:'monthly'|'annual'|'lifetime', status, current_period_end } | null
-  manageSubUI: null // { screen, preview, targetPlan, busy } | null — estado transitorio del modal "Gestionar suscripción"
+  manageSubUI: null, // { screen, preview, targetPlan, busy } | null — estado transitorio del modal "Gestionar suscripción"
+
+  friends: [], // [{ friend_id, library_name, wishlist_name, avatar_url, added_at }]
+  viewingFriendId: null,
+  friendWishlist: []
 };
 
 // Constantes: nunca se reasignan, así que no necesitan vivir dentro de `state`
@@ -74,7 +78,9 @@ export var ICONS = {
   sortDesc:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
   sortNeutral:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
   eye:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-  eyeOff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.27 21.27 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.27 21.27 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>'
+  eyeOff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.27 21.27 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.27 21.27 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>',
+  users:'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8543E" stroke-width="1.6"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+  personSmall:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>'
 };
 
 export function isPremiumTier(role){ return role === 'premium' || role === 'fundador' || role === 'administrador'; }

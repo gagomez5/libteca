@@ -38,6 +38,8 @@ export function showAuthScreen(){
   document.documentElement.classList.remove('app-shell');
   state.currentUserRole = 'free';
   state.friendCode = null;
+  state.friends = [];
+  state.viewingFriendId = null;
   updateAdminLink();
   applyRememberedEmail();
 }
@@ -71,6 +73,7 @@ export function updateAccountButton(){
   document.getElementById('btn-logout').title = state.isGuest ? 'Ingresar / Iniciar sesión' : label;
   document.querySelectorAll('.logout-btn').forEach(function(el){ el.classList.toggle('hidden', !state.isGuest); });
   document.querySelectorAll('.user-menu-wrap').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
+  document.querySelectorAll('.nav-friends').forEach(function(el){ el.classList.toggle('hidden', state.isGuest); });
   if(state.isGuest){ updateUserAvatar(null); }
 }
 export function showApp(){

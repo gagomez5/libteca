@@ -150,6 +150,23 @@ export function dbSaveAvatar(url){
   return sb.from('profile').upsert({ user_id: state.currentUserId, avatar_url: url });
 }
 
+// ================= AMIGOS =================
+export function dbAddFriend(code){
+  return sb.rpc('add_friend_by_code', { p_code: code }).then(function(res){
+    return { data: res.data && res.data[0] ? res.data[0] : null, error: res.error };
+  });
+}
+export function dbListFriends(){
+  if(state.isGuest) return Promise.resolve({ data:[], error:null });
+  return sb.rpc('list_friends');
+}
+export function dbRemoveFriend(friendId){
+  return sb.from('friends').delete().eq('friend_id', friendId);
+}
+export function dbGetFriendWishlist(friendId){
+  return sb.rpc('get_friend_wishlist', { p_friend_id: friendId });
+}
+
 // ================= SUSCRIPCIÓN (upgrade a Premium vía Lemon Squeezy) =================
 export function dbSelectSubscription(){
   if(state.isGuest) return Promise.resolve({ data:null, error:null });

@@ -1,7 +1,7 @@
 "use strict";
 
 import { esc, formatCosto, uniqueSorted } from './utils.js';
-import { state, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumUser } from './state.js';
+import { state, STATUS_LABELS, STATUS_NEXT, ICONS, isPremiumUser, DEFAULT_TITLE } from './state.js';
 import { renderColumnConfigPanel, sortItems, tableHeaderHTML, tableRowHTML, BOOK_COLUMNS, WISH_COLUMNS } from './table.js';
 import { renderStatsDashboard } from './stats.js';
 
@@ -449,4 +449,43 @@ export function openDetailModal(item, type){
 
   document.getElementById('modal-detail').classList.remove('hidden');
   document.querySelector('#modal-detail .modal').scrollTop = 0;
+}
+
+export function emptyFriendsHTML(){
+  return '<div class="empty" style="grid-column:1/-1">' + ICONS.users +
+    '<p class="title">Todavía no agregaste amigos</p>' +
+    '<p class="subtitle">Agrégalos con su ID de Bruukion (formato BRK0000) para ver su wishlist.</p></div>';
+}
+export function friendCardHTML(f){
+  var avatar = f.avatar_url ? esc(f.avatar_url) : ICONS.personSmall;
+  var name = f.library_name || DEFAULT_TITLE;
+  return '<div class="friend-item" data-action="view-friend-wishlist" data-id="'+f.friend_id+'">' +
+    '<span class="friend-avatar">'+avatar+'</span>' +
+    '<span class="friend-name">'+esc(name)+'</span>' +
+    '<button type="button" class="icon-btn" data-action="remove-friend" data-id="'+f.friend_id+'" aria-label="Eliminar amigo">'+ICONS.trash+'</button>' +
+    '</div>';
+}
+export function renderFriendsList(){
+  var el = document.getElementById('friends-list');
+  el.innerHTML = state.friends.length ? state.friends.map(friendCardHTML).join('') : emptyFriendsHTML();
+}
+export function emptyFriendWishHTML(){
+  return '<div class="empty" style="grid-column:1/-1">' + ICONS.heart +
+    '<p class="title">Esta wishlist está vacía</p>' +
+    '<p class="subtitle">Tu amigo todavía no agregó libros que quiera comprar.</p></div>';
+}
+export function friendWishCardHTML(w){
+  var sagaTag = w.saga ? (w.saga + (w.numero_saga != null ? ' #'+w.numero_saga : '')) : '';
+  var stampHtml = w.costo ? '<div class="stamp stamp-costo">'+esc(formatCosto(w.costo))+'</div>' : '';
+  return '<div class="card">' + '<div class="cover-click" style="position:relative">' + coverHTML(w.cover, w.title) + stampHtml + '</div>' +
+    '<div class="card-body">' +
+      '<div class="card-title">'+esc(w.title)+'</div>' +
+      '<div class="card-author">'+esc(w.author)+'</div>' +
+      (sagaTag ? '<div class="card-tags">'+esc(sagaTag)+'</div>' : '') +
+      (w.tienda ? '<div class="card-notes">'+esc(w.tienda)+'</div>' : '') +
+    '</div></div>';
+}
+export function renderFriendWishGrid(){
+  var grid = document.getElementById('grid-friend-wishlist');
+  grid.innerHTML = state.friendWishlist.length ? state.friendWishlist.map(friendWishCardHTML).join('') : emptyFriendWishHTML();
 }
