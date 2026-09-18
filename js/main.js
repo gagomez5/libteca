@@ -138,6 +138,14 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     if(e.persisted){ location.reload(); }
   });
 
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState !== 'visible' || state.isGuest || !state.currentUserId) return;
+    dbSelectProfile().then(function(res){
+      if(res.error || !res.data) return;
+      updateUserAvatar(res.data.avatar_url);
+    });
+  });
+
   document.getElementById('google-oauth-btn').addEventListener('click', function(){ startOAuth('google'); });
   document.getElementById('apple-oauth-btn').addEventListener('click', function(){ startOAuth('apple'); });
 
