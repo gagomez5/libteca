@@ -227,10 +227,10 @@
   #friend-detail-heading{margin-bottom:14px;}
   .stats-filter-row{display:flex;flex-wrap:wrap;gap:10px;max-width:340px;margin-bottom:16px;}
   .stats-filter-row .filter-field{flex:1;min-width:120px;}
-  .stats-sections{display:flex;flex-direction:column;gap:16px;margin-top:4px;}
-  .stats-section-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+  .stats-sections{display:flex;flex-direction:column;gap:16px;margin-top:4px;min-width:0;}
+  .stats-section-grid{display:grid;grid-template-columns:1fr;gap:16px;min-width:0;}
   @media(min-width:900px){.stats-section-grid{grid-template-columns:1fr 1fr;}}
-  .stats-section{background:var(--paper);border:1px solid var(--border);border-radius:16px;padding:20px;}
+  .stats-section{background:var(--paper);border:1px solid var(--border);border-radius:16px;padding:20px;min-width:0;overflow:hidden;}
   .stats-section-title{font-family:var(--font-serif);font-weight:700;font-size:16px;color:var(--ink);margin:0 0 12px;}
   .stats-subgrid{display:flex;flex-wrap:wrap;gap:10px;}
   .stats-chart-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px;}
