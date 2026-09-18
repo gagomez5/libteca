@@ -340,9 +340,11 @@ function svgColumnsHTML(items, opts){
     var x = idx * (barW + gap);
     var y = 100 - h;
     var tooltip = esc(item.label) + ': ' + esc(formatValue(item.value));
-    rects += '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"><title>'+tooltip+'</title></rect>';
+    rects += '<g class="chart-col" data-idx="'+idx+'">' +
+      '<rect class="chart-col-hit" x="'+x.toFixed(2)+'" y="0" width="'+barW.toFixed(2)+'" height="100" fill="transparent"/>' +
+      '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"><title>'+tooltip+'</title></rect></g>';
     if(item.value){
-      values += '<span style="left:'+x.toFixed(2)+'%;width:'+barW.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
+      values += '<span data-idx="'+idx+'" style="left:'+x.toFixed(2)+'%;width:'+barW.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
     }
   });
   var labels = items.map(function(item){ return '<span>'+esc(item.label)+'</span>'; }).join('');
@@ -589,6 +591,20 @@ function wireStatsFilterRow(){
   });
 }
 
+function wireChartColumns(){
+  document.querySelectorAll('#view-stats .chart-columns').forEach(function(container){
+    container.addEventListener('click', function(e){
+      var col = e.target.closest('.chart-col');
+      if(!col) return;
+      var idx = col.getAttribute('data-idx');
+      var current = container.querySelector('.chart-columns-values span.active');
+      if(current) current.classList.remove('active');
+      var target = container.querySelector('.chart-columns-values span[data-idx="'+idx+'"]');
+      if(target && target !== current) target.classList.add('active');
+    });
+  });
+}
+
 export function renderStatsDashboard(){
   var el = document.getElementById('view-stats');
   if(!el) return;
@@ -620,4 +636,5 @@ export function renderStatsDashboard(){
       '</div>' +
     '</div>';
   wireStatsFilterRow();
+  wireChartColumns();
 }
