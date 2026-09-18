@@ -344,7 +344,9 @@ function svgColumnsHTML(items, opts){
       '<rect class="chart-col-hit" x="'+x.toFixed(2)+'" y="0" width="'+barW.toFixed(2)+'" height="100" fill="transparent"/>' +
       '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="2" fill="'+colorVar+'"><title>'+tooltip+'</title></rect></g>';
     if(item.value){
-      values += '<span data-idx="'+idx+'" style="left:'+x.toFixed(2)+'%;width:'+barW.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
+      var cx = x + barW / 2;
+      var align = idx === 0 ? 'align-left' : (idx === n - 1 ? 'align-right' : 'align-center');
+      values += '<span class="'+align+'" data-idx="'+idx+'" style="left:'+cx.toFixed(2)+'%;bottom:calc('+h.toFixed(2)+'% + 3px)">'+esc(formatValue(item.value))+'</span>';
     }
   });
   var labels = items.map(function(item){ return '<span>'+esc(item.label)+'</span>'; }).join('');
