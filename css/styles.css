@@ -52,7 +52,7 @@
   .auth-legal a{color:var(--text-muted);text-decoration:underline;}
 
   /* ---- app shell + sidebar nav ---- */
-  html,body{height:100%;}
+  html,body{height:100%;overflow-x:hidden;}
   #app-root{display:flex;height:100vh;height:100dvh;}
   #app-root.hidden{display:none;}
 
@@ -202,7 +202,7 @@
   @media(max-width:768px){
     main{padding:20px 16px 24px;padding-top:calc(20px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));}
   }
-  .app-content{flex:1;min-width:0;height:100vh;height:100dvh;overflow-y:auto;scrollbar-gutter:stable;}
+  .app-content{flex:1;min-width:0;height:100vh;height:100dvh;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;}
   html.scroll-locked .app-content{overflow:hidden;}
   .view-heading{font-family:var(--font-serif);font-weight:700;font-size:24px;color:var(--ink);margin:0;}
   .wish-heading-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
@@ -238,7 +238,7 @@
 
   .bar-row{display:flex;align-items:center;gap:10px;padding:5px 0;}
   .bar-row-label{flex:0 0 110px;font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .bar-row-track{flex:1;display:block;}
+  .bar-row-track{flex:1;min-width:0;display:block;}
   .bar-row-track svg{display:block;width:100%;height:10px;}
   .bar-row-value{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--ink);min-width:34px;text-align:right;}
 
@@ -252,7 +252,7 @@
   .saga-progress-item{margin-bottom:12px;}
   .saga-progress-item:last-child{margin-bottom:0;}
   .saga-progress-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--text);margin-bottom:4px;}
-  .saga-progress-head span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .saga-progress-head span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .saga-progress-head strong{color:var(--ink);flex-shrink:0;}
   .saga-progress-bar{display:block;}
   .saga-progress-bar svg{display:block;width:100%;height:10px;}
