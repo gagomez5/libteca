@@ -203,7 +203,7 @@ function getAvgWishlistWaitDays(books){
 
 function getStatusDistribution(books){
   var order = ['leido','leyendo','pendiente'];
-  var colors = { leido:'var(--teal)', leyendo:'var(--amber)', pendiente:'var(--ink)' };
+  var colors = { leido:'var(--teal)', leyendo:'var(--amber)', pendiente:'var(--text-muted)' };
   var counts = { leido:0, leyendo:0, pendiente:0 };
   books.forEach(function(b){ if(counts.hasOwnProperty(b.status)) counts[b.status]++; });
   return order.map(function(k){ return { key:k, label:STATUS_LABELS[k], value:counts[k], colorVar:colors[k] }; });
@@ -691,10 +691,10 @@ export function renderStatsDashboard(){
         topGenerosSectionHTML(books) +
         sagaProgressSectionHTML(books, wishlist) +
       '</div>' +
-      '<div class="stats-section-grid">' +
-        estadoBibliotecaSectionHTML(books) +
-        isbnMetadataSectionHTML(books) +
-      '</div>' +
+      estadoBibliotecaSectionHTML(books) +
+      // Metadata de ISBN: oculta por ahora, las APIs de lookup no dan datos
+      // suficientemente buenos/actualizados todavía. isbnMetadataSectionHTML
+      // queda definida y lista para reactivar cuando mejore esa fuente.
     '</div>';
   wireStatsFilterRow();
   wireChartColumns();
