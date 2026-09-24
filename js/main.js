@@ -904,7 +904,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     else if(action === 'buy-wish'){
       var item = state.wishlist.find(function(w){return w.id===id;});
       if(!item) return;
-      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString(), isbn:item.isbn||null, isbn_data:item.isbn_data||null }).then(function(insRes){
+      dbInsertBook({ title:item.title, author:item.author, saga:item.saga||'', numero_saga:item.numero_saga||null, genre:'', cover:item.cover, costo:item.costo, status:'pendiente', edicion:'normal', fecha_compra_wishlist:new Date().toISOString(), fecha_agregado_wishlist:item.created_at||null, isbn:item.isbn||null, isbn_data:item.isbn_data||null }).then(function(insRes){
         if(insRes.error){ reportError(insRes.error); showToast('Error: '+insRes.error.message, 'error'); return; }
         dbDeleteWish(id).then(function(delRes){
           if(delRes.error){ reportError(delRes.error); showToast('Error: '+delRes.error.message, 'error'); return; }

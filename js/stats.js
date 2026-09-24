@@ -1,7 +1,7 @@
 "use strict";
 
 import { esc, formatCosto, sagaKey } from './utils.js';
-import { state, isPremiumUser, ICONS } from './state.js';
+import { state, isPremiumUser, ICONS, STATUS_LABELS } from './state.js';
 
 var ICON_CHECK = '<path d="M20 6L9 17l-5-5"/>';
 var ICON_CALENDAR = '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>';
@@ -190,6 +190,25 @@ function getAvgCostoPerBook(books){
   return withCosto.reduce(function(s,b){ return s + Number(b.costo); }, 0) / withCosto.length;
 }
 
+function getAvgWishlistWaitDays(books){
+  var diffs = [];
+  books.forEach(function(b){
+    if(!b.fecha_agregado_wishlist || !b.fecha_compra_wishlist) return;
+    var days = (new Date(b.fecha_compra_wishlist).getTime() - new Date(b.fecha_agregado_wishlist).getTime()) / 86400000;
+    if(days >= 0) diffs.push(days);
+  });
+  if(!diffs.length) return null;
+  return diffs.reduce(function(a,b){ return a+b; }, 0) / diffs.length;
+}
+
+function getStatusDistribution(books){
+  var order = ['leido','leyendo','pendiente'];
+  var colors = { leido:'var(--teal)', leyendo:'var(--amber)', pendiente:'var(--ink)' };
+  var counts = { leido:0, leyendo:0, pendiente:0 };
+  books.forEach(function(b){ if(counts.hasOwnProperty(b.status)) counts[b.status]++; });
+  return order.map(function(k){ return { key:k, label:STATUS_LABELS[k], value:counts[k], colorVar:colors[k] }; });
+}
+
 function countBy(items, getKey){
   var counts = {};
   items.forEach(function(item){
@@ -355,6 +374,29 @@ function svgColumnsHTML(items, opts){
     '<div class="chart-labels" style="grid-template-columns:repeat('+n+',1fr)">'+labels+'</div>';
 }
 
+function statusDistHTML(items){
+  var total = items.reduce(function(s,i){ return s+i.value; }, 0);
+  if(!total) return '<p class="stats-empty-metric">Sin datos todavía.</p>';
+  var segments = '', x = 0;
+  items.forEach(function(item){
+    var pct = (item.value / total) * 100;
+    if(pct > 0){
+      segments += '<rect x="'+x.toFixed(2)+'" y="0" width="'+pct.toFixed(2)+'" height="10" fill="'+item.colorVar+'"><title>'+esc(item.label)+': '+item.value+'</title></rect>';
+      x += pct;
+    }
+  });
+  var legend = items.map(function(item){
+    var pct = Math.round((item.value / total) * 100);
+    return '<div class="status-dist-legend-item">' +
+      '<span class="status-dist-dot" style="background:'+item.colorVar+'"></span>' +
+      '<span class="status-dist-legend-label">'+esc(item.label)+'</span>' +
+      '<span class="status-dist-legend-value">'+item.value+' ('+pct+'%)</span></div>';
+  }).join('');
+  return '<div class="status-dist-bar"><svg viewBox="0 0 100 10" preserveAspectRatio="none">' +
+      '<rect width="100" height="10" rx="3" fill="var(--border)"/>' + segments + '</svg></div>' +
+    '<div class="status-dist-legend">' + legend + '</div>';
+}
+
 function sortByMissingThenComplete(groups, missingFn){
   return groups.slice().sort(function(a, b){
     var ma = missingFn(a), mb = missingFn(b);
@@ -473,7 +515,11 @@ function finanzasSectionHTML(books){
   var byTienda = getSpendByTienda(scopedBooks);
   var mostExpensive = getMostExpensiveBook(scopedBooks);
   var avgCosto = getAvgCostoPerBook(scopedBooks);
+  var wishlistWait = getAvgWishlistWaitDays(scopedBooks);
   var tiles = statTileHTML('var(--coral)', ICON_DOLLAR, avgCosto!=null ? formatCosto(avgCosto) : '—', 'promedio por libro');
+  if(wishlistWait != null){
+    tiles += statTileHTML('var(--violet)', ICON_CLOCK, Math.round(wishlistWait)+' días', 'en wishlist antes de comprar');
+  }
   if(mostExpensive){
     tiles += statWideHTML('var(--amber)', ICON_TAG, mostExpensive.title, formatCosto(mostExpensive.costo) + ' — tu libro más caro');
   }
@@ -532,6 +578,15 @@ function sagaProgressSectionHTML(books, wishlist){
     sagaProgressPorLeerHTML(groups) +
     '<p class="stats-chart-label">Por comprar</p>' +
     sagaProgressPorComprarHTML(groups) +
+  '</div>';
+}
+
+function estadoBibliotecaSectionHTML(books){
+  if(!isPremiumUser()) return lockedSectionHTML('Distribución por estado');
+  var dist = getStatusDistribution(books);
+  return '<div class="stats-section">' +
+    '<h3 class="stats-section-title">Distribución por estado</h3>' +
+    statusDistHTML(dist) +
   '</div>';
 }
 
@@ -635,6 +690,10 @@ export function renderStatsDashboard(){
       '<div class="stats-section-grid">' +
         topGenerosSectionHTML(books) +
         sagaProgressSectionHTML(books, wishlist) +
+      '</div>' +
+      '<div class="stats-section-grid">' +
+        estadoBibliotecaSectionHTML(books) +
+        isbnMetadataSectionHTML(books) +
       '</div>' +
     '</div>';
   wireStatsFilterRow();

@@ -261,6 +261,14 @@
   .saga-progress-bar{display:block;}
   .saga-progress-bar svg{display:block;width:100%;height:10px;}
 
+  .status-dist-bar{display:block;}
+  .status-dist-bar svg{display:block;width:100%;height:10px;}
+  .status-dist-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+  .status-dist-legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);}
+  .status-dist-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .status-dist-legend-label{flex:1;min-width:0;}
+  .status-dist-legend-value{font-weight:700;color:var(--ink);flex-shrink:0;}
+
   .stats-locked{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;border:1px dashed var(--border);padding:32px 20px;}
   .stats-locked-icon{width:40px;height:40px;border-radius:50%;background:var(--muted-plum);display:flex;align-items:center;justify-content:center;margin-bottom:2px;}
   .stats-locked-title{font-family:var(--font-serif);font-weight:700;font-size:15px;color:var(--ink);margin:0;}
