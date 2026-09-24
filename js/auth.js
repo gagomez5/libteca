@@ -1,7 +1,7 @@
 "use strict";
 
 import { uniqueSorted } from './utils.js';
-import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, isPremiumUser } from './state.js';
+import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, isPremiumUser, BRUUKION_LAUNCH_DATE } from './state.js';
 import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors, dbSelectSubscription } from './db.js';
 import { reportError } from './telemetry.js';
 import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems, renderFriendCode } from './ui.js';
@@ -178,6 +178,7 @@ export function backfillGuestAnalyticsDates(){
     if(b.status === 'leido' && !b.fecha_leido){ patch.fecha_leido = today; needsPatch = true; }
     if((b.status === 'leyendo' || b.status === 'leido') && !b.fecha_inicio_lectura){ patch.fecha_inicio_lectura = today; needsPatch = true; }
     if(!b.fecha_compra_wishlist){ patch.fecha_compra_wishlist = today; needsPatch = true; }
+    if(!b.fecha_agregado_wishlist && (b.fecha_compra_wishlist || patch.fecha_compra_wishlist)){ patch.fecha_agregado_wishlist = BRUUKION_LAUNCH_DATE; needsPatch = true; }
     if(needsPatch){ changed = true; return Object.assign({}, b, patch); }
     return b;
   });

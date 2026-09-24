@@ -60,6 +60,11 @@ export var state = {
 // Constantes: nunca se reasignan, así que no necesitan vivir dentro de `state`
 // (exportarlas sueltas evita el riesgo de reasignación de bindings importadas).
 export var WISHLIST_CAP = 5;
+// Fecha real de lanzamiento de Bruukion (alta del primer usuario en Supabase Auth).
+// Se usa como fecha de respaldo para fecha_agregado_wishlist en libros existentes
+// donde no se puede saber la fecha real en que entraron a la wishlist (el registro
+// de wishlist ya no existe porque el libro se compró antes de que este campo existiera).
+export var BRUUKION_LAUNCH_DATE = '2026-07-28T18:07:10.609Z';
 export var DEFAULT_TITLE = 'Mi Biblioteca';
 export var DEFAULT_WISHLIST_TITLE = 'Tu Wishlist';
 export var STATUS_LABELS = { pendiente:'Pendiente', leyendo:'Leyendo', leido:'Leído' };
