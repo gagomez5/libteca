@@ -16,6 +16,7 @@ export var state = {
   isGuest: false,
   notifications: [],
   currentNotifDetailId: null,
+  annualReadingGoal: null, // meta de libros a leer este año, definida por el usuario (feature Premium)
 
   authMode: 'login', // 'login' | 'signup' | 'recover'
   cameFromGuest: false,

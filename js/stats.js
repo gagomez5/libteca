@@ -2,6 +2,9 @@
 
 import { esc, formatCosto, sagaKey } from './utils.js';
 import { state, isPremiumUser, ICONS, STATUS_LABELS } from './state.js';
+import { dbSaveProfile } from './db.js';
+import { reportError } from './telemetry.js';
+import { showToast } from './ui.js';
 
 var ICON_CHECK = '<path d="M20 6L9 17l-5-5"/>';
 var ICON_CALENDAR = '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>';
@@ -13,6 +16,7 @@ var ICON_STORE = '<path d="M3 3h18l-2 7H5z"/><path d="M5 10v10h14V10"/><path d="
 var ICON_TAG = '<path d="M20.59 13.41L11 3.83A2 2 0 009.53 3H4a1 1 0 00-1 1v5.53a2 2 0 00.59 1.41l9.58 9.58a2 2 0 002.83 0l5.59-5.59a2 2 0 000-2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/>';
 var ICON_LAYERS = '<path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>';
 var ICON_LOCK = '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>';
+var ICON_TARGET = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>';
 
 var MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -672,6 +676,61 @@ function wireWishlistAgeSelector(){
   });
 }
 
+function getYearProgress(){
+  var now = new Date();
+  var year = now.getFullYear();
+  var startOfYear = new Date(year, 0, 1);
+  var daysElapsed = Math.max(1, Math.ceil((now.getTime() - startOfYear.getTime()) / 86400000));
+  var isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  return { year:year, daysElapsed:daysElapsed, daysInYear:isLeap ? 366 : 365 };
+}
+
+function annualGoalDetailHTML(books, goal){
+  var yp = getYearProgress();
+  var readSoFar = getBooksReadInYear(books, yp.year);
+  if(!goal){
+    return '<p class="stats-empty-metric">Define tu meta de lectura para este año y te mostramos si vas por buen camino.</p>';
+  }
+  var projected = Math.round((readSoFar / yp.daysElapsed) * yp.daysInYear);
+  var diff = projected - goal;
+  var statusHTML = diff >= 0
+    ? '<p class="stats-goal-status stats-goal-status-ok">Vas por buen camino para cumplir tu meta.</p>'
+    : '<p class="stats-goal-status stats-goal-status-behind">Vas ' + Math.abs(diff) + (Math.abs(diff)===1 ? ' libro por debajo de tu meta.' : ' libros por debajo de tu meta.') + '</p>';
+  return '<div class="stats-subgrid">' +
+      statTileHTML('var(--teal)', ICON_CHECK, readSoFar, readSoFar===1 ? 'libro leído este año' : 'libros leídos este año') +
+      statTileHTML('var(--violet)', ICON_TARGET, projected, 'proyección a fin de año') +
+    '</div>' +
+    statusHTML;
+}
+
+function metaAnualSectionHTML(books){
+  if(!isPremiumUser()) return lockedSectionHTML('Meta anual');
+  var goal = state.annualReadingGoal;
+  return '<div class="stats-section">' +
+    '<div class="stats-section-head">' +
+      '<h3 class="stats-section-title">Meta anual</h3>' +
+      '<div class="filter-field"><input type="number" id="annual-goal-input" min="1" max="999" step="1" placeholder="Ej: 24" value="'+(goal!=null?esc(String(goal)):'')+'"></div>' +
+    '</div>' +
+    '<div id="annual-goal-detail">' + annualGoalDetailHTML(books, goal) + '</div>' +
+  '</div>';
+}
+
+function wireAnnualGoalInput(){
+  var input = document.getElementById('annual-goal-input');
+  var detail = document.getElementById('annual-goal-detail');
+  if(!input || !detail) return;
+  input.addEventListener('change', function(){
+    var raw = input.value.trim();
+    var val = raw === '' ? null : Math.max(1, Math.min(999, Math.round(Number(raw))));
+    input.value = val != null ? val : '';
+    state.annualReadingGoal = val;
+    detail.innerHTML = annualGoalDetailHTML(state.books, val);
+    dbSaveProfile(val, 'annual_reading_goal').then(function(res){
+      if(res.error){ reportError(res.error); showToast('Error guardando la meta: ' + res.error.message, 'error'); }
+    });
+  });
+}
+
 function isbnMetadataSectionHTML(books){
   if(!isPremiumUser()) return lockedSectionHTML('Metadata de ISBN');
   var withIsbnData = books.filter(function(b){ return !!b.isbn_data; });
@@ -777,6 +836,7 @@ export function renderStatsDashboard(){
         estadoBibliotecaSectionHTML(books) +
         wishlistAgeSectionHTML(wishlist) +
       '</div>' +
+      metaAnualSectionHTML(books) +
       // Metadata de ISBN: oculta por ahora, las APIs de lookup no dan datos
       // suficientemente buenos/actualizados todavía. isbnMetadataSectionHTML
       // queda definida y lista para reactivar cuando mejore esa fuente.
@@ -784,4 +844,5 @@ export function renderStatsDashboard(){
   wireStatsFilterRow();
   wireChartColumns();
   wireWishlistAgeSelector();
+  wireAnnualGoalInput();
 }

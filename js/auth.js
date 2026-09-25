@@ -201,6 +201,7 @@ export function loadData(){
     document.querySelector('.editable-title[data-title-field="wishlist_name"] .view-heading').textContent = savedWishTitle;
     state.currentUserRole = (!state.isGuest && !pRes.error && pRes.data && pRes.data.role) ? pRes.data.role : 'free';
     state.friendCode = (!state.isGuest && !pRes.error && pRes.data && pRes.data.friend_code) ? pRes.data.friend_code : null;
+    state.annualReadingGoal = (!pRes.error && pRes.data && pRes.data.annual_reading_goal != null) ? pRes.data.annual_reading_goal : null;
     state.subscription = (!sRes.error && sRes.data) ? sRes.data : null;
     if(!isPremiumUser()){ state.bookViewMode = 'mosaico'; state.wishViewMode = 'mosaico'; }
     updateAdminLink();

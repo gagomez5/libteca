@@ -63,10 +63,12 @@ export function dbSelectProfile(){
   if(state.isGuest){
     var name = localStorage.getItem('guest_library_name');
     var wishName = localStorage.getItem('guest_wishlist_name');
-    var data = (name || wishName) ? { library_name:name, wishlist_name:wishName } : null;
+    var goalRaw = localStorage.getItem('guest_annual_reading_goal');
+    var goal = goalRaw ? Number(goalRaw) : null;
+    var data = (name || wishName || goal) ? { library_name:name, wishlist_name:wishName, annual_reading_goal:goal } : null;
     return Promise.resolve({ data: data, error:null });
   }
-  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, wishlist_name, role, avatar_url, friend_code').maybeSingle(); });
+  return withClockSkewRetry(function(){ return sb.from('profile').select('library_name, wishlist_name, role, avatar_url, friend_code, annual_reading_goal').maybeSingle(); });
 }
 export function dbInsertBook(data){
   if(state.isGuest){
@@ -139,7 +141,8 @@ export function dbDeleteWish(id){
 export function dbSaveProfile(name, field){
   field = field || 'library_name';
   if(state.isGuest){
-    localStorage.setItem(field === 'wishlist_name' ? 'guest_wishlist_name' : 'guest_library_name', name);
+    if(name == null || name === ''){ localStorage.removeItem('guest_' + field); }
+    else { localStorage.setItem('guest_' + field, name); }
     return Promise.resolve({ error:null });
   }
   var payload = { user_id: state.currentUserId };
