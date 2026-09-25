@@ -190,17 +190,6 @@ function getAvgCostoPerBook(books){
   return withCosto.reduce(function(s,b){ return s + Number(b.costo); }, 0) / withCosto.length;
 }
 
-function getAvgWishlistWaitDays(books){
-  var diffs = [];
-  books.forEach(function(b){
-    if(!b.fecha_agregado_wishlist || !b.fecha_compra_wishlist) return;
-    var days = (new Date(b.fecha_compra_wishlist).getTime() - new Date(b.fecha_agregado_wishlist).getTime()) / 86400000;
-    if(days >= 0) diffs.push(days);
-  });
-  if(!diffs.length) return null;
-  return diffs.reduce(function(a,b){ return a+b; }, 0) / diffs.length;
-}
-
 function getStatusDistribution(books){
   var order = ['leido','leyendo','pendiente'];
   var colors = { leido:'var(--teal)', leyendo:'var(--amber)', pendiente:'var(--text-muted)' };
@@ -586,51 +575,51 @@ function estadoBibliotecaSectionHTML(books){
   '</div>';
 }
 
-function getWishlistWaitCandidates(books){
-  return books.filter(function(b){ return b.fecha_agregado_wishlist && b.fecha_compra_wishlist; })
-    .map(function(b){
-      var days = Math.round((new Date(b.fecha_compra_wishlist).getTime() - new Date(b.fecha_agregado_wishlist).getTime()) / 86400000);
-      return { id:b.id, title:b.title, author:(b.author||'').trim(), days:days };
+function getWishlistAgeCandidates(wishlist){
+  return wishlist.filter(function(w){ return !!w.created_at; })
+    .map(function(w){
+      var days = Math.round((Date.now() - new Date(w.created_at).getTime()) / 86400000);
+      return { id:w.id, title:w.title, author:(w.author||'').trim(), days:days };
     })
     .sort(function(a,b){ return a.title.localeCompare(b.title); });
 }
 
-function wishlistWaitDetailHTML(item){
-  if(!item) return '<p class="stats-empty-metric">Elegí un libro para ver cuánto esperó en tu wishlist antes de comprarlo.</p>';
+function wishlistAgeDetailHTML(item){
+  if(!item) return '<p class="stats-empty-metric">Elige un libro para ver cuánto tiempo lleva en tu wishlist.</p>';
   return statWideHTML('var(--violet)', ICON_CLOCK,
     item.title + (item.author ? ' — ' + item.author : ''),
-    item.days + (item.days===1 ? ' día en tu wishlist antes de comprarlo' : ' días en tu wishlist antes de comprarlo'));
+    item.days + (item.days===1 ? ' día en tu wishlist' : ' días en tu wishlist'));
 }
 
-function wishlistWaitSectionHTML(books){
-  if(!isPremiumUser()) return lockedSectionHTML('Días en wishlist antes de comprar');
-  var candidates = getWishlistWaitCandidates(books);
+function wishlistAgeSectionHTML(wishlist){
+  if(!isPremiumUser()) return lockedSectionHTML('Días en wishlist');
+  var candidates = getWishlistAgeCandidates(wishlist);
   if(!candidates.length){
     return '<div class="stats-section">' +
-      '<h3 class="stats-section-title">Días en wishlist antes de comprar</h3>' +
-      '<p class="stats-empty-metric">Todavía no tenés libros comprados desde tu wishlist con esta información registrada.</p>' +
+      '<h3 class="stats-section-title">Días en wishlist</h3>' +
+      '<p class="stats-empty-metric">Todavía no hay libros en tu wishlist.</p>' +
     '</div>';
   }
-  var options = '<option value="">Elegí un libro…</option>' + candidates.map(function(c){
+  var options = '<option value="">Elige un libro…</option>' + candidates.map(function(c){
     return '<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>';
   }).join('');
   return '<div class="stats-section">' +
     '<div class="stats-section-head">' +
-      '<h3 class="stats-section-title">Días en wishlist antes de comprar</h3>' +
-      '<div class="filter-field"><select id="wishlist-wait-select">' + options + '</select></div>' +
+      '<h3 class="stats-section-title">Días en wishlist</h3>' +
+      '<div class="filter-field"><select id="wishlist-age-select">' + options + '</select></div>' +
     '</div>' +
-    '<div id="wishlist-wait-detail">' + wishlistWaitDetailHTML(null) + '</div>' +
+    '<div id="wishlist-age-detail">' + wishlistAgeDetailHTML(null) + '</div>' +
   '</div>';
 }
 
-function wireWishlistWaitSelector(){
-  var sel = document.getElementById('wishlist-wait-select');
-  var detail = document.getElementById('wishlist-wait-detail');
+function wireWishlistAgeSelector(){
+  var sel = document.getElementById('wishlist-age-select');
+  var detail = document.getElementById('wishlist-age-detail');
   if(!sel || !detail) return;
-  var candidates = getWishlistWaitCandidates(state.books);
+  var candidates = getWishlistAgeCandidates(state.wishlist);
   sel.addEventListener('change', function(){
     var item = candidates.filter(function(c){ return c.id === sel.value; })[0];
-    detail.innerHTML = wishlistWaitDetailHTML(item || null);
+    detail.innerHTML = wishlistAgeDetailHTML(item || null);
   });
 }
 
@@ -737,7 +726,7 @@ export function renderStatsDashboard(){
       '</div>' +
       '<div class="stats-section-grid">' +
         estadoBibliotecaSectionHTML(books) +
-        wishlistWaitSectionHTML(books) +
+        wishlistAgeSectionHTML(wishlist) +
       '</div>' +
       // Metadata de ISBN: oculta por ahora, las APIs de lookup no dan datos
       // suficientemente buenos/actualizados todavía. isbnMetadataSectionHTML
@@ -745,5 +734,5 @@ export function renderStatsDashboard(){
     '</div>';
   wireStatsFilterRow();
   wireChartColumns();
-  wireWishlistWaitSelector();
+  wireWishlistAgeSelector();
 }
