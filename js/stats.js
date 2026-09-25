@@ -141,6 +141,30 @@ function getReadingStreak(books){
   return streak;
 }
 
+function getBestReadingMonth(books){
+  var counts = {};
+  books.forEach(function(b){
+    if(!b.fecha_leido) return;
+    var d = new Date(b.fecha_leido);
+    var key = d.getFullYear()+'-'+d.getMonth();
+    if(!counts[key]) counts[key] = { year:d.getFullYear(), month:d.getMonth(), count:0 };
+    counts[key].count++;
+  });
+  var best = null;
+  Object.keys(counts).forEach(function(k){
+    if(!best || counts[k].count > best.count) best = counts[k];
+  });
+  return best;
+}
+
+function getSpendInYear(books, year){
+  return books.reduce(function(sum, b){
+    if(b.costo == null || !b.created_at) return sum;
+    if(new Date(b.created_at).getFullYear() !== year) return sum;
+    return sum + Number(b.costo);
+  }, 0);
+}
+
 function getSpendByTienda(books){
   var totals = {};
   books.forEach(function(b){
@@ -299,6 +323,13 @@ function statWideHTML(colorVar, iconPath, value, sub){
   return '<div class="stat stat-wide">' +
     '<span class="stat-icon" style="background:'+colorVar+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--paper)" stroke-width="1.8">'+iconPath+'</svg></span>' +
     '<span class="stat-text"><span class="stat-num">'+esc(value)+'</span><span class="stat-label">'+esc(sub)+'</span></span></div>';
+}
+
+function trendTileHTML(delta, formatFn, label){
+  var format = formatFn || function(v){ return String(v); };
+  var colorVar = delta > 0 ? 'var(--teal)' : (delta < 0 ? 'var(--coral)' : 'var(--text-muted)');
+  var sign = delta > 0 ? '+' : (delta < 0 ? '−' : '');
+  return statTileHTML(colorVar, ICON_TREND, sign + format(Math.abs(delta)), label);
 }
 
 function capItems(items, max){
@@ -472,9 +503,23 @@ function ritmoLecturaSectionHTML(books){
   if(!isPremiumUser()) return lockedSectionHTML('Ritmo de lectura');
   var avgDays = getAvgDaysToFinish(books);
   var streak = getReadingStreak(books);
+  var bestMonth = getBestReadingMonth(books);
   var sf = state.statsFilters;
   var year = sf.year ? Number(sf.year) : null;
   var month = sf.month !== '' ? Number(sf.month) : null;
+  var now = new Date();
+  var compareYear = year || now.getFullYear();
+  var tiles = statTileHTML('var(--teal)', ICON_CLOCK, avgDays!=null ? Math.round(avgDays)+' días' : '—', 'promedio para terminar un libro') +
+    statTileHTML('var(--amber)', ICON_TREND, streak, streak===1 ? 'mes de racha' : 'meses de racha');
+  if(month == null){
+    var yearBooks = getBooksReadInYear(books, compareYear);
+    var prevYearBooks = getBooksReadInYear(books, compareYear - 1);
+    tiles += trendTileHTML(yearBooks - prevYearBooks, null, 'libros leídos vs ' + (compareYear - 1));
+  }
+  if(bestMonth){
+    tiles += statWideHTML('var(--violet)', ICON_TREND, MONTH_NAMES[bestMonth.month] + ' ' + bestMonth.year,
+      bestMonth.count + (bestMonth.count===1 ? ' libro — tu mejor mes' : ' libros — tu mejor mes'));
+  }
   var chartHTML;
   if(month != null){
     chartHTML = '';
@@ -487,10 +532,7 @@ function ritmoLecturaSectionHTML(books){
   }
   return '<div class="stats-section">' +
     '<h3 class="stats-section-title">Ritmo de lectura</h3>' +
-    '<div class="stats-subgrid">' +
-      statTileHTML('var(--teal)', ICON_CLOCK, avgDays!=null ? Math.round(avgDays)+' días' : '—', 'promedio para terminar un libro') +
-      statTileHTML('var(--amber)', ICON_TREND, streak, streak===1 ? 'mes de racha' : 'meses de racha') +
-    '</div>' +
+    '<div class="stats-subgrid">' + tiles + '</div>' +
     chartHTML +
   '</div>';
 }
@@ -505,6 +547,13 @@ function finanzasSectionHTML(books){
   var mostExpensive = getMostExpensiveBook(scopedBooks);
   var avgCosto = getAvgCostoPerBook(scopedBooks);
   var tiles = statTileHTML('var(--coral)', ICON_DOLLAR, avgCosto!=null ? formatCosto(avgCosto) : '—', 'promedio por libro');
+  if(month == null){
+    var now = new Date();
+    var compareYear = year || now.getFullYear();
+    var spendCurrent = getSpendInYear(books, compareYear);
+    var spendPrev = getSpendInYear(books, compareYear - 1);
+    tiles += trendTileHTML(spendCurrent - spendPrev, formatCosto, 'gastado vs ' + (compareYear - 1));
+  }
   if(mostExpensive){
     tiles += statWideHTML('var(--amber)', ICON_TAG, mostExpensive.title, formatCosto(mostExpensive.costo) + ' — tu libro más caro');
   }
