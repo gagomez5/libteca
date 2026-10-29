@@ -338,6 +338,16 @@
 
     <section id="view-cuenta" class="hidden">
       <h2 class="view-heading">Mi cuenta</h2>
+      <div class="account-info hidden" id="account-info">
+        <div class="account-info-row">
+          <span class="friend-code-label">Correo</span>
+          <span class="account-info-value" id="account-email"></span>
+        </div>
+        <div class="account-info-row">
+          <span class="friend-code-label">Cuenta creada con</span>
+          <span class="account-info-value" id="account-provider"></span>
+        </div>
+      </div>
       <div class="friend-code-row hidden" id="friend-code-row">
         <span class="friend-code-label">Tu ID de Bruukion</span>
         <button type="button" class="friend-code-chip" data-action="copy-friend-code" title="Copiar ID" aria-label="Copiar tu ID">

@@ -156,6 +156,7 @@ import { openManageSubscriptionModal, closeManageSubscriptionModal, manageSubGoB
     }
     if(session && session.user){
       state.currentUserId = session.user.id;
+      state.authUser = session.user;
       setSentryUser(state.currentUserId);
       setAnalyticsUser(state.currentUserId);
       state.isGuest = false;

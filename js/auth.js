@@ -4,7 +4,7 @@ import { uniqueSorted } from './utils.js';
 import { state, DEFAULT_TITLE, DEFAULT_WISHLIST_TITLE, isPremiumUser, BRUUKION_LAUNCH_DATE } from './state.js';
 import { sb, guestSet, dbSelectBooks, dbSelectWishlist, dbSelectProfile, dbSelectAuthors, dbSelectSubscription } from './db.js';
 import { reportError } from './telemetry.js';
-import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems, renderFriendCode } from './ui.js';
+import { showToast, updateUserAvatar, renderUserRoleBadge, renderUpgradeMenuItems, renderFriendCode, renderAccountInfo } from './ui.js';
 import { renderAll } from './render.js';
 import { renderAuthorDatalist } from './forms-shared.js';
 import { loadNotifications, updateNotifDot } from './notifications.js';
@@ -38,6 +38,7 @@ export function showAuthScreen(){
   document.documentElement.classList.remove('app-shell');
   state.currentUserRole = 'free';
   state.friendCode = null;
+  state.authUser = null;
   state.friends = [];
   state.viewingFriendId = null;
   updateAdminLink();
@@ -207,6 +208,7 @@ export function loadData(){
     updateAdminLink();
     renderUserRoleBadge();
     renderFriendCode();
+    renderAccountInfo();
     renderUpgradeMenuItems();
     updateUserAvatar(!state.isGuest && !pRes.error && pRes.data ? pRes.data.avatar_url : null);
     renderAll();

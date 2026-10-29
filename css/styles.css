@@ -457,3 +457,12 @@
   .status-badge-pendiente{background:rgba(36,28,46,.07);color:var(--text-muted);}
   .status-badge-leyendo{background:rgba(245,166,35,.16);color:var(--amber-dark);}
   .status-badge-leido{background:rgba(47,191,159,.14);color:var(--teal-dark);}
+
+  /* Mi cuenta: correo + método de creación */
+  .account-info{max-width:420px;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:4px 16px;margin-bottom:14px;}
+  .account-info-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0;}
+  .account-info-row + .account-info-row{border-top:1px solid var(--border);}
+  .account-info-row .friend-code-label{flex-shrink:0;}
+  .account-info-value{min-width:0;text-align:right;font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere;display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+  .account-info-value svg{display:inline-block;vertical-align:-2px;margin-right:6px;}
+  .account-info-value small{font-size:12px;font-weight:500;color:var(--text-muted);}

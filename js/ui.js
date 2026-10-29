@@ -60,6 +60,22 @@ export function renderFriendCode(){
   row.classList.toggle('hidden', !state.friendCode);
   if(state.friendCode) document.getElementById('friend-code-text').textContent = state.friendCode;
 }
+var PROVIDER_LABELS = { email: 'Correo y contraseña', google: 'Google', apple: 'Apple' };
+function providerLabel(p){ return PROVIDER_LABELS[p] || p; }
+export function renderAccountInfo(){
+  var box = document.getElementById('account-info');
+  if(!box) return;
+  var user = state.isGuest ? null : state.authUser;
+  box.classList.toggle('hidden', !user);
+  if(!user) return;
+  var meta = user.app_metadata || {};
+  var provider = meta.provider || 'email';
+  var others = (meta.providers || []).filter(function(p){ return p !== provider; });
+  var html = '<span>' + (provider === 'google' ? ICONS.google : '') + esc(providerLabel(provider)) + '</span>';
+  if(others.length) html += '<small>También vinculada con ' + esc(others.map(providerLabel).join(', ')) + '</small>';
+  document.getElementById('account-email').textContent = user.email || '—';
+  document.getElementById('account-provider').innerHTML = html;
+}
 export function renderUpgradeMenuItems(){
   var upgradeBtn = document.getElementById('btn-open-upgrade');
   var manageBtn = document.getElementById('btn-manage-subscription');
