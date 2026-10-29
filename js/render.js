@@ -74,8 +74,8 @@ export function coverHTML(cover, title, status){
   var letter = esc((title || '').trim().charAt(0).toUpperCase());
   if(cover){
     return '<div class="'+cls+'">' +
-      '<img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
       '<div class="cover-placeholder" style="display:none"><span>'+letter+'</span></div>' +
+      '<img src="'+esc(cover)+'" alt="'+esc(title)+'" onerror="this.style.display=\'none\';var p=this.previousElementSibling;if(p)p.style.display=\'flex\'">' +
       '</div>';
   }
   return '<div class="'+cls+'"><div class="cover-placeholder" style="display:flex"><span>'+letter+'</span></div></div>';

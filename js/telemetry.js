@@ -5,7 +5,9 @@ if(window.Sentry){
   Sentry.init({
     dsn: 'https://ed94dc6234535bf2bf6da95bf7b8604f@o4511990408151040.ingest.us.sentry.io/4511990414311424',
     environment: (location.hostname === 'bruukion.com') ? 'production' : 'development',
-    initialScope: { tags: { app: 'main' } }
+    initialScope: { tags: { app: 'main' } },
+    // Ruido de scripts inyectados por navegadores in-app (Instagram/Facebook), no de nuestro código
+    ignoreErrors: [/_META\.IABInnerFrame/]
   });
 }
 export function reportError(err){
