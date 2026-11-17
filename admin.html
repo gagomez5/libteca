@@ -141,7 +141,7 @@
     <section id="view-usuarios">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Correo</th><th>Alta</th><th>Rol</th><th>Plan</th><th>Renovación</th></tr></thead>
+          <thead><tr><th>Correo</th><th>Alta</th><th>Rol</th><th>Plan</th><th>Renovación / fin</th></tr></thead>
           <tbody id="users-tbody"></tbody>
         </table>
       </div>
@@ -215,11 +215,18 @@
     if(!u.plan) return '—';
     var label = PLAN_LABELS[u.plan] || u.plan;
     var statusSuffix = SUB_STATUS_LABELS[u.sub_status];
-    return statusSuffix ? label + ' (' + statusSuffix + ')' : label;
+    if(statusSuffix) label += ' (' + statusSuffix + ')';
+    if(u.test_mode) label += ' (prueba)';
+    return label;
   }
   function renewalCellText(u){
     if(!u.renews_at) return '—';
-    return new Date(u.renews_at).toLocaleDateString('es-AR');
+    var date = new Date(u.renews_at).toLocaleDateString('es-AR');
+    if(u.sub_status === 'active') return date;
+    if(u.sub_status === 'expired' || u.sub_status === 'cancelled'){
+      return (new Date(u.renews_at) > new Date() ? 'Termina el ' : 'Venció el ') + date;
+    }
+    return '—';
   }
   var users = [];
   var notifs = [];
