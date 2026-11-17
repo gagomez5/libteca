@@ -3,3 +3,4 @@ supabase/
 .claude/
 .git/
 wrangler.jsonc
+.github/
